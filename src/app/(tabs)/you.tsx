@@ -63,6 +63,7 @@ export default function YouTab() {
       contentContainerStyle={{
         padding: space.s4,
         paddingTop: insets.top + space.s4,
+        paddingBottom: space.s6,
         gap: space.s4,
       }}
     >

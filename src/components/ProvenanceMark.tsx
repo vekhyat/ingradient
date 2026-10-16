@@ -78,7 +78,10 @@ export function ProvenanceMark(props: ProvenanceMarkProps) {
     <View style={{ gap: space.s1 }}>
       <AppText variant="data">{`≈ ${text}`}</AppText>
       <AppText variant="bodySm" color="ink2">
-        {`${enGB.provenance.estimated} · ${fact.modelId} ${fact.modelVersion}`}
+        {`${enGB.provenance.estimated} ${
+          enGB.provenance.estimatedBy[fact.modelId] ??
+          `· ${fact.modelId} ${fact.modelVersion}`
+        }`}
       </AppText>
     </View>
   );

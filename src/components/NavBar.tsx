@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { enGB } from '../copy/en-GB';
 import { haptics } from '../motion/haptics';
 import { useColors } from '../theme/ThemeProvider';
-import { radius, size, space } from '../theme/tokens';
+import { size, space } from '../theme/tokens';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
 import { Touchable } from './Touchable';
@@ -14,6 +14,8 @@ export type RootTab = 'scan' | 'history' | 'you';
 export interface NavBarProps {
   current: RootTab;
   onSelect: (next: RootTab) => void;
+  /** True in the app: the bar adds the bottom safe area. False in the playground. */
+  floating?: boolean;
 }
 
 const TABS: readonly { key: RootTab; icon: string; label: string }[] = [
@@ -22,23 +24,28 @@ const TABS: readonly { key: RootTab; icon: string; label: string }[] = [
   { key: 'you', icon: 'person', label: enGB.nav.you },
 ];
 
+const INDICATOR_WIDTH = 56;
+const INDICATOR_HEIGHT = size.navIndicatorHeight;
+
 /**
- * Component 06. Three labelled roots. Labels are always visible and wrap at
- * large text sizes. The selected tab has a filled icon on a pill.
+ * Component 06 (D136). Three labelled roots on a docked bar with no top
+ * border: the surface colour change is the edge, so the Scan camera meets it
+ * cleanly. Labels are always visible and wrap at large text sizes; the
+ * selected tab has a filled icon on a rounded tinted pill.
  */
-export function NavBar({ current, onSelect }: NavBarProps) {
+export function NavBar({ current, onSelect, floating = true }: NavBarProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  return (
+
+  const bar = (
     <View
       accessibilityRole="tablist"
       style={{
         flexDirection: 'row',
-        minHeight: size.navBar + insets.bottom,
-        paddingBottom: insets.bottom,
+        minHeight: size.navBar + (floating ? insets.bottom : 0),
+        paddingBottom: floating ? insets.bottom : 0,
+        paddingTop: space.s2,
         backgroundColor: colors.card,
-        borderTopWidth: 1,
-        borderTopColor: colors.hair,
       }}
     >
       {TABS.map((tab) => {
@@ -49,6 +56,7 @@ export function NavBar({ current, onSelect }: NavBarProps) {
             accessibilityRole="tab"
             accessibilityLabel={tab.label}
             accessibilityState={{ selected }}
+            radius={28}
             onPress={() => {
               if (!selected) {
                 haptics.play('selection');
@@ -59,15 +67,16 @@ export function NavBar({ current, onSelect }: NavBarProps) {
               flex: 1,
               alignItems: 'center',
               justifyContent: 'center',
-              paddingVertical: space.s3,
-              gap: space.s1,
+              paddingVertical: space.s1,
+              gap: 2,
             }}
           >
             <View
               style={{
-                minWidth: size.navIndicatorWidth,
-                minHeight: size.navIndicatorHeight,
-                borderRadius: radius.full,
+                width: INDICATOR_WIDTH,
+                height: INDICATOR_HEIGHT,
+                borderRadius: INDICATOR_HEIGHT / 2,
+                overflow: 'hidden',
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: selected ? colors.primarySoft : 'transparent',
@@ -91,4 +100,6 @@ export function NavBar({ current, onSelect }: NavBarProps) {
       })}
     </View>
   );
+
+  return bar;
 }

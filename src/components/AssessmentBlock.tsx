@@ -113,9 +113,9 @@ export function AssessmentBlock({
       ) : (
         <View style={{ gap: space.s2 }}>
           <AppText variant="label" color="ink2">
-            {enGB.assessment.noGrade.toUpperCase()}
+            {enGB.assessment.nutritionGrade.toUpperCase()}
           </AppText>
-          <AppText variant="display" heading>
+          <AppText variant="heading" heading>
             {gapTitle(science)}
           </AppText>
           {gapLines(science).map((line, index) => (
@@ -178,7 +178,9 @@ export function AssessmentBlock({
         >
           <Icon name="info" color={colors.ink2} />
           <AppText variant="bodySm" color="ink2" style={{ flex: 1 }}>
-            {`${enGB.assessment.methodLabel} · ${enGB.result.method}`}
+            {science.status === 'supported'
+              ? `${enGB.assessment.methodLabel} · ${enGB.result.method}`
+              : enGB.you.method}
           </AppText>
           <Icon name="chevron_right" color={colors.ink2} />
         </Touchable>

@@ -1,7 +1,13 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, Linking, ScrollView, View } from 'react-native';
+import {
+  AppState,
+  Linking,
+  ScrollView,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { isValidGtin } from '../../adapters/catalogue/gtin';
@@ -17,7 +23,11 @@ import { space } from '../../theme/tokens';
 import type { PanelPresence } from '../../view-models/types';
 import { useLabelState, useServices } from '../app/services';
 import type { ReadOutcome } from '../capture/label-flow';
-import { isReadyForReview, missingPanels } from '../capture/label-session';
+import {
+  isReadyForReview,
+  missingPanels,
+  nutritionStillOptional,
+} from '../capture/label-session';
 import { checkTypedBarcode } from './barcode-input';
 
 const BARCODE_TYPES = ['ean13', 'ean8', 'upc_a', 'upc_e'] as const;
@@ -59,6 +69,10 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
   const labelState = useLabelState();
   const [permission, requestPermission] = useCameraPermissions();
   const camera = useRef<CameraView>(null);
+  const window = useWindowDimensions();
+  const [pictureSize, setPictureSize] = useState<string | undefined>();
+  // Height of the area above the nav bar; the camera fills it on the Scan tab.
+  const [areaHeight, setAreaHeight] = useState(window.height);
 
   const [focused, setFocused] = useState(true);
   const [foreground, setForeground] = useState(
@@ -120,6 +134,26 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
   // must not pull the user away to a lookup.
   const scanningBarcodes = !labelOnly && !anyPanel && !labelState.reading;
 
+  /** Largest still size the camera offers, so OCR sees small print. */
+  const pickLargestPictureSize = async () => {
+    if (pictureSize || !camera.current) {
+      return;
+    }
+    try {
+      const sizes = await camera.current.getAvailablePictureSizesAsync();
+      const pixels = (value: string) => {
+        const [w, h] = value.split('x').map(Number);
+        return (w ?? 0) * (h ?? 0);
+      };
+      const best = [...sizes].sort((a, b) => pixels(b) - pixels(a))[0];
+      if (best) {
+        setPictureSize(best);
+      }
+    } catch {
+      // Keep the camera default.
+    }
+  };
+
   const startLookup = (code: string) => {
     void scan.lookup(code);
     router.push('/lookup');
@@ -160,7 +194,8 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
     setCapturing(true);
     try {
       const picture = await camera.current.takePictureAsync({
-        quality: 0.9,
+        // Full quality: small and badly printed text needs every pixel.
+        quality: 1,
         skipProcessing: false,
         shutterSound: false,
       });
@@ -200,11 +235,14 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.bg }}
-      contentContainerStyle={{ paddingBottom: space.s5 }}
+      onLayout={(event) => setAreaHeight(event.nativeEvent.layout.height)}
+      contentContainerStyle={{
+        paddingBottom: labelOnly || anyPanel ? space.s5 : 0,
+      }}
     >
       <View
         style={{
-          paddingTop: labelOnly ? 0 : insets.top,
+          paddingTop: 0,
           backgroundColor: colors.camera,
         }}
       >
@@ -225,6 +263,18 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
           locked={locked}
           capturing={capturing || labelState.reading}
           showPanels={labelOnly || anyPanel}
+          rounded={labelOnly || anyPanel}
+          contentInsets={{ top: labelOnly ? 0 : insets.top, bottom: 0 }}
+          minHeight={Math.max(
+            420,
+            // Scan tab: all the space above the docked nav bar, under the
+            // status bar. With a label in progress, leave room for its actions.
+            labelOnly
+              ? window.height - insets.top - 64 - 220
+              : anyPanel
+                ? areaHeight - 300
+                : areaHeight,
+          )}
           preview={
             cameraActive ? (
               <CameraView
@@ -240,7 +290,11 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
                     ? (result) => onBarcode(result.data)
                     : undefined
                 }
-                onCameraReady={() => setReady(true)}
+                pictureSize={pictureSize}
+                onCameraReady={() => {
+                  setReady(true);
+                  void pickLargestPictureSize();
+                }}
                 onMountError={() => setMountError(true)}
               />
             ) : null
@@ -256,10 +310,6 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
       <View style={{ padding: space.s4, gap: space.s4 }}>
         {!anyPanel && !labelOnly ? (
           <>
-            <AppText variant="heading" heading>
-              {enGB.scan.noBarcodeTitle}
-            </AppText>
-            <AppText color="ink2">{enGB.scan.noBarcodeBody}</AppText>
             {message ? (
               <Card>
                 <AppText accessibilityLiveRegion="polite">{message}</AppText>
@@ -268,23 +318,35 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
           </>
         ) : (
           <>
-            {message ? (
+            {labelState.reading ? (
+              <Card>
+                <AppText accessibilityLiveRegion="polite">
+                  {enGB.status.reading.pending}
+                </AppText>
+              </Card>
+            ) : session && nutritionStillOptional(session) ? (
+              <Card>
+                <AppText accessibilityLiveRegion="polite">
+                  {enGB.capture.ingredientsRead}
+                </AppText>
+              </Card>
+            ) : message ? (
               <Card>
                 <AppText accessibilityLiveRegion="polite">{message}</AppText>
               </Card>
             ) : null}
-            {anyPanel && !readyForReview && session
-              ? missingPanels(session).map((panel) => (
-                  <Button
-                    key={panel}
-                    label={enGB.capture.markAbsent(enGB.capture.panels[panel])}
-                    variant="outline"
-                    onPress={() => label.markAbsent(panel)}
-                  />
-                ))
-              : null}
+            {session &&
+            !readyForReview &&
+            session.nutrition.state !== 'missing' &&
+            session.ingredients.state === 'missing' ? (
+              <Button
+                label={enGB.capture.markAbsent(enGB.capture.panels.ingredients)}
+                variant="outline"
+                onPress={() => label.markAbsent('ingredients')}
+              />
+            ) : null}
             <Button
-              label={enGB.capture.continue}
+              label={enGB.capture.seeResults}
               variant="primary"
               disabledReason={
                 readyForReview

@@ -79,8 +79,18 @@ export class LabelFlow {
   /** Starts a fresh session, discarding any earlier one. */
   start(base: ProductSnapshot | null): void {
     this.discard();
+    const panelHasFacts = (panel: 'ingredients' | 'nutrition') =>
+      base?.panels.some(
+        (p) =>
+          p.panel === panel && (p.state === 'read' || p.state === 'uncertain'),
+      ) ?? false;
     this.set({
-      session: createLabelSession(this.deps.newId(), base?.barcode ?? null),
+      session: createLabelSession(this.deps.newId(), base?.barcode ?? null, {
+        ingredients: panelHasFacts('ingredients'),
+        nutrition:
+          panelHasFacts('nutrition') &&
+          (base?.observations.some((o) => o.kind !== 'missing') ?? false),
+      }),
       base,
     });
   }

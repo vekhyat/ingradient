@@ -31,6 +31,12 @@ export interface CaptureViewfinderProps {
   preview?: ReactNode;
   /** Shows which label panels are present once a label photo exists. */
   showPanels: boolean;
+  /** Camera height; the screen gives it most of the window. */
+  minHeight?: number;
+  /** Extra space inside the camera for the status bar and a floating nav bar. */
+  contentInsets?: { top: number; bottom: number };
+  /** Round the bottom corners (pushed capture screen) or run edge to edge (Scan tab). */
+  rounded?: boolean;
   onCapture: () => void;
   onTorch: () => void;
   onManualBarcode: () => void;
@@ -48,7 +54,7 @@ function Corner({
   const colors = useColors();
   const reducedMotion = useReducedMotion();
   const style = useAnimatedStyle(() => ({
-    borderColor: withTiming(locked ? colors.onCamera : colors.mint, {
+    borderColor: withTiming(locked ? colors.onCamera : colors.primary, {
       duration: reducedMotion ? 0 : duration.cameraLock,
     }),
   }));
@@ -78,33 +84,46 @@ function Corner({
   );
 }
 
-function CameraPill({ text }: { text: string }) {
-  const colors = useColors();
+const TEXT_SHADOW = {
+  // Strong, tight shadow: readable over most packs without a box or gradient.
+  textShadowColor: 'rgba(0,0,0,0.95)',
+  textShadowOffset: { width: 0, height: 1 },
+  textShadowRadius: 10,
+} as const;
+
+/**
+ * Instruction under the frame (D136): plain centred text with a strong
+ * shadow, no box. One main line and an optional quieter hint.
+ */
+function CameraPill({ text, hint }: { text: string; hint?: string }) {
   return (
     <View
+      accessible
       accessibilityLiveRegion="polite"
+      accessibilityLabel={hint ? `${text}. ${hint}` : text}
       style={{
         alignSelf: 'center',
-        flexDirection: 'row',
+        maxWidth: '90%',
         alignItems: 'center',
-        gap: space.s2,
-        backgroundColor: colors.camera,
-        borderRadius: radius.full,
-        paddingHorizontal: space.s4,
-        paddingVertical: space.s2,
+        gap: 2,
       }}
     >
-      <View
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: 4,
-          backgroundColor: colors.mint,
-        }}
-      />
-      <AppText variant="data" color="onCamera">
+      <AppText
+        variant="subhead"
+        color="onCamera"
+        style={[{ textAlign: 'center' }, TEXT_SHADOW]}
+      >
         {text}
       </AppText>
+      {hint ? (
+        <AppText
+          variant="bodySm"
+          color="onCamera"
+          style={[{ textAlign: 'center', opacity: 0.85 }, TEXT_SHADOW]}
+        >
+          {hint}
+        </AppText>
+      ) : null}
     </View>
   );
 }
@@ -141,7 +160,7 @@ function PanelChips({ panels }: { panels: readonly PanelPresence[] }) {
               name={done ? 'check_circle' : 'radio_button_unchecked'}
               filled={done}
               size={18}
-              color={done ? colors.mint : colors.onCamera}
+              color={done ? colors.primary : colors.onCamera}
             />
             <AppText variant="label" color="onCamera">
               {`${enGB.capture.panels[panel.panel]} · ${enGB.capture.panelState[panel.state]}`}
@@ -170,6 +189,9 @@ export function CaptureViewfinder({
   capturing = false,
   preview,
   showPanels,
+  minHeight = 460,
+  contentInsets = { top: 0, bottom: 0 },
+  rounded = true,
   onCapture,
   onTorch,
   onManualBarcode,
@@ -197,15 +219,19 @@ export function CaptureViewfinder({
         : scanningBarcodes
           ? enGB.scan.pointAtEither
           : enGB.capture.hint;
+  const statusHint =
+    !locked && !capturing && cameraState !== 'starting' && scanningBarcodes
+      ? enGB.scan.barcodeAuto
+      : undefined;
 
   return (
     <View
       style={{
         backgroundColor: colors.camera,
-        borderBottomLeftRadius: radius.md,
-        borderBottomRightRadius: radius.md,
+        borderBottomLeftRadius: rounded ? radius.lg : 0,
+        borderBottomRightRadius: rounded ? radius.lg : 0,
         overflow: 'hidden',
-        minHeight: 460,
+        minHeight,
       }}
     >
       {permission === 'granted' && cameraState !== 'unavailable' ? (
@@ -216,7 +242,15 @@ export function CaptureViewfinder({
         </View>
       ) : null}
 
-      <View style={{ padding: space.s4, gap: space.s4, flex: 1 }}>
+      <View
+        style={{
+          padding: space.s4,
+          paddingTop: space.s4 + contentInsets.top,
+          paddingBottom: space.s4 + contentInsets.bottom,
+          gap: space.s4,
+          flex: 1,
+        }}
+      >
         <View
           style={{
             flexDirection: 'row',
@@ -317,29 +351,30 @@ export function CaptureViewfinder({
               <Corner position="br" locked={locked} />
             </View>
             {showPanels ? <PanelChips panels={panels} /> : null}
-            <CameraPill text={statusText} />
+            <CameraPill text={statusText} hint={statusHint} />
             <Touchable
               accessibilityRole="button"
               accessibilityLabel={enGB.capture.shutter}
               accessibilityState={{ busy: capturing, disabled: capturing }}
               disabled={capturing || locked || cameraState !== 'ready'}
               radius={radius.full}
-              layerColor={colors.camera}
+              layerColor={colors.onPrimary}
               onPress={onCapture}
               style={{
                 alignSelf: 'center',
                 width: 72,
                 height: 72,
                 borderRadius: radius.full,
-                backgroundColor: colors.onCamera,
+                // Theme colour (D132): the shutter follows the app palette.
+                backgroundColor: colors.primary,
                 borderWidth: 4,
-                borderColor: colors.mint,
+                borderColor: colors.onCamera,
                 alignItems: 'center',
                 justifyContent: 'center',
                 opacity: capturing || locked ? 0.5 : 1,
               }}
             >
-              <Icon name="photo_camera" color={colors.camera} />
+              <Icon name="photo_camera" color={colors.onPrimary} />
             </Touchable>
           </>
         )}

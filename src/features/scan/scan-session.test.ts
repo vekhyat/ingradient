@@ -46,11 +46,30 @@ describe('ScanSession lookup', () => {
     }
   });
 
-  it('stays on lookup when the record cannot be graded without a photo', async () => {
+  it('opens an ingredients-only record as a result (D131)', async () => {
     const { catalogue, pending } = manualCatalogue();
     const session = new ScanSession(catalogue, methodNotInstalledAnalyser);
     const running = session.lookup('8901030000001');
     pending[0]?.resolve({ state: 'found', snapshot: withoutNutrition });
+    const state = await running;
+    expect(state.status).toBe('opened');
+  });
+
+  it('stays on lookup when the record has neither ingredients nor nutrition', async () => {
+    const { catalogue, pending } = manualCatalogue();
+    const session = new ScanSession(catalogue, methodNotInstalledAnalyser);
+    const running = session.lookup('8901030000001');
+    pending[0]?.resolve({
+      state: 'found',
+      snapshot: {
+        ...withoutNutrition,
+        ingredients: [],
+        panels: withoutNutrition.panels.map((panel) => ({
+          ...panel,
+          state: 'missing' as const,
+        })),
+      },
+    });
     const state = await running;
     expect(state.status).toBe('incomplete');
     expect(Object.keys(session.getState().results)).toHaveLength(0);

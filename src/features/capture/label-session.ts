@@ -49,13 +49,27 @@ export type PhotoOutcome =
 export function createLabelSession(
   id: string,
   barcode: string | null,
+  /**
+   * Panels an earlier record already supplies (for example an Open Food
+   * Facts product with ingredients but no table). They count as present, so
+   * a photo only fills what is still missing; the facts stay on that record.
+   */
+  alreadyPresent: { ingredients?: boolean; nutrition?: boolean } = {},
 ): LabelSession {
   return {
     id,
     barcode,
     photos: [],
-    ingredients: { state: 'missing', imageId: null, text: null },
-    nutrition: { state: 'missing', imageId: null, fragments: [] },
+    ingredients: {
+      state: alreadyPresent.ingredients ? 'read' : 'missing',
+      imageId: null,
+      text: null,
+    },
+    nutrition: {
+      state: alreadyPresent.nutrition ? 'read' : 'missing',
+      imageId: null,
+      fragments: [],
+    },
   };
 }
 
@@ -178,9 +192,26 @@ export function markPanelAbsent(
 }
 
 /** Ready for review when each panel is present or explicitly absent. */
+/**
+ * Ingredients first (D131): an ingredient list alone is enough to show
+ * results; the nutrition table is an optional add-on. A nutrition table
+ * alone needs the ingredients, or the user saying the pack has none.
+ */
 export function isReadyForReview(session: LabelSession): boolean {
-  const done = (state: PanelState) => state !== 'missing';
-  return done(session.ingredients.state) && done(session.nutrition.state);
+  const present = (state: PanelState) =>
+    state === 'read' || state === 'uncertain';
+  if (present(session.ingredients.state)) {
+    return true;
+  }
+  return (
+    session.ingredients.state === 'user_marked_absent' &&
+    session.nutrition.state !== 'missing'
+  );
+}
+
+/** True when ingredients are in but the optional nutrition table is not. */
+export function nutritionStillOptional(session: LabelSession): boolean {
+  return isReadyForReview(session) && session.nutrition.state === 'missing';
 }
 
 export function missingPanels(session: LabelSession): PanelName[] {

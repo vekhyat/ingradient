@@ -15,3 +15,6 @@ contracts/
 
 # Pinned resources: byte-exact, hashes in resources/manifest.json
 resources/
+
+# Generated from pinned resources by tools/resources/build_additive_names.mjs
+src/domain/ingredients/generated/

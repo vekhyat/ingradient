@@ -62,12 +62,17 @@ export const enGB = {
     check: 'Check',
     corrected: 'You corrected this transcription',
     estimated: 'Estimated',
+    estimatedBy: {
+      'openfoodfacts-ingredients-analysis':
+        'by Open Food Facts from the ingredient list',
+    } as Record<string, string>,
     fromPack: 'read from the pack',
     fromOff: 'from Open Food Facts',
   },
 
   identity: {
     nameMissing: 'Name not on this record',
+    labelOnlyName: 'Product from your label photo',
     fromOff: 'From the barcode, Open Food Facts',
     fromLabel: 'From your label photo',
     fromMixed: 'From Open Food Facts and your label photo',
@@ -83,7 +88,8 @@ export const enGB = {
     productGrade: 'Product grade',
     methodLabel: 'Nutrition grade · European reference',
     noGrade: 'No product grade',
-    insufficientTitle: 'Not enough information to grade',
+    nutritionGrade: 'Nutrition grade',
+    insufficientTitle: 'Not enough information for a grade',
     methodUnavailableTitle: 'No grade yet',
     unsupportedTitle: 'Not graded',
     personalUnavailable: 'Personal assessment unavailable',
@@ -133,8 +139,29 @@ export const enGB = {
     within: (parent: string) => `Part of ${parent}`,
   },
 
+  facts: {
+    title: 'From the ingredient list',
+    listedFirst: 'Listed first',
+    additives: (count: number) =>
+      count === 1 ? '1 additive code listed' : `${count} additive codes listed`,
+    noAdditives: 'No additive codes listed',
+    unknownAdditive: 'Name not in the app’s additive list',
+    contains: 'The pack says it contains',
+    mayContain: 'The pack says it may contain',
+    declared: 'Amounts printed on the pack',
+    note: 'These are what the pack says. Checking them against your own allergies arrives in a later version.',
+    none: 'No ingredient list yet. Photograph it to see what is in this product.',
+  },
+
+  addNutrition: {
+    title: 'Add the nutrition table?',
+    body: 'A nutrition grade needs the nutrition table. Photograph it to add one; everything above stays.',
+    action: 'Photograph nutrition table',
+  },
+
   nutrition: {
     title: 'Nutrition',
+    kcal: (value: number) => `${value} kcal`,
     unknown: 'Unknown',
     none: 'No nutrition table on this record. A label photo can add it.',
   },
@@ -194,11 +221,12 @@ export const enGB = {
     torchOff: 'Torch off',
     findProduct: 'Find a product',
     pointAtBarcode: 'Point at the barcode',
-    pointAtEither: 'Point at a barcode, or photograph the label',
+    pointAtEither: 'Photograph the ingredients',
+    barcodeAuto: 'Barcodes are read automatically',
     barcodeDetected: 'Barcode detected',
-    noBarcodeTitle: 'Barcode or label, one camera',
+    noBarcodeTitle: 'Photograph the ingredients',
     noBarcodeBody:
-      'A barcode is read as soon as it is in view. No barcode, or no data for it? Tap the shutter to photograph the ingredients and nutrition table; one photo can hold both.',
+      'Fill the frame with the ingredient list and tap the shutter. Include the nutrition table if it fits. A barcode in view is read by itself.',
     startOver: 'Start over',
     photographLabel: 'Photograph the label',
     typeBarcode: 'Type the barcode',
@@ -218,7 +246,10 @@ export const enGB = {
 
   capture: {
     title: 'Photograph the label',
-    hint: 'Fit the ingredients and the nutrition table in the frame. One photo can hold both.',
+    hint: 'Fill the frame with the text. Hold steady; move closer for small print.',
+    ingredientsRead:
+      'Ingredients read. Want a nutrition grade too? Photograph the nutrition table, or see results now.',
+    seeResults: 'See results',
     shutter: 'Take photo',
     panels: {
       ingredients: 'Ingredients',
@@ -244,8 +275,8 @@ export const enGB = {
   review: {
     title: 'Check the text',
     intro:
-      'This is what the app read. Fix anything that does not match the pack. You do not need to confirm each row.',
-    analyse: 'Analyse available information',
+      'This is what the app read. Fix anything that does not match the pack, then see results.',
+    analyse: 'See results',
     discard: 'Discard',
     edit: (what: string) => `Edit ${what}`,
     correctionTitle: (what: string) => `Correct ${what}`,
@@ -260,7 +291,7 @@ export const enGB = {
   },
 
   result: {
-    title: 'Product',
+    title: 'Result',
     save: 'Save on this phone',
     saved: 'Saved on this phone',
     method: 'How this was assessed',

@@ -21,4 +21,6 @@ export const easing = {
   standard: Easing.bezier(0.2, 0, 0, 1),
   emphasizedDecelerate: Easing.bezier(0.05, 0.7, 0.1, 1),
   emphasizedAccelerate: Easing.bezier(0.3, 0, 0.8, 0.15),
+  /** Result reveal from the v18 prototype. */
+  reveal: Easing.bezier(0.16, 1, 0.3, 1),
 } as const;

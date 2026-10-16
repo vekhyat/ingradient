@@ -168,7 +168,14 @@ export class ScanSession {
       return this.state.lookup;
     }
     const science = toScientificView(analysed.assessment.scientific);
-    if (!opensResultAutomatically(science)) {
+    // Ingredients first (D131): an ingredient list is a result on its own;
+    // only a record with neither panel stays on lookup for a photo.
+    const hasIngredients = outcome.snapshot.panels.some(
+      (panel) =>
+        panel.panel === 'ingredients' &&
+        (panel.state === 'read' || panel.state === 'uncertain'),
+    );
+    if (!opensResultAutomatically(science) && !hasIngredients) {
       this.set({
         lookup: {
           status: 'incomplete',

@@ -36,7 +36,11 @@ export function ProductIdentity({
   onInspectSource,
 }: ProductIdentityProps) {
   const colors = useColors();
-  const name = product.name ?? enGB.identity.nameMissing;
+  const name =
+    product.name ??
+    (product.dataCredit === 'label_photo'
+      ? enGB.identity.labelOnlyName
+      : enGB.identity.nameMissing);
   const meta = [product.sizeText, sourceLine(product)]
     .filter(Boolean)
     .join(' · ');

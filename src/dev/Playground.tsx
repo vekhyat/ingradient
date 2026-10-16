@@ -221,7 +221,7 @@ export function Playground() {
       </Section>
 
       <Section title="06 Navigation bar">
-        <NavBar current={tab} onSelect={setTab} />
+        <NavBar current={tab} onSelect={setTab} floating={false} />
       </Section>
 
       <Section title="07 Grade badge">

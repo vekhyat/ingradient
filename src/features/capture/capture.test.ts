@@ -8,6 +8,7 @@ import {
   isReadyForReview,
   markPanelAbsent,
   missingPanels,
+  nutritionStillOptional,
 } from './label-session';
 import { NO_CORRECTIONS, buildLabelSnapshot } from './label-snapshot';
 import type { OcrBlock, OcrPage } from './ocr-page';
@@ -329,5 +330,47 @@ describe('buildLabelSnapshot', () => {
     expect(new Set(snapshot.sourceRefs.map((ref) => ref.id)).size).toBe(
       snapshot.sourceRefs.length,
     );
+  });
+});
+
+describe('ingredients first (D131)', () => {
+  const photo = (id: string) => ({ imageId: id, uri: `file:///${id}.jpg` });
+
+  it('is ready for results with only the ingredient list', () => {
+    const { session } = applyPhoto(
+      createLabelSession('s1', null),
+      photo('i'),
+      splitLabelPanels({ blocks: [INGREDIENTS] }),
+      null,
+    );
+    expect(isReadyForReview(session)).toBe(true);
+    expect(nutritionStillOptional(session)).toBe(true);
+  });
+
+  it('asks for the ingredients when only the table was photographed', () => {
+    const { session } = applyPhoto(
+      createLabelSession('s1', null),
+      photo('n'),
+      splitLabelPanels({ blocks: NUTRITION }),
+      null,
+    );
+    expect(isReadyForReview(session)).toBe(false);
+    expect(
+      isReadyForReview(markPanelAbsent(session, 'ingredients').session),
+    ).toBe(true);
+  });
+
+  it('lets a photo add only the table to a record that has ingredients', () => {
+    const start = createLabelSession('s1', '8901234567890', {
+      ingredients: true,
+    });
+    const { session, outcome } = applyPhoto(
+      start,
+      photo('both'),
+      splitLabelPanels(COMBINED),
+      null,
+    );
+    expect(outcome).toEqual({ kind: 'filled', panels: ['nutrition'] });
+    expect(session.ingredients.text).toBeNull();
   });
 });

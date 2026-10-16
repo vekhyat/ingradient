@@ -29,7 +29,7 @@ export function useGradeReveal(motion: RevealMotion, reducedMotion: boolean) {
       withTiming(1, {
         duration:
           motion === 'first' ? duration.gradeFirst : duration.gradeRepeat,
-        easing: easing.emphasizedDecelerate,
+        easing: easing.reveal,
       }),
     );
   }, [animate, motion, progress]);
@@ -40,8 +40,9 @@ export function useGradeReveal(motion: RevealMotion, reducedMotion: boolean) {
   }, [progress]);
 
   const style = useAnimatedStyle(() => ({
-    opacity: progress.get(),
-    transform: [{ scale: 0.92 + 0.08 * progress.get() }],
+    // v18 prototype values: never fully hidden, grows from 78%.
+    opacity: 0.2 + 0.8 * progress.get(),
+    transform: [{ scale: 0.78 + 0.22 * progress.get() }],
   }));
 
   return { style, skip };

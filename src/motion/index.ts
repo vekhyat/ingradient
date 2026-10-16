@@ -5,3 +5,5 @@ export { useReducedMotion } from './reduced-motion';
 export { RevealSession, revealSession } from './reveal';
 export type { ResultOrigin, RevealMotion } from './reveal';
 export { useGradeReveal } from './useGradeReveal';
+export { useResultReveal, useRevealSection } from './useResultReveal';
+export type { ResultReveal } from './useResultReveal';

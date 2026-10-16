@@ -89,7 +89,7 @@ export function IngredientList({
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                paddingVertical: space.s3,
+                paddingVertical: space.s2,
                 paddingLeft: item.depth * space.s4,
                 gap: space.s2,
                 backgroundColor: focused ? colors.primarySoft : undefined,
@@ -97,12 +97,19 @@ export function IngredientList({
             >
               <View style={{ flex: 1, gap: 2 }}>
                 <AppText variant="subhead">{item.printedText}</AppText>
-                <AppText variant="bodySm" color="ink2">
-                  {matchLine(item)}
-                  {item.kind.kind === 'corrected'
-                    ? ` · ${enGB.provenance.corrected}`
-                    : ''}
-                </AppText>
+                {item.match === 'ambiguous' ||
+                item.kind.kind === 'corrected' ? (
+                  <AppText variant="bodySm" color="ink2">
+                    {[
+                      item.match === 'ambiguous' ? matchLine(item) : null,
+                      item.kind.kind === 'corrected'
+                        ? enGB.provenance.corrected
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </AppText>
+                ) : null}
               </View>
               <Icon name="chevron_right" color={colors.ink2} />
             </Touchable>
