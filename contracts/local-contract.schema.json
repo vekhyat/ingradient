@@ -1,0 +1,1789 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ingradient:local-contract:0.1.0-draft",
+  "$ref": "#/$defs/LocalAssessment",
+  "$defs": {
+    "Citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "issuer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "edition": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "claimScope": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "checkedAt": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "issuer",
+        "url",
+        "edition",
+        "locator",
+        "claimScope",
+        "checkedAt"
+      ]
+    },
+    "Grade": {
+      "type": "string",
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ]
+    },
+    "HardFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requirementId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "allergy",
+            "strict"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "confirmed_conflict",
+            "possible_conflict",
+            "no_conflict_detected",
+            "insufficient_information"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "sourceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Issue"
+          }
+        }
+      },
+      "required": [
+        "requirementId",
+        "kind",
+        "state",
+        "message",
+        "sourceIds",
+        "issues"
+      ]
+    },
+    "IngredientMention": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "parentId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "canonicalId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "matched",
+            "ambiguous",
+            "unresolved"
+          ]
+        },
+        "candidateIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "maxItems": 20
+        },
+        "sourceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "minItems": 1
+        },
+        "taxonomyVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "parentId",
+        "canonicalId",
+        "state",
+        "candidateIds",
+        "sourceIds",
+        "taxonomyVersion"
+      ]
+    },
+    "Issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.]{0,79}$"
+        },
+        "stage": {
+          "type": "string",
+          "enum": [
+            "lookup",
+            "capture",
+            "extraction",
+            "matching",
+            "completeness",
+            "method",
+            "personal",
+            "storage"
+          ]
+        },
+        "field": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "retake",
+            "edit",
+            "choose_candidate",
+            "add_field",
+            "retry",
+            "read_source",
+            "none"
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "stage",
+        "message",
+        "action"
+      ]
+    },
+    "LearningEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "productKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "featureId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "sign": {
+          "type": "integer",
+          "enum": [
+            -1,
+            1
+          ]
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "not_for_me_reason",
+            "choice_reason",
+            "contrary_feature_reason"
+          ]
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "gradeWasVisible": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "productKey",
+        "featureId",
+        "sign",
+        "source",
+        "occurredAt",
+        "gradeWasVisible"
+      ],
+      "description": "LOCAL ONLY. Explicit directional reason, not scan/save/view exposure."
+    },
+    "LocalAssessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "snapshotId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "scientific": {
+          "$ref": "#/$defs/ScientificAssessment"
+        },
+        "personal": {
+          "$ref": "#/$defs/PersonalAssessment"
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Citation"
+          }
+        }
+      },
+      "required": [
+        "snapshotId",
+        "scientific",
+        "personal",
+        "citations"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "scientific": {
+                "properties": {
+                  "state": {
+                    "not": {
+                      "const": "graded"
+                    }
+                  }
+                },
+                "required": [
+                  "state"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "personal": {
+                "properties": {
+                  "state": {
+                    "not": {
+                      "enum": [
+                        "graded",
+                        "baseline_only"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "description": "LOCAL ONLY. Citation/source existence, snapshot identity, baseline equality and numeric policy caps are validated by domain code in addition to JSON Schema.",
+      "examples": [
+        {
+          "snapshotId": "fixture-1",
+          "scientific": {
+            "state": "insufficient_data",
+            "inputSnapshotId": "fixture-1",
+            "reasons": [],
+            "issues": [
+              {
+                "code": "missing_fibre",
+                "stage": "completeness",
+                "field": "fibre",
+                "message": "Fibre is not available for this calculation.",
+                "action": "add_field"
+              }
+            ]
+          },
+          "personal": {
+            "state": "not_in_slice",
+            "issues": []
+          },
+          "citations": []
+        }
+      ]
+    },
+    "LocalLearningState": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "policyVersion": {
+          "const": "personal-exp-1"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LearningEvent"
+          }
+        },
+        "suppressedFeatureIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "policyVersion",
+        "enabled",
+        "events",
+        "suppressedFeatureIds"
+      ],
+      "description": "LOCAL ONLY. Thirty-day influence window and reset semantics are policy invariants.",
+      "examples": [
+        {
+          "policyVersion": "personal-exp-1",
+          "enabled": false,
+          "events": [],
+          "suppressedFeatureIds": []
+        }
+      ]
+    },
+    "LocalProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "allergies": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "uniqueItems": true
+        },
+        "strictRequirements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "uniqueItems": true
+        },
+        "softPreferences": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "targetId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "nutrient",
+                  "ingredient",
+                  "class"
+                ]
+              },
+              "emphasis": {
+                "type": "integer",
+                "enum": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "targetId",
+              "kind",
+              "emphasis"
+            ]
+          }
+        }
+      },
+      "required": [
+        "version",
+        "allergies",
+        "strictRequirements",
+        "softPreferences"
+      ],
+      "description": "LOCAL ONLY. IDs must resolve in accepted regional/scope catalogues. No inferred allergy or strictness.",
+      "examples": [
+        {
+          "version": "fixture-profile",
+          "allergies": [],
+          "strictRequirements": [],
+          "softPreferences": []
+        }
+      ]
+    },
+    "LookupOutcome": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "const": "found"
+            },
+            "snapshot": {
+              "$ref": "#/$defs/ProductSnapshot"
+            }
+          },
+          "required": [
+            "state",
+            "snapshot"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "type": "string",
+              "enum": [
+                "invalid",
+                "absent",
+                "offline",
+                "timeout",
+                "throttled",
+                "upstream_unavailable",
+                "malformed",
+                "cancelled"
+              ]
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            },
+            "retryAfterSeconds": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "state",
+            "issues"
+          ]
+        }
+      ],
+      "description": "Local adapter result for direct OFF reads; not an Ingradient network response."
+    },
+    "MethodRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "edition": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "bundleId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "bundleSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "label": {
+          "type": "string",
+          "enum": [
+            "Nutrition grade \u00b7 European reference"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "edition",
+        "bundleId",
+        "bundleSha256",
+        "label"
+      ]
+    },
+    "NutrientObservation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "field": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "sourceIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "minItems": 1
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "g",
+                "kJ",
+                "percent"
+              ]
+            },
+            "basis": {
+              "type": "string",
+              "enum": [
+                "per_100_g",
+                "per_100_ml",
+                "per_serving"
+              ]
+            },
+            "derivation": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "maxItems": 12
+            },
+            "kind": {
+              "const": "read"
+            },
+            "value": {
+              "type": "number",
+              "minimum": 0
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "field",
+            "kind",
+            "value",
+            "unit",
+            "basis",
+            "sourceIds",
+            "issues"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "field": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "sourceIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "minItems": 1
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "g",
+                "kJ",
+                "percent"
+              ]
+            },
+            "basis": {
+              "type": "string",
+              "enum": [
+                "per_100_g",
+                "per_100_ml",
+                "per_serving"
+              ]
+            },
+            "derivation": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "maxItems": 12
+            },
+            "kind": {
+              "const": "uncertain"
+            },
+            "value": {
+              "type": "number",
+              "minimum": 0
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "field",
+            "kind",
+            "value",
+            "unit",
+            "basis",
+            "sourceIds",
+            "issues"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "field": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "sourceIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "minItems": 1
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "g",
+                "kJ",
+                "percent"
+              ]
+            },
+            "basis": {
+              "type": "string",
+              "enum": [
+                "per_100_g",
+                "per_100_ml",
+                "per_serving"
+              ]
+            },
+            "derivation": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "maxItems": 12
+            },
+            "kind": {
+              "const": "corrected"
+            },
+            "value": {
+              "type": "number",
+              "minimum": 0
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            },
+            "previousSourceIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "field",
+            "kind",
+            "value",
+            "unit",
+            "basis",
+            "sourceIds",
+            "issues",
+            "previousSourceIds"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "field": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "sourceIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "minItems": 1
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "g",
+                "kJ",
+                "percent"
+              ]
+            },
+            "basis": {
+              "type": "string",
+              "enum": [
+                "per_100_g",
+                "per_100_ml",
+                "per_serving"
+              ]
+            },
+            "derivation": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "maxItems": 12
+            },
+            "kind": {
+              "const": "estimated"
+            },
+            "value": {
+              "type": "number",
+              "minimum": 0
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            },
+            "modelId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "modelVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            }
+          },
+          "required": [
+            "field",
+            "kind",
+            "value",
+            "unit",
+            "basis",
+            "sourceIds",
+            "issues",
+            "modelId",
+            "modelVersion"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "field": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "kind": {
+              "const": "missing"
+            },
+            "reason": {
+              "type": "string",
+              "enum": [
+                "not_declared",
+                "unreadable",
+                "ambiguous",
+                "unsupported_basis",
+                "conflicting_sources",
+                "not_available"
+              ]
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "field",
+            "kind",
+            "reason",
+            "issues"
+          ]
+        }
+      ],
+      "discriminator": {
+        "propertyName": "kind"
+      },
+      "examples": [
+        {
+          "field": "sugars",
+          "kind": "read",
+          "value": 12.5,
+          "unit": "g",
+          "basis": "per_100_g",
+          "sourceIds": [
+            "label:1"
+          ],
+          "issues": []
+        },
+        {
+          "field": "fibre",
+          "kind": "missing",
+          "reason": "not_declared",
+          "issues": []
+        }
+      ]
+    },
+    "PanelRegion": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "panel": {
+          "type": "string",
+          "enum": [
+            "ingredients",
+            "nutrition"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "read",
+            "uncertain",
+            "missing",
+            "user_marked_absent"
+          ]
+        },
+        "imageId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 160
+        },
+        "regionId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 160
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 20000
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Issue"
+          }
+        }
+      },
+      "required": [
+        "panel",
+        "state",
+        "imageId",
+        "regionId",
+        "issues"
+      ]
+    },
+    "PersonalAssessment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "const": "hard_conflict"
+            },
+            "profileVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "policyVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "findings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/HardFinding"
+              },
+              "minItems": 1,
+              "contains": {
+                "type": "object",
+                "properties": {
+                  "state": {
+                    "const": "confirmed_conflict"
+                  }
+                },
+                "required": [
+                  "state"
+                ]
+              }
+            }
+          },
+          "required": [
+            "state",
+            "profileVersion",
+            "policyVersion",
+            "findings"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "const": "hard_uncertain"
+            },
+            "profileVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "policyVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "findings": {
+              "type": "array",
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/HardFinding"
+                  },
+                  {
+                    "properties": {
+                      "state": {
+                        "not": {
+                          "const": "confirmed_conflict"
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "minItems": 1,
+              "contains": {
+                "type": "object",
+                "properties": {
+                  "state": {
+                    "enum": [
+                      "possible_conflict",
+                      "insufficient_information"
+                    ]
+                  }
+                },
+                "required": [
+                  "state"
+                ]
+              }
+            }
+          },
+          "required": [
+            "state",
+            "profileVersion",
+            "policyVersion",
+            "findings"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "const": "graded"
+            },
+            "grade": {
+              "$ref": "#/$defs/Grade"
+            },
+            "profileVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "policyVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "findings": {
+              "type": "array",
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/HardFinding"
+                  },
+                  {
+                    "properties": {
+                      "state": {
+                        "const": "no_conflict_detected"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PersonalEffect"
+              }
+            },
+            "experimental": {
+              "const": true
+            }
+          },
+          "required": [
+            "state",
+            "grade",
+            "profileVersion",
+            "policyVersion",
+            "findings",
+            "effects",
+            "experimental"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "const": "baseline_only"
+            },
+            "grade": {
+              "$ref": "#/$defs/Grade"
+            },
+            "profileVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "policyVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "findings": {
+              "type": "array",
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/HardFinding"
+                  },
+                  {
+                    "properties": {
+                      "state": {
+                        "const": "no_conflict_detected"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PersonalEffect"
+              },
+              "maxItems": 0
+            },
+            "experimental": {
+              "const": true
+            }
+          },
+          "required": [
+            "state",
+            "grade",
+            "profileVersion",
+            "policyVersion",
+            "findings",
+            "effects",
+            "experimental"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "type": "string",
+              "enum": [
+                "not_in_slice",
+                "insufficient_data",
+                "policy_unavailable"
+              ]
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "state",
+            "issues"
+          ]
+        }
+      ],
+      "discriminator": {
+        "propertyName": "state"
+      },
+      "description": "LOCAL ONLY. Never sent as a request/response. Hard or unavailable outcomes have no grade property. Cross-field policy invariants require domain validation.",
+      "examples": [
+        {
+          "state": "hard_conflict",
+          "profileVersion": "fixture-profile",
+          "policyVersion": "personal-exp-1",
+          "findings": [
+            {
+              "requirementId": "peanut",
+              "kind": "allergy",
+              "state": "confirmed_conflict",
+              "message": "Illustrative declared peanut conflict.",
+              "sourceIds": [
+                "label:1"
+              ],
+              "issues": []
+            }
+          ]
+        },
+        {
+          "state": "not_in_slice",
+          "issues": []
+        }
+      ]
+    },
+    "PersonalEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preferenceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "you_set",
+            "learned"
+          ]
+        },
+        "feature": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "penalty": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "policyVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        }
+      },
+      "required": [
+        "preferenceId",
+        "source",
+        "feature",
+        "penalty",
+        "message",
+        "policyVersion"
+      ]
+    },
+    "PersonalPolicyConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": "personal-exp-1"
+        },
+        "confirmedCap": {
+          "const": 2
+        },
+        "learnedCap": {
+          "const": 0.5
+        },
+        "totalCap": {
+          "const": 2
+        },
+        "minimumProducts": {
+          "const": 5
+        },
+        "minimumDays": {
+          "const": 3
+        },
+        "minimumPositiveSupport": {
+          "const": 3
+        },
+        "supportRatio": {
+          "const": 0.8
+        },
+        "halfLifeDays": {
+          "const": 14
+        },
+        "expiryDays": {
+          "const": 30
+        },
+        "rounding": {
+          "const": "half_up_nonnegative"
+        },
+        "direction": {
+          "const": "downward_only"
+        }
+      },
+      "required": [
+        "version",
+        "confirmedCap",
+        "learnedCap",
+        "totalCap",
+        "minimumProducts",
+        "minimumDays",
+        "minimumPositiveSupport",
+        "supportRatio",
+        "halfLifeDays",
+        "expiryDays",
+        "rounding",
+        "direction"
+      ],
+      "description": "LOCAL ONLY. Proposed experimental engineering policy, not accepted or scientifically validated parameters."
+    },
+    "ProductSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "barcode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(?:[0-9]{8}|[0-9]{12,14})$"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500
+        },
+        "market": {
+          "type": "string",
+          "enum": [
+            "IN",
+            "EU",
+            "unknown"
+          ]
+        },
+        "capturedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SourceRef"
+          }
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NutrientObservation"
+          },
+          "maxItems": 100
+        },
+        "ingredients": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IngredientMention"
+          },
+          "maxItems": 300
+        },
+        "panels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PanelRegion"
+          },
+          "maxItems": 2
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "general",
+            "fats_nuts_seeds",
+            "beverage",
+            "excluded",
+            "unknown"
+          ]
+        },
+        "taxonomyVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "evidenceVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        }
+      },
+      "required": [
+        "id",
+        "barcode",
+        "name",
+        "market",
+        "capturedAt",
+        "sourceRefs",
+        "observations",
+        "ingredients",
+        "panels",
+        "category",
+        "taxonomyVersion",
+        "evidenceVersion"
+      ]
+    },
+    "ScientificAssessment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "const": "graded"
+            },
+            "grade": {
+              "$ref": "#/$defs/Grade"
+            },
+            "score": {
+              "type": "integer",
+              "minimum": -18,
+              "maximum": 55,
+              "description": "Union of route bounds: general and fats/nuts/seeds -17..55, beverage -18..54. Domain validation checks the route-specific bound."
+            },
+            "route": {
+              "type": "string",
+              "enum": [
+                "general",
+                "fats_nuts_seeds",
+                "beverage"
+              ]
+            },
+            "method": {
+              "$ref": "#/$defs/MethodRef"
+            },
+            "inputSnapshotId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "reasons": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ScientificReason"
+              },
+              "minItems": 1
+            },
+            "trace": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TraceStep"
+              },
+              "minItems": 1
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              }
+            }
+          },
+          "required": [
+            "state",
+            "grade",
+            "score",
+            "route",
+            "method",
+            "inputSnapshotId",
+            "reasons",
+            "trace",
+            "issues"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "type": "string",
+              "enum": [
+                "insufficient_data",
+                "unsupported",
+                "method_unavailable"
+              ]
+            },
+            "inputSnapshotId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "reasons": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ScientificReason"
+              }
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Issue"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "state",
+            "inputSnapshotId",
+            "reasons",
+            "issues"
+          ]
+        }
+      ],
+      "discriminator": {
+        "propertyName": "state"
+      },
+      "examples": [
+        {
+          "state": "graded",
+          "grade": "C",
+          "score": 5,
+          "route": "general",
+          "method": {
+            "id": "nutriscore-updated-2023",
+            "edition": "faq-v11-2025-03-17",
+            "bundleId": "fixture-method-1",
+            "bundleSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "label": "Nutrition grade \u00b7 European reference"
+          },
+          "inputSnapshotId": "fixture-1",
+          "reasons": [
+            {
+              "id": "fixture-reason",
+              "templateId": "fixture.reason",
+              "text": "Illustrative method reason; this fixture is not a scored product.",
+              "citationIds": [
+                "spf-faq-v11"
+              ],
+              "inputFields": [
+                "sugars"
+              ],
+              "step": "sugars-points"
+            }
+          ],
+          "trace": [
+            {
+              "component": "fixture-only",
+              "inputFields": [
+                "sugars"
+              ],
+              "points": 5,
+              "ruleLocator": "Fixture only; not an official calculation vector",
+              "citationIds": [
+                "spf-faq-v11"
+              ]
+            }
+          ],
+          "issues": []
+        },
+        {
+          "state": "insufficient_data",
+          "inputSnapshotId": "fixture-1",
+          "reasons": [],
+          "issues": [
+            {
+              "code": "missing_fibre",
+              "stage": "completeness",
+              "field": "fibre",
+              "message": "Fibre is not available for this calculation.",
+              "action": "add_field"
+            }
+          ]
+        }
+      ],
+      "description": "LOCAL ONLY. Graded example demonstrates shape, not valid method arithmetic. Zero hash is fictional fixture metadata, never an artifact checksum."
+    },
+    "ScientificReason": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "templateId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.]{0,79}$",
+          "description": "Id of a reviewed reason template in the evidence edition. The phone renders the shown sentence from its own copy of that template; it never displays server text directly."
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "citationIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "minItems": 1
+        },
+        "inputFields": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "step": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        }
+      },
+      "required": [
+        "id",
+        "templateId",
+        "text",
+        "citationIds",
+        "inputFields",
+        "step"
+      ]
+    },
+    "SourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "off",
+            "label",
+            "user_correction",
+            "model",
+            "official"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "edition": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "locator": {
+          "type": "string",
+          "maxLength": 300
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "title"
+      ]
+    },
+    "TraceStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "inputFields": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "points": {
+          "type": "integer"
+        },
+        "ruleLocator": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "citationIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "component",
+        "inputFields",
+        "points",
+        "ruleLocator",
+        "citationIds"
+      ]
+    }
+  },
+  "description": "Proposed canonical local schema projection, frozen independently from optional public wire paths. No network operation is authorised."
+}

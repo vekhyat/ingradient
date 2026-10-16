@@ -1,0 +1,2353 @@
+"""Generate canonical Nutri-Score test vectors with relative paths and updated schema."""
+import os
+import json
+import hashlib
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+repo_root = os.path.abspath(os.path.join(script_dir, "..", ".."))
+resources_dir = os.path.join(repo_root, "resources")
+method_path = os.path.join(resources_dir, "method", "nutriscore-updated-2023.json")
+target_path = os.path.join(resources_dir, "vectors", "nutriscore-vectors.json")
+
+os.makedirs(os.path.dirname(target_path), exist_ok=True)
+
+# Load method bundle hash dynamically
+with open(method_path, "rb") as f:
+    method_sha = hashlib.sha256(f.read()).hexdigest()
+
+method_ref = {
+    "id": "nutriscore-updated-2023",
+    "edition": "sc-2022-2023-updated",
+    "bundleId": "nutriscore-updated-2023",
+    "bundleSha256": method_sha,
+    "label": "Nutrition grade · European reference"
+}
+
+raw_vectors = json.loads(r'''
+[
+  {
+    "id": "vector-general-mid",
+    "acceptanceCase": "Case 5: Canonical general food vector",
+    "description": "Standard general food (lentil meal) with moderate nutrients resulting in Grade A",
+    "inputs": {
+      "category": "general",
+      "flags": {
+        "cheese": false,
+        "redMeat": false,
+        "plainWater": false,
+        "nonNutritiveSweetener": "absent"
+      },
+      "observations": [
+        {
+          "field": "energy",
+          "value": 450,
+          "unit": "kJ",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "sugars",
+          "value": 4.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "saturates",
+          "value": 0.5,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "salt",
+          "value": 0.8,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "protein",
+          "value": 6.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fibre",
+          "value": 4.5,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fvl",
+          "value": 65.0,
+          "unit": "percent",
+          "basis": "per_100_g"
+        }
+      ]
+    },
+    "expectedAssessment": {
+      "state": "graded",
+      "grade": "A",
+      "score": -1,
+      "route": "general",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "sc-2022-2023-updated",
+        "bundleId": "nutriscore-updated-2023",
+        "bundleSha256": "8a18e7f8c940075b3f7abd20e6f47f1c2828ba574d8e3c7c550fa2270235b523",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "snap-general-mid",
+      "reasons": [
+        {
+          "id": "reason-energy",
+          "templateId": "nutriscore.energy",
+          "text": "Energy of 450 kJ contributes 1 adverse point(s) out of 10.",
+          "citationIds": [
+            "sc-food-2022"
+          ],
+          "inputFields": [
+            "energy"
+          ],
+          "step": "energy-points"
+        },
+        {
+          "id": "reason-sugars",
+          "templateId": "nutriscore.sugars",
+          "text": "Total sugars of 4.0 g contribute 1 adverse point(s) under the European reference algorithm.",
+          "citationIds": [
+            "sc-food-2022"
+          ],
+          "inputFields": [
+            "sugars"
+          ],
+          "step": "sugars-points"
+        },
+        {
+          "id": "reason-saturates",
+          "templateId": "nutriscore.saturates",
+          "text": "Saturated fatty acids of 0.5 g contribute 0 adverse point(s) out of 10.",
+          "citationIds": [
+            "sc-food-2022"
+          ],
+          "inputFields": [
+            "saturates"
+          ],
+          "step": "saturates-points"
+        },
+        {
+          "id": "reason-salt",
+          "templateId": "nutriscore.salt",
+          "text": "Salt content of 0.8 g contributes 3 adverse point(s) out of 20.",
+          "citationIds": [
+            "sc-food-2022"
+          ],
+          "inputFields": [
+            "salt"
+          ],
+          "step": "salt-points"
+        },
+        {
+          "id": "reason-protein",
+          "templateId": "nutriscore.protein",
+          "text": "Protein content of 6.0 g contributes 2 favourable point(s).",
+          "citationIds": [
+            "sc-food-2022"
+          ],
+          "inputFields": [
+            "protein"
+          ],
+          "step": "protein-points"
+        },
+        {
+          "id": "reason-fibres",
+          "templateId": "nutriscore.fibres",
+          "text": "Dietary fibre content of 4.5 g contributes 2 favourable point(s) out of 5.",
+          "citationIds": [
+            "sc-food-2022"
+          ],
+          "inputFields": [
+            "fibres"
+          ],
+          "step": "fibres-points"
+        },
+        {
+          "id": "reason-fvl",
+          "templateId": "nutriscore.fvl",
+          "text": "Fruits, vegetables and legumes content of 65.0% contributes 2 favourable point(s).",
+          "citationIds": [
+            "sc-food-2022"
+          ],
+          "inputFields": [
+            "fvl"
+          ],
+          "step": "fvl-points"
+        }
+      ],
+      "trace": [
+        {
+          "component": "energy",
+          "inputFields": [
+            "energy"
+          ],
+          "points": 1,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "sugars",
+          "inputFields": [
+            "sugars"
+          ],
+          "points": 1,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "saturates",
+          "inputFields": [
+            "saturates"
+          ],
+          "points": 0,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "salt",
+          "inputFields": [
+            "salt"
+          ],
+          "points": 3,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "points_a",
+          "inputFields": [
+            "energy",
+            "sugars",
+            "saturates",
+            "salt"
+          ],
+          "points": 5,
+          "ruleLocator": "2022 Report p. 132, Section 1.3",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "protein",
+          "inputFields": [
+            "protein"
+          ],
+          "points": 2,
+          "ruleLocator": "2022 Report p. 130, Table 1.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "fibres",
+          "inputFields": [
+            "fibres"
+          ],
+          "points": 2,
+          "ruleLocator": "2022 Report p. 130, Table 1.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "fvl",
+          "inputFields": [
+            "fvl"
+          ],
+          "points": 2,
+          "ruleLocator": "2022 Report p. 130, Table 1.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "points_c",
+          "inputFields": [
+            "protein",
+            "fibres",
+            "fvl"
+          ],
+          "points": 6,
+          "ruleLocator": "2022 Report p. 132, Section 1.3",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "final_score",
+          "inputFields": [
+            "points_a",
+            "points_c"
+          ],
+          "points": -1,
+          "ruleLocator": "2022 Report p. 132 (Points A < 11 -> A - C)",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "id": "vector-general-threshold-exact",
+    "acceptanceCase": "Case 2 & 6: General food exact threshold boundary",
+    "description": "Values exactly equal to lower thresholds: operator > requires strict exceedance, so all points remain 0",
+    "inputs": {
+      "category": "general",
+      "flags": {
+        "cheese": false,
+        "redMeat": false,
+        "plainWater": false,
+        "nonNutritiveSweetener": "absent"
+      },
+      "observations": [
+        {
+          "field": "energy",
+          "value": 335,
+          "unit": "kJ",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "sugars",
+          "value": 3.4,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "saturates",
+          "value": 1.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "salt",
+          "value": 0.2,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "protein",
+          "value": 2.4,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fibre",
+          "value": 3.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fvl",
+          "value": 40.0,
+          "unit": "percent",
+          "basis": "per_100_g"
+        }
+      ]
+    },
+    "expectedAssessment": {
+      "state": "graded",
+      "grade": "A",
+      "score": 0,
+      "route": "general",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "sc-2022-2023-updated",
+        "bundleId": "nutriscore-updated-2023",
+        "bundleSha256": "8a18e7f8c940075b3f7abd20e6f47f1c2828ba574d8e3c7c550fa2270235b523",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "snap-general-exact",
+      "reasons": [
+        {
+          "id": "reason-exact-energy",
+          "templateId": "nutriscore.energy",
+          "text": "Energy of 335 kJ contributes 0 adverse point(s) out of 10.",
+          "citationIds": [
+            "sc-food-2022"
+          ],
+          "inputFields": [
+            "energy"
+          ],
+          "step": "energy-points"
+        }
+      ],
+      "trace": [
+        {
+          "component": "points_a",
+          "inputFields": [
+            "energy",
+            "sugars",
+            "saturates",
+            "salt"
+          ],
+          "points": 0,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "points_c",
+          "inputFields": [
+            "protein",
+            "fibres",
+            "fvl"
+          ],
+          "points": 0,
+          "ruleLocator": "2022 Report p. 130, Table 1.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "final_score",
+          "inputFields": [
+            "points_a",
+            "points_c"
+          ],
+          "points": 0,
+          "ruleLocator": "2022 Report p. 132, Table 1.4",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "id": "vector-general-threshold-plus",
+    "acceptanceCase": "Case 2 & 6: General food strictly above threshold",
+    "description": "Values strictly above thresholds by small epsilon: each component earns 1 point",
+    "inputs": {
+      "category": "general",
+      "flags": {
+        "cheese": false,
+        "redMeat": false,
+        "plainWater": false,
+        "nonNutritiveSweetener": "absent"
+      },
+      "observations": [
+        {
+          "field": "energy",
+          "value": 336,
+          "unit": "kJ",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "sugars",
+          "value": 3.5,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "saturates",
+          "value": 1.1,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "salt",
+          "value": 0.21,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "protein",
+          "value": 2.5,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fibre",
+          "value": 3.1,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fvl",
+          "value": 40.1,
+          "unit": "percent",
+          "basis": "per_100_g"
+        }
+      ]
+    },
+    "expectedAssessment": {
+      "state": "graded",
+      "grade": "B",
+      "score": 1,
+      "route": "general",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "sc-2022-2023-updated",
+        "bundleId": "nutriscore-updated-2023",
+        "bundleSha256": "8a18e7f8c940075b3f7abd20e6f47f1c2828ba574d8e3c7c550fa2270235b523",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "snap-general-plus",
+      "reasons": [
+        {
+          "id": "reason-plus-score",
+          "templateId": "nutriscore.salt",
+          "text": "Salt content of 0.21 g contributes 1 adverse point(s) out of 20.",
+          "citationIds": [
+            "sc-food-2022"
+          ],
+          "inputFields": [
+            "salt"
+          ],
+          "step": "salt-points"
+        }
+      ],
+      "trace": [
+        {
+          "component": "points_a",
+          "inputFields": [
+            "energy",
+            "sugars",
+            "saturates",
+            "salt"
+          ],
+          "points": 4,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "points_c",
+          "inputFields": [
+            "protein",
+            "fibres",
+            "fvl"
+          ],
+          "points": 3,
+          "ruleLocator": "2022 Report p. 130, Table 1.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "final_score",
+          "inputFields": [
+            "points_a",
+            "points_c"
+          ],
+          "points": 1,
+          "ruleLocator": "2022 Report p. 132, Table 1.4",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "id": "vector-general-protein-limit-active",
+    "acceptanceCase": "Case 2: Protein conditional rule when Points A >= 11",
+    "description": "Snack food with Points A = 21 (>= 11) where protein points (3) are NOT subtracted; only fibres (1) subtracted, resulting in Score 20 (Grade E)",
+    "inputs": {
+      "category": "general",
+      "flags": {
+        "cheese": false,
+        "redMeat": false,
+        "plainWater": false,
+        "nonNutritiveSweetener": "absent"
+      },
+      "observations": [
+        {
+          "field": "energy",
+          "value": 2100,
+          "unit": "kJ",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "sugars",
+          "value": 25.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "saturates",
+          "value": 6.5,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "salt",
+          "value": 0.5,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "protein",
+          "value": 8.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fibre",
+          "value": 3.5,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fvl",
+          "value": 0.0,
+          "unit": "percent",
+          "basis": "per_100_g"
+        }
+      ]
+    },
+    "expectedAssessment": {
+      "state": "graded",
+      "grade": "E",
+      "score": 20,
+      "route": "general",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "sc-2022-2023-updated",
+        "bundleId": "nutriscore-updated-2023",
+        "bundleSha256": "8a18e7f8c940075b3f7abd20e6f47f1c2828ba574d8e3c7c550fa2270235b523",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "snap-general-protein-limit",
+      "reasons": [
+        {
+          "id": "reason-protein-blocked",
+          "templateId": "nutriscore.protein",
+          "text": "Protein content of 8.0 g contributes 3 favourable point(s).",
+          "citationIds": [
+            "sc-food-2022"
+          ],
+          "inputFields": [
+            "protein"
+          ],
+          "step": "protein-points"
+        }
+      ],
+      "trace": [
+        {
+          "component": "energy",
+          "inputFields": [
+            "energy"
+          ],
+          "points": 6,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "sugars",
+          "inputFields": [
+            "sugars"
+          ],
+          "points": 7,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "saturates",
+          "inputFields": [
+            "saturates"
+          ],
+          "points": 6,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "salt",
+          "inputFields": [
+            "salt"
+          ],
+          "points": 2,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "points_a",
+          "inputFields": [
+            "energy",
+            "sugars",
+            "saturates",
+            "salt"
+          ],
+          "points": 21,
+          "ruleLocator": "2022 Report p. 132, Section 1.3",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "protein",
+          "inputFields": [
+            "protein"
+          ],
+          "points": 3,
+          "ruleLocator": "2022 Report p. 130, Table 1.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "fibres",
+          "inputFields": [
+            "fibres"
+          ],
+          "points": 1,
+          "ruleLocator": "2022 Report p. 130, Table 1.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "fvl",
+          "inputFields": [
+            "fvl"
+          ],
+          "points": 0,
+          "ruleLocator": "2022 Report p. 130, Table 1.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "final_score",
+          "inputFields": [
+            "points_a",
+            "fibres",
+            "fvl"
+          ],
+          "points": 20,
+          "ruleLocator": "2022 Report p. 132 (Points A >= 11 and not cheese -> A - (Fibres + FVL))",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "id": "vector-general-cheese-exception",
+    "acceptanceCase": "Case 2: Cheese exception to the protein conditional rule",
+    "description": "Cheese product with Points A = 22 (>= 11). Because product is cheese, all 7 protein points ARE subtracted: Score = 22 - 7 = 15 (Grade D). Hand-verified against Belgian calculator sheet 'Cheese' row 3.",
+    "inputs": {
+      "category": "general",
+      "flags": {
+        "cheese": true,
+        "redMeat": false,
+        "plainWater": false,
+        "nonNutritiveSweetener": "absent"
+      },
+      "observations": [
+        {
+          "field": "energy",
+          "value": 1523,
+          "unit": "kJ",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "sugars",
+          "value": 0.5,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "saturates",
+          "value": 19.8,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "salt",
+          "value": 1.8,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "protein",
+          "value": 24.1,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fibre",
+          "value": 0.1,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fvl",
+          "value": 0.0,
+          "unit": "percent",
+          "basis": "per_100_g"
+        }
+      ]
+    },
+    "expectedAssessment": {
+      "state": "graded",
+      "grade": "D",
+      "score": 15,
+      "route": "general",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "sc-2022-2023-updated",
+        "bundleId": "nutriscore-updated-2023",
+        "bundleSha256": "8a18e7f8c940075b3f7abd20e6f47f1c2828ba574d8e3c7c550fa2270235b523",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "snap-cheese-exception",
+      "reasons": [
+        {
+          "id": "reason-cheese-rule",
+          "templateId": "nutriscore.cheese_rule",
+          "text": "Cheese route: favourable points (including protein) are subtracted without the 11-point adverse limit.",
+          "citationIds": [
+            "sc-food-2022"
+          ],
+          "inputFields": [
+            "category",
+            "protein"
+          ],
+          "step": "cheese-scoring"
+        }
+      ],
+      "trace": [
+        {
+          "component": "energy",
+          "inputFields": [
+            "energy"
+          ],
+          "points": 4,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "sugars",
+          "inputFields": [
+            "sugars"
+          ],
+          "points": 0,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "saturates",
+          "inputFields": [
+            "saturates"
+          ],
+          "points": 10,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "salt",
+          "inputFields": [
+            "salt"
+          ],
+          "points": 8,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "points_a",
+          "inputFields": [
+            "energy",
+            "sugars",
+            "saturates",
+            "salt"
+          ],
+          "points": 22,
+          "ruleLocator": "2022 Report p. 132, Section 1.3",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "protein",
+          "inputFields": [
+            "protein"
+          ],
+          "points": 7,
+          "ruleLocator": "2022 Report p. 130, Table 1.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "fibres",
+          "inputFields": [
+            "fibres"
+          ],
+          "points": 0,
+          "ruleLocator": "2022 Report p. 130, Table 1.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "fvl",
+          "inputFields": [
+            "fvl"
+          ],
+          "points": 0,
+          "ruleLocator": "2022 Report p. 130, Table 1.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "points_c",
+          "inputFields": [
+            "protein",
+            "fibres",
+            "fvl"
+          ],
+          "points": 7,
+          "ruleLocator": "2022 Report p. 132, Section 1.3",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "final_score",
+          "inputFields": [
+            "points_a",
+            "points_c"
+          ],
+          "points": 15,
+          "ruleLocator": "2022 Report p. 132 (Cheese exception: A - C)",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "id": "vector-general-red-meat-cap",
+    "acceptanceCase": "Case 2: Red meat protein point cap of 2 points",
+    "description": "Raw beef tenderloin with 23.7g protein (would earn 7 points without cap). Red meat rule caps protein at 2 points: Score = 1 - 2 = -1 (Grade A). Hand-verified against Belgian calculator sheet 'Red meat' row 3.",
+    "inputs": {
+      "category": "general",
+      "flags": {
+        "cheese": false,
+        "redMeat": true,
+        "plainWater": false,
+        "nonNutritiveSweetener": "absent"
+      },
+      "observations": [
+        {
+          "field": "energy",
+          "value": 489,
+          "unit": "kJ",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "sugars",
+          "value": 0.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "saturates",
+          "value": 0.9,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "salt",
+          "value": 0.125,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "protein",
+          "value": 23.7,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fibre",
+          "value": 0.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fvl",
+          "value": 0.0,
+          "unit": "percent",
+          "basis": "per_100_g"
+        }
+      ]
+    },
+    "expectedAssessment": {
+      "state": "graded",
+      "grade": "A",
+      "score": -1,
+      "route": "general",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "sc-2022-2023-updated",
+        "bundleId": "nutriscore-updated-2023",
+        "bundleSha256": "8a18e7f8c940075b3f7abd20e6f47f1c2828ba574d8e3c7c550fa2270235b523",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "snap-red-meat-cap",
+      "reasons": [
+        {
+          "id": "reason-meat-cap",
+          "templateId": "nutriscore.protein_red_meat",
+          "text": "Protein content of 23.7 g in red meat is capped at 2 favourable point(s).",
+          "citationIds": [
+            "sc-food-2022"
+          ],
+          "inputFields": [
+            "category",
+            "protein"
+          ],
+          "step": "protein-cap"
+        }
+      ],
+      "trace": [
+        {
+          "component": "energy",
+          "inputFields": [
+            "energy"
+          ],
+          "points": 1,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "sugars",
+          "inputFields": [
+            "sugars"
+          ],
+          "points": 0,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "saturates",
+          "inputFields": [
+            "saturates"
+          ],
+          "points": 0,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "salt",
+          "inputFields": [
+            "salt"
+          ],
+          "points": 0,
+          "ruleLocator": "2022 Report p. 130, Table 1.1",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "points_a",
+          "inputFields": [
+            "energy",
+            "sugars",
+            "saturates",
+            "salt"
+          ],
+          "points": 1,
+          "ruleLocator": "2022 Report p. 132, Section 1.3",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "protein",
+          "inputFields": [
+            "protein"
+          ],
+          "points": 2,
+          "ruleLocator": "2022 Report p. 131, Section 1.2.1 (Red meat cap: 2 pts)",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "points_c",
+          "inputFields": [
+            "protein",
+            "fibres",
+            "fvl"
+          ],
+          "points": 2,
+          "ruleLocator": "2022 Report p. 132, Section 1.3",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "final_score",
+          "inputFields": [
+            "points_a",
+            "points_c"
+          ],
+          "points": -1,
+          "ruleLocator": "2022 Report p. 132 (Points A < 11 -> A - C)",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "id": "vector-fats-olive-oil",
+    "acceptanceCase": "Case 2 & 6: Fats/nuts/seeds route with ratio and FVL oils",
+    "description": "Extra virgin olive oil: energy from saturates (14g * 37 = 518 kJ -> 4 pts), saturates ratio (14/100 = 14% -> 1 pt), 100% olive oil FVL (5 pts). Points A = 5 < 7 -> Score = 5 - 5 = 0 (Grade B).",
+    "inputs": {
+      "category": "fats_nuts_seeds",
+      "flags": {
+        "cheese": false,
+        "redMeat": false,
+        "plainWater": false,
+        "nonNutritiveSweetener": "absent"
+      },
+      "observations": [
+        {
+          "field": "fat",
+          "value": 100.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "saturates",
+          "value": 14.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "sugars",
+          "value": 0.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "salt",
+          "value": 0.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "protein",
+          "value": 0.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fibre",
+          "value": 0.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fvl",
+          "value": 100.0,
+          "unit": "percent",
+          "basis": "per_100_g"
+        }
+      ]
+    },
+    "expectedAssessment": {
+      "state": "graded",
+      "grade": "B",
+      "score": 0,
+      "route": "fats_nuts_seeds",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "sc-2022-2023-updated",
+        "bundleId": "nutriscore-updated-2023",
+        "bundleSha256": "8a18e7f8c940075b3f7abd20e6f47f1c2828ba574d8e3c7c550fa2270235b523",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "snap-fats-olive-oil",
+      "reasons": [
+        {
+          "id": "reason-fats-ratio",
+          "templateId": "nutriscore.saturates_ratio",
+          "text": "Saturated fatty acids ratio to total lipids (14.0%) contributes 1 adverse point(s) out of 10.",
+          "citationIds": [
+            "sc-food-2022"
+          ],
+          "inputFields": [
+            "saturates",
+            "totalFat"
+          ],
+          "step": "saturates-ratio-points"
+        }
+      ],
+      "trace": [
+        {
+          "component": "energy_from_saturates",
+          "inputFields": [
+            "saturates"
+          ],
+          "points": 4,
+          "ruleLocator": "2022 Report p. 133, Table 2.2 (14g * 37 = 518 kJ)",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "sugars",
+          "inputFields": [
+            "sugars"
+          ],
+          "points": 0,
+          "ruleLocator": "2022 Report p. 133, Table 2.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "saturates_ratio",
+          "inputFields": [
+            "saturates",
+            "totalFat"
+          ],
+          "points": 1,
+          "ruleLocator": "2022 Report p. 133, Table 2.2 (14% < 16% -> 1 pt)",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "salt",
+          "inputFields": [
+            "salt"
+          ],
+          "points": 0,
+          "ruleLocator": "2022 Report p. 133, Table 2.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "points_a",
+          "inputFields": [
+            "energy_from_saturates",
+            "sugars",
+            "saturates_ratio",
+            "salt"
+          ],
+          "points": 5,
+          "ruleLocator": "2022 Report p. 135, Section 2.4",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "fvl",
+          "inputFields": [
+            "fvl"
+          ],
+          "points": 5,
+          "ruleLocator": "2022 Report p. 134, Section 2.3.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "points_c",
+          "inputFields": [
+            "protein",
+            "fibres",
+            "fvl"
+          ],
+          "points": 5,
+          "ruleLocator": "2022 Report p. 135, Section 2.4",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "final_score",
+          "inputFields": [
+            "points_a",
+            "points_c"
+          ],
+          "points": 0,
+          "ruleLocator": "2022 Report p. 135, Section 2.1 (Score 0 is in -5..2 -> Grade B)",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "id": "vector-fats-protein-conditional",
+    "acceptanceCase": "Case 2: Fats route protein conditional rule when Points A >= 7",
+    "description": "Nut spread with Points A = 10 (>= 7). Protein points (7) are NOT subtracted; only fibres (4) are subtracted. Score = 10 - 4 = 6 (Grade C).",
+    "inputs": {
+      "category": "fats_nuts_seeds",
+      "flags": {
+        "cheese": false,
+        "redMeat": false,
+        "plainWater": false,
+        "nonNutritiveSweetener": "absent"
+      },
+      "observations": [
+        {
+          "field": "fat",
+          "value": 50.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "saturates",
+          "value": 10.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "sugars",
+          "value": 12.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "salt",
+          "value": 0.5,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "protein",
+          "value": 25.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fibre",
+          "value": 6.5,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fvl",
+          "value": 0.0,
+          "unit": "percent",
+          "basis": "per_100_g"
+        }
+      ]
+    },
+    "expectedAssessment": {
+      "state": "graded",
+      "grade": "C",
+      "score": 6,
+      "route": "fats_nuts_seeds",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "sc-2022-2023-updated",
+        "bundleId": "nutriscore-updated-2023",
+        "bundleSha256": "8a18e7f8c940075b3f7abd20e6f47f1c2828ba574d8e3c7c550fa2270235b523",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "snap-fats-protein-conditional",
+      "reasons": [
+        {
+          "id": "reason-fats-protein-block",
+          "templateId": "nutriscore.protein",
+          "text": "Protein content of 25.0 g contributes 7 favourable point(s).",
+          "citationIds": [
+            "sc-food-2022"
+          ],
+          "inputFields": [
+            "protein"
+          ],
+          "step": "protein-points"
+        }
+      ],
+      "trace": [
+        {
+          "component": "energy_from_saturates",
+          "inputFields": [
+            "saturates"
+          ],
+          "points": 3,
+          "ruleLocator": "2022 Report p. 133, Table 2.2 (10g * 37 = 370 kJ)",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "sugars",
+          "inputFields": [
+            "sugars"
+          ],
+          "points": 3,
+          "ruleLocator": "2022 Report p. 133, Table 2.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "saturates_ratio",
+          "inputFields": [
+            "saturates",
+            "totalFat"
+          ],
+          "points": 2,
+          "ruleLocator": "2022 Report p. 133, Table 2.2 (20% < 22% -> 2 pts)",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "salt",
+          "inputFields": [
+            "salt"
+          ],
+          "points": 2,
+          "ruleLocator": "2022 Report p. 133, Table 2.2",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "points_a",
+          "inputFields": [
+            "energy_from_saturates",
+            "sugars",
+            "saturates_ratio",
+            "salt"
+          ],
+          "points": 10,
+          "ruleLocator": "2022 Report p. 135, Section 2.4",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "fibres",
+          "inputFields": [
+            "fibres"
+          ],
+          "points": 4,
+          "ruleLocator": "2022 Report p. 134, Table 2.3",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "protein",
+          "inputFields": [
+            "protein"
+          ],
+          "points": 7,
+          "ruleLocator": "2022 Report p. 134, Table 2.3",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        },
+        {
+          "component": "final_score",
+          "inputFields": [
+            "points_a",
+            "fibres",
+            "fvl"
+          ],
+          "points": 6,
+          "ruleLocator": "2022 Report p. 135, Section 2.4 (Points A >= 7 -> A - (Fibres + FVL))",
+          "citationIds": [
+            "sc-food-2022"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "id": "vector-beverage-water",
+    "acceptanceCase": "Case 6: Beverage water special rule",
+    "description": "Supported plain water is classified as Grade A automatically without calculation.",
+    "inputs": {
+      "category": "beverage",
+      "flags": {
+        "cheese": false,
+        "redMeat": false,
+        "plainWater": true,
+        "nonNutritiveSweetener": "absent"
+      },
+      "observations": []
+    },
+    "expectedAssessment": {
+      "state": "graded",
+      "grade": "A",
+      "score": 0,
+      "route": "beverage",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "sc-2022-2023-updated",
+        "bundleId": "nutriscore-updated-2023",
+        "bundleSha256": "8a18e7f8c940075b3f7abd20e6f47f1c2828ba574d8e3c7c550fa2270235b523",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "snap-beverage-water",
+      "reasons": [
+        {
+          "id": "reason-water",
+          "templateId": "nutriscore.energy",
+          "text": "Water is classified as Grade A automatically under the European reference algorithm.",
+          "citationIds": [
+            "sc-beverage-2023"
+          ],
+          "inputFields": [
+            "category"
+          ],
+          "step": "water-rule"
+        }
+      ],
+      "trace": [
+        {
+          "component": "water_classification",
+          "inputFields": [
+            "category"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 75, Section 1.4 & Table 'Final Nutri-Score thresholds'",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "id": "vector-beverage-extreme-favourable",
+    "acceptanceCase": "Case 6: Extreme beverage vector with 0 adverse points, max favourable points (-18 score floor)",
+    "description": "Beverage with Points A = 0 and maximum favourable Points C = 18 (Protein 7, Fibres 5, FVL 6). Score = 0 - 18 = -18 (Grade B). Note that water is Grade A, while non-water beverages with Score <= 2 receive Grade B.",
+    "inputs": {
+      "category": "beverage",
+      "flags": {
+        "cheese": false,
+        "redMeat": false,
+        "plainWater": false,
+        "nonNutritiveSweetener": "absent"
+      },
+      "observations": [
+        {
+          "field": "energy",
+          "value": 25,
+          "unit": "kJ",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "sugars",
+          "value": 0.4,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "saturates",
+          "value": 0.5,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "salt",
+          "value": 0.1,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "protein",
+          "value": 3.5,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "fibre",
+          "value": 7.8,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "fvl",
+          "value": 85.0,
+          "unit": "percent",
+          "basis": "per_100_ml"
+        }
+      ]
+    },
+    "expectedAssessment": {
+      "state": "graded",
+      "grade": "B",
+      "score": -18,
+      "route": "beverage",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "sc-2022-2023-updated",
+        "bundleId": "nutriscore-updated-2023",
+        "bundleSha256": "8a18e7f8c940075b3f7abd20e6f47f1c2828ba574d8e3c7c550fa2270235b523",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "snap-beverage-extreme",
+      "reasons": [
+        {
+          "id": "reason-bev-protein",
+          "templateId": "nutriscore.protein",
+          "text": "Protein content of 3.5 g contributes 7 favourable point(s).",
+          "citationIds": [
+            "sc-beverage-2023"
+          ],
+          "inputFields": [
+            "protein"
+          ],
+          "step": "protein-points"
+        },
+        {
+          "id": "reason-bev-fibres",
+          "templateId": "nutriscore.fibres",
+          "text": "Dietary fibre content of 7.8 g contributes 5 favourable point(s) out of 5.",
+          "citationIds": [
+            "sc-beverage-2023"
+          ],
+          "inputFields": [
+            "fibres"
+          ],
+          "step": "fibres-points"
+        },
+        {
+          "id": "reason-bev-fvl",
+          "templateId": "nutriscore.fvl",
+          "text": "Fruits, vegetables and legumes content of 85.0% contributes 6 favourable point(s).",
+          "citationIds": [
+            "sc-beverage-2023"
+          ],
+          "inputFields": [
+            "fvl"
+          ],
+          "step": "fvl-points"
+        }
+      ],
+      "trace": [
+        {
+          "component": "energy",
+          "inputFields": [
+            "energy"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 73, Table 1.1 (<= 30 kJ -> 0)",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "sugars",
+          "inputFields": [
+            "sugars"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 73, Table 1.1 (<= 0.5 g -> 0)",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "saturates",
+          "inputFields": [
+            "saturates"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 73, Table 1.1 (<= 1.0 g -> 0)",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "salt",
+          "inputFields": [
+            "salt"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 73, Table 1.1 (<= 0.2 g -> 0)",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "sweeteners",
+          "inputFields": [
+            "hasNonNutritiveSweetener"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 73, Table 1.1 (Absence -> 0)",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "points_a",
+          "inputFields": [
+            "energy",
+            "sugars",
+            "saturates",
+            "salt",
+            "sweeteners"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 74, Section 1.3",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "protein",
+          "inputFields": [
+            "protein"
+          ],
+          "points": 7,
+          "ruleLocator": "2023 Report p. 73, Table 1.2 (> 3.0 g -> 7 pts)",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "fibres",
+          "inputFields": [
+            "fibres"
+          ],
+          "points": 5,
+          "ruleLocator": "2023 Report p. 73, Table 1.2 (> 7.4 g -> 5 pts)",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "fvl",
+          "inputFields": [
+            "fvl"
+          ],
+          "points": 6,
+          "ruleLocator": "2023 Report p. 73, Table 1.2 (> 80% -> 6 pts)",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "points_c",
+          "inputFields": [
+            "protein",
+            "fibres",
+            "fvl"
+          ],
+          "points": 18,
+          "ruleLocator": "2023 Report p. 74, Section 1.3",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "final_score",
+          "inputFields": [
+            "points_a",
+            "points_c"
+          ],
+          "points": -18,
+          "ruleLocator": "2023 Report p. 74, Section 1.3 (Score = Points A - Points C: 0 - 18 = -18)",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "id": "vector-beverage-sweetener",
+    "acceptanceCase": "Case 2: Beverage non-nutritive sweetener +4 adverse points",
+    "description": "Diet soft drink with zero sugar and energy, containing aspartame: +4 adverse points for sweetener. Score = 4 - 0 = 4 (Grade C).",
+    "inputs": {
+      "category": "beverage",
+      "flags": {
+        "cheese": false,
+        "redMeat": false,
+        "plainWater": false,
+        "nonNutritiveSweetener": "present"
+      },
+      "observations": [
+        {
+          "field": "energy",
+          "value": 5,
+          "unit": "kJ",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "sugars",
+          "value": 0.0,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "saturates",
+          "value": 0.0,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "salt",
+          "value": 0.05,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "protein",
+          "value": 0.0,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "fibre",
+          "value": 0.0,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "fvl",
+          "value": 0.0,
+          "unit": "percent",
+          "basis": "per_100_ml"
+        }
+      ]
+    },
+    "expectedAssessment": {
+      "state": "graded",
+      "grade": "C",
+      "score": 4,
+      "route": "beverage",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "sc-2022-2023-updated",
+        "bundleId": "nutriscore-updated-2023",
+        "bundleSha256": "8a18e7f8c940075b3f7abd20e6f47f1c2828ba574d8e3c7c550fa2270235b523",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "snap-beverage-sweetener",
+      "reasons": [
+        {
+          "id": "reason-sweetener",
+          "templateId": "nutriscore.sweetener",
+          "text": "Presence of authorized non-nutritive sweetener adds 4 adverse points in the beverage calculation route.",
+          "citationIds": [
+            "sc-beverage-2023"
+          ],
+          "inputFields": [
+            "hasNonNutritiveSweetener"
+          ],
+          "step": "sweetener-points"
+        }
+      ],
+      "trace": [
+        {
+          "component": "energy",
+          "inputFields": [
+            "energy"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 73, Table 1.1",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "sugars",
+          "inputFields": [
+            "sugars"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 73, Table 1.1",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "saturates",
+          "inputFields": [
+            "saturates"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 73, Table 1.1",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "salt",
+          "inputFields": [
+            "salt"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 73, Table 1.1",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "sweeteners",
+          "inputFields": [
+            "hasNonNutritiveSweetener"
+          ],
+          "points": 4,
+          "ruleLocator": "2023 Report p. 73, Table 1.1 (Presence -> 4)",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "points_a",
+          "inputFields": [
+            "energy",
+            "sugars",
+            "saturates",
+            "salt",
+            "sweeteners"
+          ],
+          "points": 4,
+          "ruleLocator": "2023 Report p. 74, Section 1.3",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "points_c",
+          "inputFields": [
+            "protein",
+            "fibres",
+            "fvl"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 74, Section 1.3",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "final_score",
+          "inputFields": [
+            "points_a",
+            "points_c"
+          ],
+          "points": 4,
+          "ruleLocator": "2023 Report p. 75, Table 'Final Nutri-Score thresholds' (Score 4 is in 3..6 -> Grade C)",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "id": "vector-beverage-threshold-exact",
+    "acceptanceCase": "Case 2 & 6: Beverage exact threshold boundary",
+    "description": "Values exactly at thresholds: energy = 30 kJ (<= 30 -> 0), sugars = 0.5g (<= 0.5 -> 0), saturates = 1.0g (<= 1.0 -> 0), salt = 0.2g (<= 0.2 -> 0). Score = 0 (Grade B).",
+    "inputs": {
+      "category": "beverage",
+      "flags": {
+        "cheese": false,
+        "redMeat": false,
+        "plainWater": false,
+        "nonNutritiveSweetener": "absent"
+      },
+      "observations": [
+        {
+          "field": "energy",
+          "value": 30,
+          "unit": "kJ",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "sugars",
+          "value": 0.5,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "saturates",
+          "value": 1.0,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "salt",
+          "value": 0.2,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "protein",
+          "value": 1.2,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "fibre",
+          "value": 3.0,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "fvl",
+          "value": 40.0,
+          "unit": "percent",
+          "basis": "per_100_ml"
+        }
+      ]
+    },
+    "expectedAssessment": {
+      "state": "graded",
+      "grade": "B",
+      "score": 0,
+      "route": "beverage",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "sc-2022-2023-updated",
+        "bundleId": "nutriscore-updated-2023",
+        "bundleSha256": "8a18e7f8c940075b3f7abd20e6f47f1c2828ba574d8e3c7c550fa2270235b523",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "snap-beverage-exact",
+      "reasons": [
+        {
+          "id": "reason-bev-exact",
+          "templateId": "nutriscore.energy",
+          "text": "Energy of 30 kJ contributes 0 adverse point(s) out of 10.",
+          "citationIds": [
+            "sc-beverage-2023"
+          ],
+          "inputFields": [
+            "energy"
+          ],
+          "step": "energy-points"
+        }
+      ],
+      "trace": [
+        {
+          "component": "points_a",
+          "inputFields": [
+            "energy",
+            "sugars",
+            "saturates",
+            "salt",
+            "sweeteners"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 73, Table 1.1",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "points_c",
+          "inputFields": [
+            "protein",
+            "fibres",
+            "fvl"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 73, Table 1.2",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        },
+        {
+          "component": "final_score",
+          "inputFields": [
+            "points_a",
+            "points_c"
+          ],
+          "points": 0,
+          "ruleLocator": "2023 Report p. 75, Table 'Final Nutri-Score thresholds' (Score 0 is <= 2 -> Grade B)",
+          "citationIds": [
+            "sc-beverage-2023"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "id": "vector-gap-missing-fibre",
+    "acceptanceCase": "Case 3: Missing required field yields insufficient_data abstention",
+    "description": "General food product missing mandatory fibre declaration: scoring engine must withhold grade and report missing_fibre issue",
+    "inputs": {
+      "category": "general",
+      "flags": {
+        "cheese": false,
+        "redMeat": false,
+        "plainWater": false,
+        "nonNutritiveSweetener": "absent"
+      },
+      "observations": [
+        {
+          "field": "energy",
+          "value": 500,
+          "unit": "kJ",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "sugars",
+          "value": 5.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "saturates",
+          "value": 1.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "salt",
+          "value": 0.3,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "protein",
+          "value": 4.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fvl",
+          "value": 0.0,
+          "unit": "percent",
+          "basis": "per_100_g"
+        }
+      ]
+    },
+    "expectedAssessment": {
+      "state": "insufficient_data",
+      "inputSnapshotId": "snap-missing-fibre",
+      "reasons": [],
+      "issues": [
+        {
+          "code": "missing_fibre",
+          "stage": "completeness",
+          "field": "fibre",
+          "message": "Fibre is not available for this calculation.",
+          "action": "add_field"
+        }
+      ]
+    }
+  },
+  {
+    "id": "vector-gap-unknown-category",
+    "acceptanceCase": "Case 3: Unknown/unsupported category yields insufficient_data abstention",
+    "description": "Product category cannot be determined or routed into supported categories: engine must not silently apply general food rules",
+    "inputs": {
+      "category": "unknown",
+      "flags": {
+        "cheese": false,
+        "redMeat": false,
+        "plainWater": false,
+        "nonNutritiveSweetener": "absent"
+      },
+      "observations": [
+        {
+          "field": "energy",
+          "value": 500,
+          "unit": "kJ",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "sugars",
+          "value": 5.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "saturates",
+          "value": 1.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "salt",
+          "value": 0.3,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "protein",
+          "value": 4.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fibre",
+          "value": 2.0,
+          "unit": "g",
+          "basis": "per_100_g"
+        },
+        {
+          "field": "fvl",
+          "value": 0.0,
+          "unit": "percent",
+          "basis": "per_100_g"
+        }
+      ]
+    },
+    "expectedAssessment": {
+      "state": "insufficient_data",
+      "inputSnapshotId": "snap-unknown-category",
+      "reasons": [],
+      "issues": [
+        {
+          "code": "unsupported_category",
+          "stage": "method",
+          "field": "category",
+          "message": "Product category is not supported for Nutri-Score calculation.",
+          "action": "read_source"
+        }
+      ]
+    }
+  },
+  {
+    "id": "vector-beverage-sweetener-unknown",
+    "acceptanceCase": "Case 3 & 6: Beverage with unknown sweetener presence yields insufficient_data abstention",
+    "description": "Beverage whose sweetener presence is unknown (“unknown presence is not absence”, 05-scoring.md): scoring engine must withhold grade and report sweetener_presence_unknown issue",
+    "inputs": {
+      "category": "beverage",
+      "flags": {
+        "cheese": false,
+        "redMeat": false,
+        "plainWater": false,
+        "nonNutritiveSweetener": "unknown"
+      },
+      "observations": [
+        {
+          "field": "energy",
+          "value": 120,
+          "unit": "kJ",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "sugars",
+          "value": 2.5,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "saturates",
+          "value": 0.0,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "salt",
+          "value": 0.05,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "protein",
+          "value": 0.5,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "fibre",
+          "value": 0.0,
+          "unit": "g",
+          "basis": "per_100_ml"
+        },
+        {
+          "field": "fvl",
+          "value": 0.0,
+          "unit": "percent",
+          "basis": "per_100_ml"
+        }
+      ]
+    },
+    "expectedAssessment": {
+      "state": "insufficient_data",
+      "inputSnapshotId": "snap-beverage-sweetener-unknown",
+      "reasons": [],
+      "issues": [
+        {
+          "code": "sweetener_presence_unknown",
+          "stage": "completeness",
+          "field": "nonNutritiveSweetener",
+          "message": "Sweetener presence is unknown; cannot determine beverage adverse points under updated 2023 algorithm.",
+          "action": "add_field"
+        }
+      ]
+    }
+  }
+]''')
+
+# Update methodRef in any graded vectors
+for v in raw_vectors:
+    if v.get("expectedAssessment", {}).get("state") == "graded":
+        v["expectedAssessment"]["method"] = method_ref
+
+bundle = {
+    "schemaVersion": 1,
+    "bundleId": "nutriscore-canonical-vectors",
+    "methodRef": method_ref,
+    "description": "Hand-derived canonical test vectors for updated Nutri-Score scoring engines (TypeScript and Python). Covers all acceptance cases, boundaries, route exceptions, and abstentions.",
+    "vectors": raw_vectors
+}
+
+content = json.dumps(bundle, indent=2, ensure_ascii=False) + "\n"
+raw_bytes = content.encode("utf-8")
+with open(target_path, "wb") as f:
+    f.write(raw_bytes)
+
+print(f"Generated {target_path} ({len(raw_bytes)} bytes, SHA-256: {hashlib.sha256(raw_bytes).hexdigest()})")

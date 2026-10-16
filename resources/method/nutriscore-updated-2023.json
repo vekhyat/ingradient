@@ -1,0 +1,1092 @@
+{
+  "id": "nutriscore-updated-2023",
+  "name": "Nutri-Score Updated Algorithm (2023)",
+  "edition": "sc-2022-2023-updated",
+  "label": "Nutrition grade · European reference",
+  "schemaVersion": 1,
+  "description": "Machine-readable definition of the official updated Nutri-Score algorithm endorsed by the Transnational Governance (Belgium, France, Germany, Luxembourg, Netherlands, Spain, Switzerland). Encodes general foods, fats/nuts/seeds, and beverages rules.",
+  "citations": [
+    {
+      "id": "sc-food-2022",
+      "title": "Update of the Nutri-Score algorithm: Update of the algorithm for general foods - Report from the Scientific Committee of the Nutri-Score",
+      "issuer": "Scientific Committee of the Nutri-Score",
+      "url": "https://mpc.gouvernement.lu/dam-assets/le-minist%C3%A8re/consodur/2022-main-algorithm-report-update-final.pdf",
+      "edition": "2022-06-29",
+      "locator": "pp. 129-135 (Algorithm modifications - recap)",
+      "claimScope": "Component thresholds and scoring rules for general foods and fats/oils/nuts/seeds",
+      "checkedAt": "2026-10-15"
+    },
+    {
+      "id": "sc-beverage-2023",
+      "title": "Update of the Nutri-Score algorithm for beverages - Report from the Scientific Committee of the Nutri-Score (V2)",
+      "issuer": "Scientific Committee of the Nutri-Score",
+      "url": "https://edepot.wur.nl/629571",
+      "edition": "2023-02-01",
+      "locator": "pp. 72-76 (Recap of the update algorithm for beverages) and Table 2 p. 27 (Authorized NNS)",
+      "claimScope": "Component thresholds, scoring rules, score bounds (-18..54) and sweetener rules for beverages",
+      "checkedAt": "2026-10-15"
+    },
+    {
+      "id": "fps-public-health-tool-2025",
+      "title": "Nutri-Score calculation tool for the updated algorithm (va_nutri-score_calculation_tool_updated_algorithm.xlsx)",
+      "issuer": "Federal Public Service (FPS) Public Health, Food Chain Safety and Environment (Belgium) / Transnational Governance",
+      "url": "https://www.health.belgium.be/sites/default/files/media/files/2025-10/va_nutri-score_calculation_tool_updated_algorithm.xlsx",
+      "edition": "2025-10",
+      "locator": "Worksheets: General foods, Fats oils nuts and seeds, Beverages, Cheese, Red meat, Scenario, Non-nutritive sweeteners",
+      "claimScope": "Official transnational spreadsheet implementation of scoring formulas, boundary conditions and letter mappings",
+      "checkedAt": "2026-10-15"
+    }
+  ],
+  "routes": {
+    "general": {
+      "adverseComponents": {
+        "energy": {
+          "basis": "per_100_g",
+          "unit": "kJ",
+          "thresholds": [
+            335,
+            670,
+            1005,
+            1340,
+            1675,
+            2010,
+            2345,
+            2680,
+            3015,
+            3350
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "ruleLocator": "2022 Report p. 130, Table 1.1; Calculator Sheet 'General foods' col K"
+        },
+        "sugars": {
+          "basis": "per_100_g",
+          "unit": "g",
+          "thresholds": [
+            3.4,
+            6.8,
+            10.0,
+            14.0,
+            17.0,
+            20.0,
+            24.0,
+            27.0,
+            31.0,
+            34.0,
+            37.0,
+            41.0,
+            44.0,
+            48.0,
+            51.0
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "ruleLocator": "2022 Report p. 130, Table 1.1; Calculator Sheet 'General foods' col AA"
+        },
+        "saturates": {
+          "basis": "per_100_g",
+          "unit": "g",
+          "thresholds": [
+            1.0,
+            2.0,
+            3.0,
+            4.0,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+            9.0,
+            10.0
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "ruleLocator": "2022 Report p. 130, Table 1.1; Calculator Sheet 'General foods' col M"
+        },
+        "salt": {
+          "basis": "per_100_g",
+          "unit": "g",
+          "thresholds": [
+            0.2,
+            0.4,
+            0.6,
+            0.8,
+            1.0,
+            1.2,
+            1.4,
+            1.6,
+            1.8,
+            2.0,
+            2.2,
+            2.4,
+            2.6,
+            2.8,
+            3.0,
+            3.2,
+            3.4,
+            3.6,
+            3.8,
+            4.0
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ],
+          "ruleLocator": "2022 Report p. 130, Table 1.1; Calculator Sheet 'General foods' col Z"
+        }
+      },
+      "favourableComponents": {
+        "protein": {
+          "basis": "per_100_g",
+          "unit": "g",
+          "thresholds": [
+            2.4,
+            4.8,
+            7.2,
+            9.6,
+            12.0,
+            14.0,
+            17.0
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "exceptions": {
+            "red_meat": {
+              "maxPoints": 2,
+              "ruleLocator": "2022 Report p. 131, Section 1.2.1; Calculator Sheet 'Red meat' col W"
+            }
+          },
+          "ruleLocator": "2022 Report p. 130, Table 1.2; Calculator Sheet 'General foods' col Y"
+        },
+        "fibres": {
+          "basis": "per_100_g",
+          "unit": "g",
+          "thresholds": [
+            3.0,
+            4.1,
+            5.2,
+            6.3,
+            7.4
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "ruleLocator": "2022 Report p. 130, Table 1.2; Calculator Sheet 'General foods' col X"
+        },
+        "fvl": {
+          "basis": "per_100_g",
+          "unit": "percent",
+          "thresholds": [
+            40.0,
+            60.0,
+            80.0
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            5
+          ],
+          "ruleLocator": "2022 Report p. 130, Table 1.2; Calculator Sheet 'General foods' col W"
+        }
+      },
+      "scoring": {
+        "adverseSumMax": 55,
+        "favourableSumMax": 17,
+        "conditionalProteinRule": {
+          "thresholdA": 11,
+          "condition": "If Points A < 11 or category == 'cheese', Score = Points A - Points C. If Points A >= 11 and category != 'cheese', Score = Points A - (Points Fibres + Points FVL).",
+          "ruleLocator": "2022 Report p. 132, Section 1.3; Calculator Sheet 'General foods' col AD; Calculator Sheet 'Cheese' col AB"
+        },
+        "scoreBounds": {
+          "min": -17,
+          "max": 55
+        },
+        "letterMapping": [
+          {
+            "maxScore": 0,
+            "letter": "A",
+            "color": "dark_green"
+          },
+          {
+            "minScore": 1,
+            "maxScore": 2,
+            "letter": "B",
+            "color": "light_green"
+          },
+          {
+            "minScore": 3,
+            "maxScore": 10,
+            "letter": "C",
+            "color": "yellow"
+          },
+          {
+            "minScore": 11,
+            "maxScore": 18,
+            "letter": "D",
+            "color": "light_orange"
+          },
+          {
+            "minScore": 19,
+            "letter": "E",
+            "color": "dark_orange"
+          }
+        ],
+        "ruleLocator": "2022 Report p. 132, Table 1.4; Calculator Sheet 'General foods' col AE"
+      }
+    },
+    "fats_nuts_seeds": {
+      "adverseComponents": {
+        "energy": {
+          "basis": "per_100_g",
+          "unit": "kJ",
+          "calculation": "saturates_g * 37",
+          "thresholds": [
+            120,
+            240,
+            360,
+            480,
+            600,
+            720,
+            840,
+            960,
+            1080,
+            1200
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "ruleLocator": "2022 Report p. 133, Table 2.2; Calculator Sheet 'Fats, oils, nuts and seeds' col AE"
+        },
+        "sugars": {
+          "basis": "per_100_g",
+          "unit": "g",
+          "thresholds": [
+            3.4,
+            6.8,
+            10.0,
+            14.0,
+            17.0,
+            20.0,
+            24.0,
+            27.0,
+            31.0,
+            34.0,
+            37.0,
+            41.0,
+            44.0,
+            48.0,
+            51.0
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "ruleLocator": "2022 Report p. 133, Table 2.2; Calculator Sheet 'Fats, oils, nuts and seeds' col AD"
+        },
+        "saturates": {
+          "basis": "per_100_g",
+          "unit": "percent",
+          "calculation": "(saturates_g / total_fat_g) * 100",
+          "thresholds": [
+            10.0,
+            16.0,
+            22.0,
+            28.0,
+            34.0,
+            40.0,
+            46.0,
+            52.0,
+            58.0,
+            64.0
+          ],
+          "operator": ">=",
+          "operatorDescription": "Ratio < 10% gives 0 pts, then each threshold met or exceeded gives 1..10 pts (>= 64% gives 10 pts)",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "ruleLocator": "2022 Report p. 133, Table 2.2; Calculator Sheet 'Fats, oils, nuts and seeds' col Z"
+        },
+        "salt": {
+          "basis": "per_100_g",
+          "unit": "g",
+          "thresholds": [
+            0.2,
+            0.4,
+            0.6,
+            0.8,
+            1.0,
+            1.2,
+            1.4,
+            1.6,
+            1.8,
+            2.0,
+            2.2,
+            2.4,
+            2.6,
+            2.8,
+            3.0,
+            3.2,
+            3.4,
+            3.6,
+            3.8,
+            4.0
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ],
+          "ruleLocator": "2022 Report p. 133, Table 2.2; Calculator Sheet 'Fats, oils, nuts and seeds' col AC"
+        }
+      },
+      "favourableComponents": {
+        "protein": {
+          "basis": "per_100_g",
+          "unit": "g",
+          "thresholds": [
+            2.4,
+            4.8,
+            7.2,
+            9.6,
+            12.0,
+            14.0,
+            17.0
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "ruleLocator": "2022 Report p. 134, Table 2.3; Calculator Sheet 'Fats, oils, nuts and seeds' col AB"
+        },
+        "fibres": {
+          "basis": "per_100_g",
+          "unit": "g",
+          "thresholds": [
+            3.0,
+            4.1,
+            5.2,
+            6.3,
+            7.4
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "ruleLocator": "2022 Report p. 134, Table 2.3; Calculator Sheet 'Fats, oils, nuts and seeds' col AA"
+        },
+        "fvl": {
+          "basis": "per_100_g",
+          "unit": "percent",
+          "description": "Includes fruits, vegetables, legumes and oils derived from these ingredients (e.g., olive, avocado, rapeseed, walnut oils)",
+          "thresholds": [
+            40.0,
+            60.0,
+            80.0
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            5
+          ],
+          "ruleLocator": "2022 Report p. 134, Section 2.3.2; Calculator Sheet 'Fats, oils, nuts and seeds' col AF"
+        }
+      },
+      "scoring": {
+        "adverseSumMax": 55,
+        "favourableSumMax": 17,
+        "conditionalProteinRule": {
+          "thresholdA": 7,
+          "condition": "If Points A < 7, Score = Points A - Points C. If Points A >= 7, Score = Points A - (Points Fibres + Points FVL).",
+          "ruleLocator": "2022 Report p. 135, Section 2.4; Calculator Sheet 'Fats, oils, nuts and seeds' col AI"
+        },
+        "scoreBounds": {
+          "min": -17,
+          "max": 55
+        },
+        "letterMapping": [
+          {
+            "maxScore": -6,
+            "letter": "A",
+            "color": "dark_green"
+          },
+          {
+            "minScore": -5,
+            "maxScore": 2,
+            "letter": "B",
+            "color": "light_green"
+          },
+          {
+            "minScore": 3,
+            "maxScore": 10,
+            "letter": "C",
+            "color": "yellow"
+          },
+          {
+            "minScore": 11,
+            "maxScore": 18,
+            "letter": "D",
+            "color": "light_orange"
+          },
+          {
+            "minScore": 19,
+            "letter": "E",
+            "color": "dark_orange"
+          }
+        ],
+        "ruleLocator": "2022 Report p. 135, Section 2.1 (Table); Calculator Sheet 'Fats, oils, nuts and seeds' col AJ"
+      }
+    },
+    "beverage": {
+      "adverseComponents": {
+        "energy": {
+          "basis": "per_100_ml",
+          "unit": "kJ",
+          "thresholds": [
+            30,
+            90,
+            150,
+            210,
+            240,
+            270,
+            300,
+            330,
+            360,
+            390
+          ],
+          "operator": "<=",
+          "operatorDescription": "<= 30 -> 0; <= 90 -> 1; <= 150 -> 2; ...; <= 390 -> 9; > 390 -> 10",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "ruleLocator": "2023 Report p. 73, Table 1.1; Calculator Sheet 'Beverages' col AB"
+        },
+        "sugars": {
+          "basis": "per_100_ml",
+          "unit": "g",
+          "thresholds": [
+            0.5,
+            2.0,
+            3.5,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+            9.0,
+            10.0,
+            11.0
+          ],
+          "operator": "<=",
+          "operatorDescription": "<= 0.5 -> 0; <= 2.0 -> 1; <= 3.5 -> 2; ...; <= 11.0 -> 9; > 11.0 -> 10",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "ruleLocator": "2023 Report p. 73, Table 1.1; Calculator Sheet 'Beverages' col AD"
+        },
+        "saturates": {
+          "basis": "per_100_ml",
+          "unit": "g",
+          "thresholds": [
+            1.0,
+            2.0,
+            3.0,
+            4.0,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+            9.0,
+            10.0
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "ruleLocator": "2023 Report p. 73, Table 1.1; Calculator Sheet 'Beverages' col O"
+        },
+        "salt": {
+          "basis": "per_100_ml",
+          "unit": "g",
+          "thresholds": [
+            0.2,
+            0.4,
+            0.6,
+            0.8,
+            1.0,
+            1.2,
+            1.4,
+            1.6,
+            1.8,
+            2.0,
+            2.2,
+            2.4,
+            2.6,
+            2.8,
+            3.0,
+            3.2,
+            3.4,
+            3.6,
+            3.8,
+            4.0
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ],
+          "ruleLocator": "2023 Report p. 73, Table 1.1; Calculator Sheet 'Beverages' col AC"
+        },
+        "sweeteners": {
+          "basis": "presence_or_absence",
+          "pointsIfPresent": 4,
+          "pointsIfAbsent": 0,
+          "ruleLocator": "2023 Report p. 73, Table 1.1; Calculator Sheet 'Beverages' col AE"
+        }
+      },
+      "favourableComponents": {
+        "protein": {
+          "basis": "per_100_ml",
+          "unit": "g",
+          "thresholds": [
+            1.2,
+            1.5,
+            1.8,
+            2.1,
+            2.4,
+            2.7,
+            3.0
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "ruleLocator": "2023 Report p. 73, Table 1.2; Calculator Sheet 'Beverages' col AA"
+        },
+        "fibres": {
+          "basis": "per_100_ml",
+          "unit": "g",
+          "thresholds": [
+            3.0,
+            4.1,
+            5.2,
+            6.3,
+            7.4
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "ruleLocator": "2023 Report p. 73, Table 1.2; Calculator Sheet 'Beverages' col Z"
+        },
+        "fvl": {
+          "basis": "per_100_ml",
+          "unit": "percent",
+          "thresholds": [
+            40.0,
+            60.0,
+            80.0
+          ],
+          "operator": ">",
+          "points": [
+            0,
+            2,
+            4,
+            6
+          ],
+          "operatorDescription": "<= 40% -> 0; > 40% -> 2; > 60% -> 4; > 80% -> 6",
+          "ruleLocator": "2023 Report p. 73, Table 1.2; Calculator Sheet 'Beverages' col Y"
+        }
+      },
+      "scoring": {
+        "adverseSumMax": 54,
+        "favourableSumMax": 18,
+        "scoreFormula": "Score = Points A - Points C (all favourable points subtracted regardless of Points A sum)",
+        "scoreBounds": {
+          "min": -18,
+          "max": 54
+        },
+        "waterRule": "Supported plain water is classified as Grade A automatically without calculation.",
+        "letterMapping": [
+          {
+            "special": "water",
+            "letter": "A",
+            "color": "dark_green"
+          },
+          {
+            "maxScore": 2,
+            "letter": "B",
+            "color": "light_green"
+          },
+          {
+            "minScore": 3,
+            "maxScore": 6,
+            "letter": "C",
+            "color": "yellow"
+          },
+          {
+            "minScore": 7,
+            "maxScore": 9,
+            "letter": "D",
+            "color": "light_orange"
+          },
+          {
+            "minScore": 10,
+            "letter": "E",
+            "color": "dark_orange"
+          }
+        ],
+        "ruleLocator": "2023 Report p. 74-75, Section 1.3 & Table 'Final Nutri-Score thresholds'; Calculator Sheet 'Beverages' col AH"
+      }
+    }
+  },
+  "sweetenersCatalogue": {
+    "description": "Authorized non-nutritive sweeteners evaluated for Nutri-Score beverage scoring (+4 points for presence). Polyols/sugar alcohols are explicitly excluded.",
+    "included": [
+      {
+        "eNumber": "E 950",
+        "name": "Acesulfame K",
+        "ruleLocator": "2023 Report p. 27, Table 2"
+      },
+      {
+        "eNumber": "E 951",
+        "name": "Aspartame",
+        "ruleLocator": "2023 Report p. 27, Table 2"
+      },
+      {
+        "eNumber": "E 952",
+        "name": "Cyclamates",
+        "ruleLocator": "2023 Report p. 27, Table 2"
+      },
+      {
+        "eNumber": "E 954",
+        "name": "Saccharins",
+        "ruleLocator": "2023 Report p. 27, Table 2"
+      },
+      {
+        "eNumber": "E 955",
+        "name": "Sucralose",
+        "ruleLocator": "2023 Report p. 27, Table 2"
+      },
+      {
+        "eNumber": "E 957",
+        "name": "Thaumatin",
+        "ruleLocator": "2023 Report p. 27, Table 2"
+      },
+      {
+        "eNumber": "E 959",
+        "name": "Neohesperidine DC",
+        "ruleLocator": "2023 Report p. 27, Table 2"
+      },
+      {
+        "eNumber": "E 960a",
+        "name": "Steviol glycosides from Stevia",
+        "ruleLocator": "2023 Report p. 27, Table 2"
+      },
+      {
+        "eNumber": "E 961",
+        "name": "Neotame",
+        "ruleLocator": "2023 Report p. 27, Table 2"
+      },
+      {
+        "eNumber": "E 962",
+        "name": "Salt of aspartame-acesulfame",
+        "ruleLocator": "2023 Report p. 27, Table 2"
+      },
+      {
+        "eNumber": "E 969",
+        "name": "Advantame",
+        "ruleLocator": "2023 Report p. 27, Table 2"
+      }
+    ],
+    "excludedPolyols": [
+      {
+        "eNumber": "E 420",
+        "name": "Sorbitols",
+        "reason": "Sugar alcohol / polyol",
+        "ruleLocator": "2023 Report p. 27-28; Calculator Sheet 'Non-nutritive sweeteners'"
+      },
+      {
+        "eNumber": "E 421",
+        "name": "Mannitol",
+        "reason": "Sugar alcohol / polyol",
+        "ruleLocator": "2023 Report p. 27-28; Calculator Sheet 'Non-nutritive sweeteners'"
+      },
+      {
+        "eNumber": "E 953",
+        "name": "Isomalt",
+        "reason": "Sugar alcohol / polyol",
+        "ruleLocator": "2023 Report p. 27-28; Calculator Sheet 'Non-nutritive sweeteners'"
+      },
+      {
+        "eNumber": "E 956",
+        "name": "Alitame",
+        "reason": "Not EU authorized",
+        "ruleLocator": "2023 Report p. 27-28; Calculator Sheet 'Non-nutritive sweeteners'"
+      },
+      {
+        "eNumber": "E 964",
+        "name": "Polyglycitol syrup",
+        "reason": "Sugar alcohol / polyol",
+        "ruleLocator": "2023 Report p. 27-28; Calculator Sheet 'Non-nutritive sweeteners'"
+      },
+      {
+        "eNumber": "E 965",
+        "name": "Maltitols",
+        "reason": "Sugar alcohol / polyol",
+        "ruleLocator": "2023 Report p. 27-28; Calculator Sheet 'Non-nutritive sweeteners'"
+      },
+      {
+        "eNumber": "E 966",
+        "name": "Lactitol",
+        "reason": "Sugar alcohol / polyol",
+        "ruleLocator": "2023 Report p. 27-28; Calculator Sheet 'Non-nutritive sweeteners'"
+      },
+      {
+        "eNumber": "E 967",
+        "name": "Xylitol",
+        "reason": "Sugar alcohol / polyol",
+        "ruleLocator": "2023 Report p. 27-28; Calculator Sheet 'Non-nutritive sweeteners'"
+      },
+      {
+        "eNumber": "E 968",
+        "name": "Erythritol",
+        "reason": "Sugar alcohol / polyol (caloric)",
+        "ruleLocator": "2023 Report p. 27-28; Calculator Sheet 'Non-nutritive sweeteners'"
+      }
+    ]
+  },
+  "inputFields": {
+    "description": "Canonical nutrient input fields required for Nutri-Score calculation across routes. A missing input is an omitted observation.",
+    "fields": {
+      "energy": {
+        "canonicalField": "energy",
+        "name": "Energy",
+        "unit": "kJ",
+        "basis": {
+          "general": "per_100_g",
+          "fats_nuts_seeds": "per_100_g",
+          "beverage": "per_100_ml"
+        },
+        "routes": [
+          "general",
+          "beverage"
+        ],
+        "description": "Total energy in kJ. In fats_nuts_seeds route, energy points are calculated from saturates (saturates_g * 37 kJ) rather than total declared energy."
+      },
+      "sugars": {
+        "canonicalField": "sugars",
+        "name": "Total Sugars",
+        "unit": "g",
+        "basis": {
+          "general": "per_100_g",
+          "fats_nuts_seeds": "per_100_g",
+          "beverage": "per_100_ml"
+        },
+        "routes": [
+          "general",
+          "fats_nuts_seeds",
+          "beverage"
+        ],
+        "description": "Total sugars in g declared on the nutrition declaration."
+      },
+      "saturates": {
+        "canonicalField": "saturates",
+        "name": "Saturated Fatty Acids",
+        "unit": "g",
+        "basis": {
+          "general": "per_100_g",
+          "fats_nuts_seeds": "per_100_g",
+          "beverage": "per_100_ml"
+        },
+        "routes": [
+          "general",
+          "fats_nuts_seeds",
+          "beverage"
+        ],
+        "description": "Saturated fatty acids in g. In fats_nuts_seeds route, evaluated as a percentage of total lipids (saturates / fat * 100) and for energy proxy."
+      },
+      "salt": {
+        "canonicalField": "salt",
+        "name": "Salt",
+        "unit": "g",
+        "basis": {
+          "general": "per_100_g",
+          "fats_nuts_seeds": "per_100_g",
+          "beverage": "per_100_ml"
+        },
+        "routes": [
+          "general",
+          "fats_nuts_seeds",
+          "beverage"
+        ],
+        "description": "Salt in g declared on the nutrition declaration (or derived from sodium: sodium_g * 2.5)."
+      },
+      "protein": {
+        "canonicalField": "protein",
+        "name": "Protein",
+        "unit": "g",
+        "basis": {
+          "general": "per_100_g",
+          "fats_nuts_seeds": "per_100_g",
+          "beverage": "per_100_ml"
+        },
+        "routes": [
+          "general",
+          "fats_nuts_seeds",
+          "beverage"
+        ],
+        "description": "Total protein in g. Subject to conditional protein rules (general: N < 11 unless cheese; fats: N < 7) and red meat cap (max 2 pts)."
+      },
+      "fibre": {
+        "canonicalField": "fibre",
+        "name": "Dietary Fibre",
+        "unit": "g",
+        "basis": {
+          "general": "per_100_g",
+          "fats_nuts_seeds": "per_100_g",
+          "beverage": "per_100_ml"
+        },
+        "routes": [
+          "general",
+          "fats_nuts_seeds",
+          "beverage"
+        ],
+        "description": "Dietary fibre in g (AOAC method). A missing fibre observation withholds score unless product is exempt."
+      },
+      "fat": {
+        "canonicalField": "fat",
+        "name": "Total Fat / Lipids",
+        "unit": "g",
+        "basis": {
+          "fats_nuts_seeds": "per_100_g"
+        },
+        "routes": [
+          "fats_nuts_seeds"
+        ],
+        "description": "Total lipids in g. Required specifically for fats_nuts_seeds route to calculate the saturates / total fat ratio."
+      },
+      "fvl": {
+        "canonicalField": "fvl",
+        "name": "Fruits, Vegetables, Legumes, and Qualifying Oils",
+        "unit": "percent",
+        "basis": {
+          "general": "per_100_g",
+          "fats_nuts_seeds": "per_100_g",
+          "beverage": "per_100_ml"
+        },
+        "routes": [
+          "general",
+          "fats_nuts_seeds",
+          "beverage"
+        ],
+        "description": "Percentage (0-100%) of qualifying fruits, vegetables, legumes, and for the fats route, qualifying oils (olive, avocado, rapeseed, walnut oils)."
+      }
+    }
+  }
+}

@@ -1,0 +1,440 @@
+{
+  "description": "inputDigest vectors (D104): lowercase hex SHA-256 over the UTF-8 bytes of the RFC 8785 (JCS) canonical JSON of the request product value exactly as decoded, before model defaults, so absent and null stay distinct. Generated with the rfc8785 Python package.",
+  "cases": [
+    {
+      "name": "request example (missing ingredients)",
+      "kind": "product",
+      "value": {
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [],
+        "issues": []
+      },
+      "canonical": "{\"barcode\":null,\"ingredientsStatus\":\"missing\",\"ingredientsText\":null,\"issues\":[],\"market\":\"IN\",\"name\":null,\"observations\":[],\"sourceRefs\":[]}",
+      "sha256": "e6ade5b0de6d13badba8caf26dc5d77200d61487268895e284078206ed06a55c"
+    },
+    {
+      "name": "read nutrition, decimals and integer-valued floats",
+      "kind": "product",
+      "value": {
+        "barcode": "8901234567890",
+        "name": "Roasted chana",
+        "market": "IN",
+        "ingredientsText": "Bengal gram (98%), salt, edible vegetable oil",
+        "ingredientsStatus": "complete",
+        "observations": [
+          {
+            "field": "energy",
+            "kind": "read",
+            "value": 1550,
+            "unit": "kJ",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "sugars",
+            "kind": "read",
+            "value": 2.5,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "saturates",
+            "kind": "read",
+            "value": 0.1,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "salt",
+            "kind": "read",
+            "value": 1.0,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "protein",
+            "kind": "read",
+            "value": 21.75,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          }
+        ],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "label",
+            "title": "Nutrition panel"
+          }
+        ],
+        "issues": []
+      },
+      "canonical": "{\"barcode\":\"8901234567890\",\"ingredientsStatus\":\"complete\",\"ingredientsText\":\"Bengal gram (98%), salt, edible vegetable oil\",\"issues\":[],\"market\":\"IN\",\"name\":\"Roasted chana\",\"observations\":[{\"basis\":\"per_100_g\",\"field\":\"energy\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"kJ\",\"value\":1550},{\"basis\":\"per_100_g\",\"field\":\"sugars\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":2.5},{\"basis\":\"per_100_g\",\"field\":\"saturates\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":0.1},{\"basis\":\"per_100_g\",\"field\":\"salt\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":1},{\"basis\":\"per_100_g\",\"field\":\"protein\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":21.75}],\"sourceRefs\":[{\"id\":\"src-0\",\"kind\":\"label\",\"title\":\"Nutrition panel\"}]}",
+      "sha256": "eb0d86c30df07e9897d98cf494ec85f434b44b26f9de6ac314f045e504496a71"
+    },
+    {
+      "name": "same product, keys in reverse insertion order",
+      "kind": "product",
+      "value": {
+        "issues": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "label",
+            "title": "Nutrition panel"
+          }
+        ],
+        "observations": [
+          {
+            "field": "energy",
+            "kind": "read",
+            "value": 1550,
+            "unit": "kJ",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "sugars",
+            "kind": "read",
+            "value": 2.5,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "saturates",
+            "kind": "read",
+            "value": 0.1,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "salt",
+            "kind": "read",
+            "value": 1.0,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "protein",
+            "kind": "read",
+            "value": 21.75,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          }
+        ],
+        "ingredientsStatus": "complete",
+        "ingredientsText": "Bengal gram (98%), salt, edible vegetable oil",
+        "market": "IN",
+        "name": "Roasted chana",
+        "barcode": "8901234567890"
+      },
+      "canonical": "{\"barcode\":\"8901234567890\",\"ingredientsStatus\":\"complete\",\"ingredientsText\":\"Bengal gram (98%), salt, edible vegetable oil\",\"issues\":[],\"market\":\"IN\",\"name\":\"Roasted chana\",\"observations\":[{\"basis\":\"per_100_g\",\"field\":\"energy\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"kJ\",\"value\":1550},{\"basis\":\"per_100_g\",\"field\":\"sugars\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":2.5},{\"basis\":\"per_100_g\",\"field\":\"saturates\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":0.1},{\"basis\":\"per_100_g\",\"field\":\"salt\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":1},{\"basis\":\"per_100_g\",\"field\":\"protein\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":21.75}],\"sourceRefs\":[{\"id\":\"src-0\",\"kind\":\"label\",\"title\":\"Nutrition panel\"}]}",
+      "sha256": "eb0d86c30df07e9897d98cf494ec85f434b44b26f9de6ac314f045e504496a71"
+    },
+    {
+      "name": "non-ASCII text, quotes, backslash and newline",
+      "kind": "product",
+      "value": {
+        "barcode": "8901234567890",
+        "name": "Masala chana – मसाला चना",
+        "market": "IN",
+        "ingredientsText": "Chana, \"masala\" (salt\\pepper)\nline two",
+        "ingredientsStatus": "complete",
+        "observations": [
+          {
+            "field": "energy",
+            "kind": "read",
+            "value": 1550,
+            "unit": "kJ",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "sugars",
+            "kind": "read",
+            "value": 2.5,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "saturates",
+            "kind": "read",
+            "value": 0.1,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "salt",
+            "kind": "read",
+            "value": 1.0,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "protein",
+            "kind": "read",
+            "value": 21.75,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          }
+        ],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "label",
+            "title": "Nutrition panel"
+          }
+        ],
+        "issues": []
+      },
+      "canonical": "{\"barcode\":\"8901234567890\",\"ingredientsStatus\":\"complete\",\"ingredientsText\":\"Chana, \\\"masala\\\" (salt\\\\pepper)\\nline two\",\"issues\":[],\"market\":\"IN\",\"name\":\"Masala chana – मसाला चना\",\"observations\":[{\"basis\":\"per_100_g\",\"field\":\"energy\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"kJ\",\"value\":1550},{\"basis\":\"per_100_g\",\"field\":\"sugars\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":2.5},{\"basis\":\"per_100_g\",\"field\":\"saturates\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":0.1},{\"basis\":\"per_100_g\",\"field\":\"salt\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":1},{\"basis\":\"per_100_g\",\"field\":\"protein\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":21.75}],\"sourceRefs\":[{\"id\":\"src-0\",\"kind\":\"label\",\"title\":\"Nutrition panel\"}]}",
+      "sha256": "bd29c8619f46dfd7baf3914e1edf9f68d0625a4b2e6d40aff5b6b4419d351716"
+    },
+    {
+      "name": "optional name absent",
+      "kind": "product",
+      "value": {
+        "barcode": "8901234567890",
+        "market": "IN",
+        "ingredientsText": "Bengal gram (98%), salt, edible vegetable oil",
+        "ingredientsStatus": "complete",
+        "observations": [
+          {
+            "field": "energy",
+            "kind": "read",
+            "value": 1550,
+            "unit": "kJ",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "sugars",
+            "kind": "read",
+            "value": 2.5,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "saturates",
+            "kind": "read",
+            "value": 0.1,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "salt",
+            "kind": "read",
+            "value": 1.0,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "protein",
+            "kind": "read",
+            "value": 21.75,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          }
+        ],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "label",
+            "title": "Nutrition panel"
+          }
+        ],
+        "issues": []
+      },
+      "canonical": "{\"barcode\":\"8901234567890\",\"ingredientsStatus\":\"complete\",\"ingredientsText\":\"Bengal gram (98%), salt, edible vegetable oil\",\"issues\":[],\"market\":\"IN\",\"observations\":[{\"basis\":\"per_100_g\",\"field\":\"energy\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"kJ\",\"value\":1550},{\"basis\":\"per_100_g\",\"field\":\"sugars\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":2.5},{\"basis\":\"per_100_g\",\"field\":\"saturates\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":0.1},{\"basis\":\"per_100_g\",\"field\":\"salt\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":1},{\"basis\":\"per_100_g\",\"field\":\"protein\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":21.75}],\"sourceRefs\":[{\"id\":\"src-0\",\"kind\":\"label\",\"title\":\"Nutrition panel\"}]}",
+      "sha256": "4bd0e9be8b4241ad08ac2a01f296a415a77fcaf5a622f536064dad24111b4b77"
+    },
+    {
+      "name": "optional name present as null",
+      "kind": "product",
+      "value": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": "Bengal gram (98%), salt, edible vegetable oil",
+        "ingredientsStatus": "complete",
+        "observations": [
+          {
+            "field": "energy",
+            "kind": "read",
+            "value": 1550,
+            "unit": "kJ",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "sugars",
+            "kind": "read",
+            "value": 2.5,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "saturates",
+            "kind": "read",
+            "value": 0.1,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "salt",
+            "kind": "read",
+            "value": 1.0,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "protein",
+            "kind": "read",
+            "value": 21.75,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          }
+        ],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "label",
+            "title": "Nutrition panel"
+          }
+        ],
+        "issues": []
+      },
+      "canonical": "{\"barcode\":\"8901234567890\",\"ingredientsStatus\":\"complete\",\"ingredientsText\":\"Bengal gram (98%), salt, edible vegetable oil\",\"issues\":[],\"market\":\"IN\",\"name\":null,\"observations\":[{\"basis\":\"per_100_g\",\"field\":\"energy\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"kJ\",\"value\":1550},{\"basis\":\"per_100_g\",\"field\":\"sugars\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":2.5},{\"basis\":\"per_100_g\",\"field\":\"saturates\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":0.1},{\"basis\":\"per_100_g\",\"field\":\"salt\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":1},{\"basis\":\"per_100_g\",\"field\":\"protein\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":21.75}],\"sourceRefs\":[{\"id\":\"src-0\",\"kind\":\"label\",\"title\":\"Nutrition panel\"}]}",
+      "sha256": "47f601468ff852ee1e3479538aac42ae1ac441ee0b9b597ca65c6253fe81c799"
+    },
+    {
+      "name": "number formatting",
+      "kind": "canonicalization",
+      "value": {
+        "n": [
+          1e-06,
+          1e-07,
+          1e+21,
+          100.0,
+          -0.0,
+          12.5
+        ]
+      },
+      "canonical": "{\"n\":[0.000001,1e-7,1e+21,100,0,12.5]}",
+      "sha256": "647feee479cdaf73bb9f2ec97b8b56e7ef8023357114673a0bf5fa484fa382e4"
+    },
+    {
+      "name": "key order uses UTF-16 code units",
+      "kind": "canonicalization",
+      "value": {
+        "b": 1,
+        "a": 2,
+        "é": 3,
+        "A": 4,
+        "😀": 5,
+        "ﬁ": 6
+      },
+      "canonical": "{\"A\":4,\"a\":2,\"b\":1,\"é\":3,\"😀\":5,\"ﬁ\":6}",
+      "sha256": "07fa3ba9f3aa8ebedb49a269d1d2959fac65c8573ff5c416372f00ec6e3279e0"
+    }
+  ]
+}

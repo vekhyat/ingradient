@@ -1,0 +1,57 @@
+[project]
+name = "ingradient-backend"
+version = "0.1.0"
+description = "Local FastAPI skeleton for the Ingradient analysis API"
+readme = "README.md"
+requires-python = ">=3.14.3,<3.15"
+dependencies = [
+  "fastapi>=0.115",
+  "pydantic-settings>=2.6",
+  "rfc8785>=0.1.4",
+  "uvicorn>=0.32",
+]
+
+[dependency-groups]
+dev = [
+  "httpx2>=2.0",
+  "jsonschema>=4.23",
+  "pyright>=1.1.390",
+  "pytest>=8.3",
+  "pyyaml>=6.0.2",
+  "ruff>=0.8",
+  "types-PyYAML>=6.0.12",
+]
+
+[tool.uv]
+package = false
+
+[tool.fastapi]
+entrypoint = "app.main:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.pyright]
+pythonVersion = "3.14"
+typeCheckingMode = "strict"
+# JSON objects and Starlette's TestClient are typed as unknown. Those checks
+# fail the build on library types this skeleton does not control.
+reportUnknownVariableType = "none"
+reportUnknownMemberType = "none"
+reportUnknownArgumentType = "none"
+reportUnknownParameterType = "none"
+reportMissingTypeStubs = "none"
+include = ["app", "tests"]
+extraPaths = ["."]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 88
+src = ["app", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]

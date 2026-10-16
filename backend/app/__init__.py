@@ -1,0 +1,1 @@
+"""Ingradient analysis API application."""

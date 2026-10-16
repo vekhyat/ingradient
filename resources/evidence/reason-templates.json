@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "evidenceEdition": "nutriscore-reasons-2023.1",
+  "description": "Reviewed non-alarmist scientific reason templates for Nutri-Score calculation components.",
+  "templates": [
+    {
+      "templateId": "nutriscore.energy",
+      "component": "energy",
+      "format": "Energy of {value} {unit} contributes {points} adverse point(s) out of 10.",
+      "defaultText": "Energy contributes points based on declared kJ per 100g or 100ml under the official threshold table.",
+      "citationIds": [
+        "sc-food-2022",
+        "sc-beverage-2023"
+      ],
+      "scope": "General foods, fats/oils/nuts/seeds, and beverages energy points allocation."
+    },
+    {
+      "templateId": "nutriscore.sugars",
+      "component": "sugars",
+      "format": "Total sugars of {value} {unit} contribute {points} adverse point(s) under the European reference algorithm.",
+      "defaultText": "Total sugars contribute points based on declared grams per 100g or 100ml under official threshold tables.",
+      "citationIds": [
+        "sc-food-2022",
+        "sc-beverage-2023"
+      ],
+      "scope": "Adverse points allocation for declared total sugars."
+    },
+    {
+      "templateId": "nutriscore.saturates",
+      "component": "saturates",
+      "format": "Saturated fatty acids of {value} {unit} contribute {points} adverse point(s) out of 10.",
+      "defaultText": "Saturated fatty acids contribute points based on declared grams per 100g or 100ml.",
+      "citationIds": [
+        "sc-food-2022",
+        "sc-beverage-2023"
+      ],
+      "scope": "General food and beverage saturated fat component."
+    },
+    {
+      "templateId": "nutriscore.saturates_ratio",
+      "component": "saturates_ratio",
+      "format": "Saturated fatty acids ratio to total lipids ({value}%) contributes {points} adverse point(s) out of 10.",
+      "defaultText": "For fats and oils, saturated fatty acids are evaluated as a ratio of total lipids (saturates / total fat * 100).",
+      "citationIds": [
+        "sc-food-2022"
+      ],
+      "scope": "Fats, oils, nuts and seeds route ratio point allocation."
+    },
+    {
+      "templateId": "nutriscore.salt",
+      "component": "salt",
+      "format": "Salt content of {value} {unit} contributes {points} adverse point(s) out of 20.",
+      "defaultText": "Salt contributes points based on declared salt content in grams per 100g or 100ml.",
+      "citationIds": [
+        "sc-food-2022",
+        "sc-beverage-2023"
+      ],
+      "scope": "Adverse points allocation for salt across all calculation routes."
+    },
+    {
+      "templateId": "nutriscore.protein",
+      "component": "protein",
+      "format": "Protein content of {value} {unit} contributes {points} favourable point(s).",
+      "defaultText": "Protein contributes favourable points, subject to conditional subtraction rules and red meat point caps.",
+      "citationIds": [
+        "sc-food-2022",
+        "sc-beverage-2023"
+      ],
+      "scope": "Favourable protein points for general foods, fats, and beverages."
+    },
+    {
+      "templateId": "nutriscore.protein_red_meat",
+      "component": "protein",
+      "format": "Protein content of {value} {unit} in red meat is capped at {points} favourable point(s).",
+      "defaultText": "For red meat products, protein points are capped at a maximum of 2 points under official rules.",
+      "citationIds": [
+        "sc-food-2022"
+      ],
+      "scope": "Red meat specific protein point cap."
+    },
+    {
+      "templateId": "nutriscore.fibres",
+      "component": "fibres",
+      "format": "Dietary fibre content of {value} {unit} contributes {points} favourable point(s) out of 5.",
+      "defaultText": "Dietary fibre contributes favourable points based on declared grams per 100g or 100ml.",
+      "citationIds": [
+        "sc-food-2022",
+        "sc-beverage-2023"
+      ],
+      "scope": "Favourable fibre points across all routes."
+    },
+    {
+      "templateId": "nutriscore.fvl",
+      "component": "fvl",
+      "format": "Fruits, vegetables and legumes content of {value}% contributes {points} favourable point(s).",
+      "defaultText": "Eligible fruits, vegetables and legumes contribute favourable points when exceeding official percentage thresholds.",
+      "citationIds": [
+        "sc-food-2022",
+        "sc-beverage-2023"
+      ],
+      "scope": "Favourable fruits, vegetables, and legumes component points."
+    },
+    {
+      "templateId": "nutriscore.sweetener",
+      "component": "sweeteners",
+      "format": "Presence of authorized non-nutritive sweetener adds 4 adverse points in the beverage calculation route.",
+      "defaultText": "Under the updated beverage algorithm, the presence of non-nutritive sweeteners adds 4 adverse points.",
+      "citationIds": [
+        "sc-beverage-2023"
+      ],
+      "scope": "Beverage route adverse points for non-nutritive sweeteners."
+    },
+    {
+      "templateId": "nutriscore.cheese_rule",
+      "component": "cheese_rule",
+      "format": "Cheese route: favourable points (including protein) are subtracted without the 11-point adverse limit.",
+      "defaultText": "For cheeses, all favourable points (protein, fibre, FVL) are subtracted from adverse points regardless of total adverse score.",
+      "citationIds": [
+        "sc-food-2022"
+      ],
+      "scope": "Cheese specific favourable component subtraction exception."
+    }
+  ]
+}

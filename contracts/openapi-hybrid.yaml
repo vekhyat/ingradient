@@ -1,0 +1,1265 @@
+openapi: 3.1.0
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+info:
+  title: Ingradient hybrid product-analysis contract candidate
+  version: 0.2.0-draft
+  description: Accepted shape D83, revised by the D100 review (D104); frozen at INT-00. D66 hybrid; D67 text/nutrition/local
+    OCR; D68 Python/FastAPI; D69 fallback start 2000 ms; D70 explicit late update. Examples are fictional shape checks, not
+    official scoring vectors.
+servers:
+- url: https://analysis.ingradient.invalid
+  description: Placeholder; no host/account selected
+paths:
+  /health:
+    get:
+      operationId: readHealth
+      summary: Optional public service health; no personal context
+      responses:
+        '200':
+          description: Public response
+          headers: &id001
+            ETag:
+              description: Opaque validator for the exact representation.
+              schema:
+                type: string
+            Cache-Control:
+              schema:
+                type: string
+            X-Manifest-Signature:
+              description: 'For manifest200 only: Ed25519 detached signature over exact body bytes, base64 encoded.'
+              schema:
+                type: string
+            X-Signing-Key-ID:
+              description: An app-pinned verification key ID; not a trusted key supplied by the response.
+              schema:
+                type: string
+                minLength: 1
+                maxLength: 160
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+              example:
+                status: ok
+                contractVersion: 0.2.0-draft
+        '400': &id002
+          description: Unknown or invalid parameter; no content recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                code: invalid_request
+                message: Use only documented parameters.
+  /v1/resources/manifest:
+    get:
+      operationId: readResourceManifest
+      summary: Read compatible public resource release descriptors
+      parameters:
+      - name: If-None-Match
+        in: header
+        required: false
+        schema:
+          type: string
+          maxLength: 200
+      responses:
+        '200':
+          description: Public response
+          headers: *id001
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceManifest'
+              example:
+                revision: fixture-release
+                sequence: 1
+                publishedAt: '2026-10-16T00:00:00Z'
+                bundles: []
+        '304':
+          description: Current manifest unchanged; no response body
+        '429': &id003
+          description: Public response
+          headers: *id001
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                code: rate_limited
+                message: Try again later.
+                retryAfterSeconds: 60
+        '503': &id004
+          description: Public response
+          headers: *id001
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                code: unavailable
+                message: Public resources are temporarily unavailable.
+        '400': *id002
+  /v1/resources/{bundleId}:
+    get:
+      operationId: readResourceBundle
+      summary: Read one public immutable resource bundle
+      parameters:
+      - name: bundleId
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[a-z0-9][a-z0-9-]{0,79}$
+      responses:
+        '200':
+          description: Public response
+          headers: *id001
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceBundle'
+        '404':
+          description: Public response
+          headers: *id001
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                code: not_found
+                message: That resource version is not published.
+        '429': *id003
+        '503': *id004
+        '400': *id002
+  /v1/analyses:
+    post:
+      operationId: analyzeProduct
+      summary: Analyze extracted product facts using the selected Python/FastAPI backend
+      description: Analyse extracted product facts (D67). Fallback starts on the phone after 2000 ms (D69); a valid late body
+        becomes an explicit update offer (D70). No per-user identity field. With collection off (COLLECTION_RELEASE pending)
+        the handler must not touch the database.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeRequest'
+            example: &id020
+              contractVersion: 0.2.0-draft
+              product:
+                barcode: null
+                name: null
+                market: IN
+                ingredientsText: null
+                ingredientsStatus: missing
+                observations: []
+                sourceRefs: []
+                issues: []
+              resourceCompatibility:
+                taxonomyVersion: fictional-taxonomy
+                evidenceVersion: fictional-evidence
+                methodEdition: fictional-method
+                methodBundleSha256: '0000000000000000000000000000000000000000000000000000000000000000'
+      responses:
+        '200':
+          description: Supported analysis or explicit named gap; no personal grade
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeResponse'
+              example: &id021
+                contractVersion: 0.2.0-draft
+                inputDigest: '0000000000000000000000000000000000000000000000000000000000000000'
+                product:
+                  id: fictional-snapshot
+                  barcode: null
+                  name: null
+                  market: IN
+                  sourceRefs: []
+                  observations: []
+                  ingredients: []
+                  category: unknown
+                  taxonomyVersion: fictional-taxonomy
+                  evidenceVersion: fictional-evidence
+                scientific:
+                  state: method_unavailable
+                  inputSnapshotId: fictional-snapshot
+                  reasons: []
+                  issues:
+                  - &id005
+                    code: candidate_method_not_released
+                    stage: method
+                    message: A reviewed compatible method bundle is not available.
+                    action: none
+                citations: []
+                issues:
+                - *id005
+        '400':
+          description: Invalid product facts or undocumented field.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                code: invalid_request
+                message: Invalid product facts or undocumented field.
+        '413':
+          description: Body over 262144 bytes, rejected from Content-Length or a streamed byte count before parsing, logging
+            or storage.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                code: payload_too_large
+                message: Product request exceeds the accepted size bound.
+        '429':
+          description: Wait for the retry cooldown.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                code: rate_limited
+                message: Wait for the retry cooldown.
+                retryAfterSeconds: 60
+          headers:
+            Retry-After:
+              description: Seconds to wait before another analysis request (RFC 9110).
+              required: true
+              schema:
+                type: integer
+                minimum: 1
+        '503':
+          description: Backend analysis unavailable; local fallback may run.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                code: unavailable
+                message: Backend analysis unavailable; local fallback may run.
+components:
+  schemas:
+    Issue:
+      type: object
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          pattern: ^[a-z][a-z0-9_.]{0,79}$
+        stage:
+          type: string
+          enum:
+          - lookup
+          - capture
+          - extraction
+          - matching
+          - completeness
+          - method
+        field:
+          type: string
+          maxLength: 160
+        message:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        action:
+          type: string
+          enum:
+          - retake
+          - edit
+          - choose_candidate
+          - add_field
+          - retry
+          - read_source
+          - none
+      required:
+      - code
+      - stage
+      - message
+      - action
+    Citation:
+      type: object
+      additionalProperties: false
+      properties:
+        id: &id006
+          type: string
+          minLength: 1
+          maxLength: 160
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        issuer:
+          type: string
+          minLength: 1
+          maxLength: 200
+        url:
+          type: string
+          format: uri
+        edition: *id006
+        locator:
+          type: string
+          minLength: 1
+          maxLength: 300
+        claimScope:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        checkedAt:
+          type: string
+          format: date
+      required:
+      - id
+      - title
+      - issuer
+      - url
+      - edition
+      - locator
+      - claimScope
+      - checkedAt
+    ScientificAssessment:
+      oneOf:
+      - type: object
+        additionalProperties: false
+        properties:
+          state:
+            const: graded
+          grade:
+            $ref: '#/components/schemas/Grade'
+          score:
+            type: integer
+            minimum: -18
+            maximum: 55
+            description: 'Union of route bounds: general and fats/nuts/seeds -17..55, beverage -18..54. Domain validation
+              checks the route-specific bound.'
+          route:
+            type: string
+            enum:
+            - general
+            - fats_nuts_seeds
+            - beverage
+          method:
+            $ref: '#/components/schemas/MethodRef'
+          inputSnapshotId: &id007
+            type: string
+            minLength: 1
+            maxLength: 160
+          reasons:
+            type: array
+            items:
+              $ref: '#/components/schemas/ScientificReason'
+            minItems: 1
+          trace:
+            type: array
+            items:
+              $ref: '#/components/schemas/TraceStep'
+            minItems: 1
+          issues:
+            type: array
+            items:
+              $ref: '#/components/schemas/Issue'
+        required:
+        - state
+        - grade
+        - score
+        - route
+        - method
+        - inputSnapshotId
+        - reasons
+        - trace
+        - issues
+      - type: object
+        additionalProperties: false
+        properties:
+          state:
+            type: string
+            enum:
+            - insufficient_data
+            - unsupported
+            - method_unavailable
+          inputSnapshotId: *id007
+          reasons:
+            type: array
+            items:
+              $ref: '#/components/schemas/ScientificReason'
+          issues:
+            type: array
+            items:
+              $ref: '#/components/schemas/Issue'
+            minItems: 1
+        required:
+        - state
+        - inputSnapshotId
+        - reasons
+        - issues
+      discriminator:
+        propertyName: state
+      examples:
+      - state: graded
+        grade: C
+        score: 5
+        route: general
+        method:
+          id: nutriscore-updated-2023
+          edition: faq-v11-2025-03-17
+          bundleId: fixture-method-1
+          bundleSha256: '0000000000000000000000000000000000000000000000000000000000000000'
+          label: Nutrition grade · European reference
+        inputSnapshotId: fixture-1
+        reasons:
+        - id: fixture-reason
+          templateId: fixture.reason
+          text: Illustrative method reason; this fixture is not a scored product.
+          citationIds:
+          - spf-faq-v11
+          inputFields:
+          - sugars
+          step: sugars-points
+        trace:
+        - component: fixture-only
+          inputFields:
+          - sugars
+          points: 5
+          ruleLocator: Fixture only; not an official calculation vector
+          citationIds:
+          - spf-faq-v11
+        issues: []
+      - state: insufficient_data
+        inputSnapshotId: fixture-1
+        reasons: []
+        issues:
+        - code: missing_fibre
+          stage: completeness
+          field: fibre
+          message: Fibre is not available for this calculation.
+          action: add_field
+      description: LOCAL ONLY. Graded example demonstrates shape, not valid method arithmetic. Zero hash is fictional fixture
+        metadata, never an artifact checksum.
+    Grade:
+      type: string
+      enum:
+      - A
+      - B
+      - C
+      - D
+      - E
+    MethodRef:
+      type: object
+      additionalProperties: false
+      properties:
+        id: &id008
+          type: string
+          minLength: 1
+          maxLength: 160
+        edition: *id008
+        bundleId: *id008
+        bundleSha256:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+        label:
+          type: string
+          enum:
+          - Nutrition grade · European reference
+      required:
+      - id
+      - edition
+      - bundleId
+      - bundleSha256
+      - label
+    ScientificReason:
+      type: object
+      additionalProperties: false
+      properties:
+        id: &id009
+          type: string
+          minLength: 1
+          maxLength: 160
+        templateId:
+          type: string
+          pattern: ^[a-z][a-z0-9_.]{0,79}$
+          description: Id of a reviewed reason template in the evidence edition. The phone renders the shown sentence from
+            its own copy of that template; it never displays server text directly.
+        text:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        citationIds:
+          type: array
+          items: *id009
+          minItems: 1
+        inputFields:
+          type: array
+          items: *id009
+        step: *id009
+      required:
+      - id
+      - templateId
+      - text
+      - citationIds
+      - inputFields
+      - step
+    TraceStep:
+      type: object
+      additionalProperties: false
+      properties:
+        component: &id010
+          type: string
+          minLength: 1
+          maxLength: 160
+        inputFields:
+          type: array
+          items: *id010
+        points:
+          type: integer
+        ruleLocator:
+          type: string
+          minLength: 1
+          maxLength: 300
+        citationIds:
+          type: array
+          items: *id010
+          minItems: 1
+      required:
+      - component
+      - inputFields
+      - points
+      - ruleLocator
+      - citationIds
+    IngredientMention:
+      type: object
+      additionalProperties: false
+      properties:
+        id: &id011
+          type: string
+          minLength: 1
+          maxLength: 160
+        text:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        parentId:
+          type:
+          - string
+          - 'null'
+        canonicalId:
+          type:
+          - string
+          - 'null'
+        state:
+          type: string
+          enum:
+          - matched
+          - ambiguous
+          - unresolved
+        candidateIds:
+          type: array
+          items: *id011
+          maxItems: 20
+        sourceIds:
+          type: array
+          items: *id011
+          minItems: 1
+        taxonomyVersion: *id011
+      required:
+      - id
+      - text
+      - parentId
+      - canonicalId
+      - state
+      - candidateIds
+      - sourceIds
+      - taxonomyVersion
+    Problem:
+      type: object
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          enum:
+          - invalid_request
+          - payload_too_large
+          - not_found
+          - rate_limited
+          - unavailable
+        message:
+          type: string
+          minLength: 1
+          maxLength: 500
+        retryAfterSeconds:
+          type: integer
+          minimum: 0
+      required:
+      - code
+      - message
+      examples:
+      - code: rate_limited
+        message: Try again after the stated cooldown.
+        retryAfterSeconds: 60
+    ResourceManifest:
+      type: object
+      additionalProperties: false
+      properties:
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 160
+        sequence:
+          type: integer
+          minimum: 1
+        publishedAt:
+          type: string
+          format: date-time
+        bundles:
+          type: array
+          items:
+            $ref: '#/components/schemas/BundleDescriptor'
+          maxItems: 100
+      required:
+      - revision
+      - sequence
+      - publishedAt
+      - bundles
+      examples:
+      - revision: fixture-release
+        sequence: 1
+        publishedAt: '2026-10-16T00:00:00Z'
+        bundles: []
+      description: Empty bundle list is valid for app-bundled-only S1. Fixture revision is not a published release. Optional
+        remote delivery verifies a detached signature over exact manifest bytes, using an app-pinned key and persistent anti-replay
+        sequence.
+    BundleDescriptor:
+      type: object
+      additionalProperties: false
+      properties:
+        bundleId:
+          type: string
+          pattern: ^[a-z0-9][a-z0-9-]{0,79}$
+        sha256:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+        sizeBytes:
+          type: integer
+          minimum: 1
+          maximum: 20000000
+        schemaVersion:
+          const: 1
+        minAppContract: &id012
+          type: string
+          minLength: 1
+          maxLength: 160
+        signature:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        signingKeyId: *id012
+      required:
+      - bundleId
+      - sha256
+      - sizeBytes
+      - schemaVersion
+      - minAppContract
+      - signature
+      - signingKeyId
+    ResourceBundle:
+      type: object
+      additionalProperties: false
+      properties:
+        bundleId: &id013
+          type: string
+          minLength: 1
+          maxLength: 160
+        schemaVersion:
+          const: 1
+        taxonomyVersion: *id013
+        evidenceVersion: *id013
+        taxonomy:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxonomyEntry'
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceEntry'
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+        licences:
+          type: array
+          items:
+            $ref: '#/components/schemas/LicenceEntry'
+          minItems: 1
+      required:
+      - bundleId
+      - schemaVersion
+      - taxonomyVersion
+      - evidenceVersion
+      - taxonomy
+      - evidence
+      - citations
+      - licences
+      description: Public immutable resource bytes. Method bundle activation is separate and requires a pinned, reviewed official-rule
+        artifact; no unverified executable method is returned here.
+    TaxonomyEntry:
+      type: object
+      additionalProperties: false
+      properties:
+        id: &id014
+          type: string
+          minLength: 1
+          maxLength: 160
+        names:
+          type: object
+          additionalProperties: false
+          properties:
+            en:
+              type: string
+              minLength: 1
+              maxLength: 300
+          required:
+          - en
+        aliases:
+          type: array
+          items:
+            type: string
+            maxLength: 300
+          maxItems: 100
+        relationships:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              type:
+                type: string
+                enum:
+                - is_a
+                - synonym_of
+                - derived_from
+                - may_contain
+                - has_function
+              targetId: *id014
+              sourceIds:
+                type: array
+                items: *id014
+                minItems: 1
+            required:
+            - type
+            - targetId
+            - sourceIds
+      required:
+      - id
+      - names
+      - aliases
+      - relationships
+    EvidenceEntry:
+      type: object
+      additionalProperties: false
+      properties:
+        id: &id015
+          type: string
+          minLength: 1
+          maxLength: 160
+        text:
+          type: string
+          maxLength: 2000
+        citationIds:
+          type: array
+          items: *id015
+          minItems: 1
+        scope:
+          type: string
+          maxLength: 1000
+      required:
+      - id
+      - text
+      - citationIds
+      - scope
+    LicenceEntry:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 160
+        name:
+          type: string
+          minLength: 1
+          maxLength: 300
+        url:
+          type: string
+          format: uri
+        attribution:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        sourceUrl:
+          type: string
+          format: uri
+        alterationsUrl:
+          type: string
+          format: uri
+      required:
+      - id
+      - name
+      - url
+      - attribution
+      - sourceUrl
+    Health:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          const: ok
+        contractVersion:
+          const: 0.2.0-draft
+      required:
+      - status
+      - contractVersion
+      examples:
+      - status: ok
+        contractVersion: 0.2.0-draft
+    ProductInputObservation:
+      oneOf:
+      - type: object
+        additionalProperties: false
+        properties:
+          field: &id016
+            type: string
+            minLength: 1
+            maxLength: 160
+          sourceIds:
+            type: array
+            items:
+              type: string
+              pattern: ^src-[0-9]{1,3}$
+              description: Per-request local label (src-0, src-1, ...). Carries no stable or device-derived value (D73).
+            minItems: 1
+          unit: &id017
+            type: string
+            enum:
+            - g
+            - kJ
+            - percent
+          basis: &id018
+            type: string
+            enum:
+            - per_100_g
+            - per_100_ml
+            - per_serving
+          derivation: &id019
+            type: array
+            items:
+              type: string
+              maxLength: 500
+            maxItems: 12
+          kind:
+            const: read
+          value:
+            type: number
+            minimum: 0
+          issues:
+            type: array
+            items:
+              $ref: '#/components/schemas/Issue'
+        required:
+        - field
+        - kind
+        - value
+        - unit
+        - basis
+        - sourceIds
+        - issues
+      - type: object
+        additionalProperties: false
+        properties:
+          field: *id016
+          sourceIds:
+            type: array
+            items:
+              type: string
+              pattern: ^src-[0-9]{1,3}$
+              description: Per-request local label (src-0, src-1, ...). Carries no stable or device-derived value (D73).
+            minItems: 1
+          unit: *id017
+          basis: *id018
+          derivation: *id019
+          kind:
+            const: uncertain
+          value:
+            type: number
+            minimum: 0
+          issues:
+            type: array
+            items:
+              $ref: '#/components/schemas/Issue'
+            minItems: 1
+        required:
+        - field
+        - kind
+        - value
+        - unit
+        - basis
+        - sourceIds
+        - issues
+      - type: object
+        additionalProperties: false
+        properties:
+          field: *id016
+          sourceIds:
+            type: array
+            items:
+              type: string
+              pattern: ^src-[0-9]{1,3}$
+              description: Per-request local label (src-0, src-1, ...). Carries no stable or device-derived value (D73).
+            minItems: 1
+          unit: *id017
+          basis: *id018
+          derivation: *id019
+          kind:
+            const: corrected
+          value:
+            type: number
+            minimum: 0
+          issues:
+            type: array
+            items:
+              $ref: '#/components/schemas/Issue'
+          previousSourceIds:
+            type: array
+            items:
+              type: string
+              pattern: ^src-[0-9]{1,3}$
+              description: Per-request local label (src-0, src-1, ...). Carries no stable or device-derived value (D73).
+            minItems: 1
+        required:
+        - field
+        - kind
+        - value
+        - unit
+        - basis
+        - sourceIds
+        - issues
+        - previousSourceIds
+      - type: object
+        additionalProperties: false
+        properties:
+          field: *id016
+          kind:
+            const: missing
+          reason:
+            type: string
+            enum:
+            - not_declared
+            - unreadable
+            - ambiguous
+            - unsupported_basis
+            - conflicting_sources
+            - not_available
+          issues:
+            type: array
+            items:
+              $ref: '#/components/schemas/Issue'
+        required:
+        - field
+        - kind
+        - reason
+        - issues
+      discriminator:
+        propertyName: kind
+    ProductInputSource:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          pattern: ^src-[0-9]{1,3}$
+          description: Per-request local label (src-0, src-1, ...). Carries no stable or device-derived value (D73).
+        kind:
+          type: string
+          enum:
+          - label
+          - 'off'
+          - user_correction
+        title:
+          type: string
+          enum:
+          - Ingredient panel
+          - Nutrition panel
+          - Combined label photo
+          - Open Food Facts product
+          - User correction
+        edition:
+          type: string
+          pattern: ^(rev-[0-9]{1,9}|[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z)$
+          description: Open Food Facts product revision (rev-N) or retrieval time in UTC.
+      required:
+      - id
+      - kind
+      - title
+    ProductAnalysisInput:
+      type: object
+      additionalProperties: false
+      properties:
+        barcode:
+          type:
+          - string
+          - 'null'
+          pattern: ^(?:[0-9]{8}|[0-9]{12,14})$
+        name:
+          type:
+          - string
+          - 'null'
+          maxLength: 500
+        market:
+          type: string
+          enum:
+          - IN
+          - EU
+          - unknown
+        ingredientsText:
+          type:
+          - string
+          - 'null'
+          maxLength: 20000
+        ingredientsStatus:
+          type: string
+          enum:
+          - complete
+          - partial
+          - missing
+          - unreadable
+        observations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductInputObservation'
+          maxItems: 100
+        sourceRefs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductInputSource'
+          maxItems: 100
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/Issue'
+          maxItems: 100
+      required:
+      - barcode
+      - market
+      - ingredientsText
+      - ingredientsStatus
+      - observations
+      - sourceRefs
+      - issues
+      allOf:
+      - if:
+          properties:
+            ingredientsStatus:
+              const: complete
+        then:
+          properties:
+            ingredientsText:
+              type: string
+              minLength: 1
+    AnalyzeRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        contractVersion:
+          const: 0.2.0-draft
+        product:
+          $ref: '#/components/schemas/ProductAnalysisInput'
+        resourceCompatibility:
+          type: object
+          additionalProperties: false
+          properties:
+            taxonomyVersion:
+              type: string
+              minLength: 1
+              maxLength: 160
+            evidenceVersion:
+              type: string
+              minLength: 1
+              maxLength: 160
+            methodEdition:
+              type: string
+              minLength: 1
+              maxLength: 160
+            methodBundleSha256:
+              type: string
+              pattern: ^[a-f0-9]{64}$
+          required:
+          - taxonomyVersion
+          - evidenceVersion
+          - methodEdition
+          - methodBundleSha256
+          description: Installed public-resource compatibility only; no personal policy/profile version.
+      required:
+      - contractVersion
+      - product
+      - resourceCompatibility
+      description: D67 product-only request. No images/crops/coordinates/profile/allergies/behaviour/account/device/session
+        identifiers. Server learning persistence requires separately released D71-D75 policy; payload shape is not consent
+        evidence.
+      examples:
+      - *id020
+    AnalyzedProduct:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 160
+        barcode:
+          type:
+          - string
+          - 'null'
+          pattern: ^(?:[0-9]{8}|[0-9]{12,14})$
+        name:
+          type:
+          - string
+          - 'null'
+          maxLength: 500
+        market:
+          type: string
+          enum:
+          - IN
+          - EU
+          - unknown
+        sourceRefs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductInputSource'
+        observations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductInputObservation'
+          maxItems: 100
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/IngredientMention'
+          maxItems: 300
+        category:
+          type: string
+          enum:
+          - general
+          - fats_nuts_seeds
+          - beverage
+          - excluded
+          - unknown
+        taxonomyVersion:
+          type: string
+          minLength: 1
+          maxLength: 160
+        evidenceVersion:
+          type: string
+          minLength: 1
+          maxLength: 160
+      required:
+      - id
+      - barcode
+      - name
+      - market
+      - sourceRefs
+      - observations
+      - ingredients
+      - category
+      - taxonomyVersion
+      - evidenceVersion
+    AnalyzeResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        contractVersion:
+          const: 0.2.0-draft
+        product:
+          $ref: '#/components/schemas/AnalyzedProduct'
+        scientific:
+          $ref: '#/components/schemas/ScientificAssessment'
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/Issue'
+        inputDigest:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+          description: Lowercase hex SHA-256 of the RFC 8785 (JCS) canonical JSON of the request product value as decoded
+            by the JSON parser, before model validation or defaults, so an absent field and a null field hash differently.
+            The phone hashes the product of JSON.parse(exact body it sent) and offers the result only on equality.
+      required:
+      - contractVersion
+      - inputDigest
+      - product
+      - scientific
+      - citations
+      - issues
+      description: Product/scientific response only. Personal assessment stays local. Domain validation resolves sources and
+        citations, requires scientific.inputSnapshotId = product.id, inputDigest = client digest, and matching taxonomy/evidence/method
+        editions before an update offer; same input/method/resources must pass the shared Python/mobile vectors.
+      examples:
+      - *id021
+x-status: accepted_D83_revised_D104_freeze_at_INT-00
+x-draft-client-policy:
+  analysisFallbackStartMs: 2000
+  offlineOrExplicitBackendFailure: immediate local fallback
+  lateBackendAfterLocalDisplay: validate inputDigest, editions and active scan revision at apply time, then offer explicit
+    update; never silent replacement
+  warmupPing: GET /health with no body on each entry to the scan screen, at most once per 10 minutes; no repeating timer while
+    the screen stays open
+  personalData: local only
+  platformTransientResponse: 'A response that is not contract JSON (HTML loading page, non-JSON body, or 502/504 from the
+    platform) is a wake-up signal, not a D69 failure: the local result proceeds and the client may re-send the identical request
+    once within the remaining lifetime. This is the only permitted re-send.'
+  foregroundOnly: Leaving the foreground cancels the request; a cancelled scan never receives an offer. The offer exists only
+    while that scan result is on screen.
+x-draft-operating-limits:
+  maxRequestBytes: 262144
+  automaticAnalysisRetries: 0
+  analysisRequestLifetimeMs: 90000
+  analysisRequestLifetimeNote: Initial budget covering one documented Render Free spin-up (about one minute) plus a Neon resume
+    margin. BE-14 measures it; a different value needs a recorded decision and a re-freeze, and HYB-01 reads it from contracts/.
+  rateLimit:
+    scope: POST /v1/analyses only
+    perClientAddressPerMinute: 60
+    burst: 20
+    globalPerHour: 1800
+    key: client address appended by Render's proxy (rightmost X-Forwarded-For entry); never a client-supplied hop; held in
+      memory only, never stored or logged
+    limitation: Counters reset when the free service spins down, so this blunts bursts but does not cap monthly usage.
+  learningCollectionReleased: false
+  namedTimers:
+    ANALYSIS_FALLBACK_START_MS: D69, 2000, from analysis request send after local OCR
+    ANALYSIS_REQUEST_LIFETIME_MS: D104, 90000 initial, from the same send; changed only by decision and re-freeze
+    OFF_LOOKUP_TIMEOUT_MS: barcode lookup to Open Food Facts; defined in 06-api.md, separate operation
+    PHOTO_TO_GRADE_TARGET_MS: BRIEF aspiration, not a timer; measured in QA-01
+  description: Engineering defaults within accepted decisions, not a measured SLA.
+x-runtime-invariants:
+- No account/device/profile/behaviour identifiers in the learning dataset.
+- No image/crop/coordinates/arbitrary URL forwarding in AnalyzeRequest.
+- Reject stale/cancelled/input-revised completions on client, including candidates.
+- Validate source/citation references, units/basis, method eligibility, versions and scientific snapshot identity.
+- Do not include local personal outcomes in backend DTOs.
+- Terms acceptance is not an automatic legal-basis conclusion; collection stays off pending actual release.
+- 90-day originals and annual-reviewed useful curated examples require real deletion/review/lineage operations.
+- 'Graded score within its route bound: general and fats/nuts/seeds -17..55, beverage -18..54.'
+- Every ScientificReason.citationIds entry resolves to an entry in citations.
+- Rate-limit, 413 and body-size checks run before the body is parsed, logged or stored.
+- With collection off, POST /v1/analyses performs no database access.
+- Client source ids are per-request labels (src-N); the server assigns its own record ids.
+- Source ids are unique within one request; duplicates are rejected with 400.
+- GET /health never touches the database and answers within 5 seconds.
+- Original-submission expiry runs only while collection is on, after an analysis response is sent; never on GET /health.
+- A learning row is written only after the full response was sent while the client was still connected.
+- A graded result is offered only if scientific.method.bundleSha256 equals the request methodBundleSha256.
+- The phone renders reason text from its own reviewed template for templateId; an unknown templateId drops that reason with
+  an issue.

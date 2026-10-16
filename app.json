@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Ingradient (Dev)",
+    "slug": "ingradient",
+    "version": "0.1.0",
+    "scheme": "ingradient-dev",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.example.ingradient.dev"
+    },
+    "android": {
+      "package": "com.example.ingradient.dev",
+      "allowBackup": false,
+      "permissions": ["android.permission.CAMERA"],
+      "blockedPermissions": ["android.permission.RECORD_AUDIO"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-dev-client",
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Ingradient uses the camera to read barcodes and food labels. Photos stay on this phone.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
+      ],
+      ["expo-sqlite", { "useSQLCipher": true }],
+      "expo-secure-store",
+      "expo-web-browser"
+    ]
+  }
+}

@@ -1,0 +1,3 @@
+# Frozen contract copies are hashed byte for byte; never convert line endings.
+contracts/** -text
+resources/** -text

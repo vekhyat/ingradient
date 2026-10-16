@@ -1,0 +1,200 @@
+[
+  {
+    "name": "hard conflict forbids personal letter",
+    "schema": "PersonalAssessment",
+    "value": {
+      "state": "hard_conflict",
+      "profileVersion": "fixture-profile",
+      "policyVersion": "personal-exp-1",
+      "findings": [
+        {
+          "requirementId": "peanut",
+          "kind": "allergy",
+          "state": "confirmed_conflict",
+          "message": "Illustrative declared peanut conflict.",
+          "sourceIds": [
+            "label:1"
+          ],
+          "issues": []
+        }
+      ],
+      "grade": "A"
+    }
+  },
+  {
+    "name": "unavailable science forbids letter",
+    "schema": "ScientificAssessment",
+    "value": {
+      "state": "insufficient_data",
+      "inputSnapshotId": "fixture-1",
+      "reasons": [],
+      "issues": [
+        {
+          "code": "missing_fibre",
+          "stage": "completeness",
+          "field": "fibre",
+          "message": "Fibre is not available for this calculation.",
+          "action": "add_field"
+        }
+      ],
+      "grade": "B"
+    }
+  },
+  {
+    "name": "graded science requires reasons",
+    "schema": "ScientificAssessment",
+    "value": {
+      "state": "graded",
+      "grade": "C",
+      "score": 5,
+      "route": "general",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "faq-v11-2025-03-17",
+        "bundleId": "fixture-method-1",
+        "bundleSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "fixture-1",
+      "reasons": [],
+      "trace": [
+        {
+          "component": "fixture-only",
+          "inputFields": [
+            "sugars"
+          ],
+          "points": 5,
+          "ruleLocator": "Fixture only; not an official calculation vector",
+          "citationIds": [
+            "spf-faq-v11"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "name": "unknown nutrient is not implicit zero",
+    "schema": "NutrientObservation",
+    "value": {
+      "field": "fibre",
+      "kind": "missing",
+      "reason": "not_declared",
+      "value": 0,
+      "issues": []
+    }
+  },
+  {
+    "name": "estimate requires model identity",
+    "schema": "NutrientObservation",
+    "value": {
+      "field": "sugars",
+      "kind": "estimated",
+      "value": 1,
+      "unit": "g",
+      "basis": "per_100_g",
+      "sourceIds": [
+        "fixture-model"
+      ],
+      "issues": []
+    }
+  },
+  {
+    "name": "hard uncertain cannot hide known conflict",
+    "schema": "PersonalAssessment",
+    "value": {
+      "state": "hard_uncertain",
+      "profileVersion": "fixture-profile",
+      "policyVersion": "personal-exp-1",
+      "findings": [
+        {
+          "requirementId": "peanut",
+          "kind": "allergy",
+          "state": "confirmed_conflict",
+          "message": "Illustrative declared peanut conflict.",
+          "sourceIds": [
+            "label:1"
+          ],
+          "issues": []
+        }
+      ]
+    }
+  },
+  {
+    "name": "personal grade needs supported scientific state",
+    "schema": "LocalAssessment",
+    "value": {
+      "snapshotId": "fixture-1",
+      "scientific": {
+        "state": "insufficient_data",
+        "inputSnapshotId": "fixture-1",
+        "reasons": [],
+        "issues": [
+          {
+            "code": "missing_fibre",
+            "stage": "completeness",
+            "field": "fibre",
+            "message": "Fibre is not available for this calculation.",
+            "action": "add_field"
+          }
+        ]
+      },
+      "personal": {
+        "state": "graded",
+        "grade": "A",
+        "profileVersion": "fixture-profile",
+        "policyVersion": "personal-exp-1",
+        "findings": [],
+        "effects": [],
+        "experimental": true
+      },
+      "citations": []
+    }
+  },
+  {
+    "name": "nonblocking grade cannot contain unresolved hard finding",
+    "schema": "PersonalAssessment",
+    "value": {
+      "state": "graded",
+      "grade": "A",
+      "profileVersion": "fixture-profile",
+      "policyVersion": "personal-exp-1",
+      "findings": [
+        {
+          "requirementId": "peanut",
+          "kind": "allergy",
+          "state": "insufficient_information",
+          "message": "Illustrative declared peanut conflict.",
+          "sourceIds": [
+            "label:1"
+          ],
+          "issues": []
+        }
+      ],
+      "effects": [],
+      "experimental": true
+    }
+  },
+  {
+    "name": "baseline cannot contain adjustment effects",
+    "schema": "PersonalAssessment",
+    "value": {
+      "state": "baseline_only",
+      "grade": "A",
+      "profileVersion": "fixture-profile",
+      "policyVersion": "personal-exp-1",
+      "findings": [],
+      "effects": [
+        {
+          "preferenceId": "sugars",
+          "source": "learned",
+          "feature": "sugars",
+          "penalty": 0.5,
+          "message": "Fixture",
+          "policyVersion": "personal-exp-1"
+        }
+      ],
+      "experimental": true
+    }
+  }
+]

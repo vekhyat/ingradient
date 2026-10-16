@@ -1,0 +1,132 @@
+{
+  "revision": "2026-10-16.2",
+  "sequence": 2,
+  "publishedAt": "2026-10-16T00:00:00Z",
+  "description": "Resource manifest for Ingradient frozen resources: official Nutri-Score updated-2023 method bundle, canonical scoring vectors, evidence reason templates, and Open Food Facts taxonomies.",
+  "bundles": [
+    {
+      "bundleId": "nutriscore-updated-2023",
+      "sha256": "8a18e7f8c940075b3f7abd20e6f47f1c2828ba574d8e3c7c550fa2270235b523",
+      "sizeBytes": 28447,
+      "schemaVersion": 1,
+      "minAppContract": "0.2.0-draft",
+      "signature": "pinned-local-contract",
+      "signingKeyId": "ingradient-release-key-1",
+      "path": "method/nutriscore-updated-2023.json",
+      "licence": "project-authored; licence pending owner decision; facts from the cited official reports",
+      "sourceUrl": "https://www.health.belgium.be/sites/default/files/media/files/2025-10/va_nutri-score_calculation_tool_updated_algorithm.xlsx",
+      "accessDate": "2026-10-15",
+      "attribution": "Transnational Governance Nutri-Score (Belgium, France, Germany, Luxembourg, Netherlands, Spain, Switzerland); facts from the cited official reports",
+      "alterationsUrl": "https://www.health.belgium.be/sites/default/files/media/files/2025-10/va_conditions_of_use_nutriscore.pdf"
+    },
+    {
+      "bundleId": "nutriscore-canonical-vectors",
+      "sha256": "ec3988f45332a7c641f6bf8bd86695d9b380a20fb5c90525010ff74ba255a3a3",
+      "sizeBytes": 64959,
+      "schemaVersion": 1,
+      "minAppContract": "0.2.0-draft",
+      "signature": "pinned-local-contract",
+      "signingKeyId": "ingradient-release-key-1",
+      "path": "vectors/nutriscore-vectors.json",
+      "licence": "project-authored; licence pending owner decision; facts from the cited official reports",
+      "sourceUrl": "https://github.com/vekhyat/Ingradient/tree/main/resources/vectors/nutriscore-vectors.json",
+      "accessDate": "2026-10-15",
+      "attribution": "Ingradient project; facts derived step-by-step from official Scientific Committee reports and Belgian FPS calculation workbook",
+      "alterationsUrl": "https://github.com/vekhyat/Ingradient/tree/main/resources/vectors/nutriscore-vectors.json"
+    },
+    {
+      "bundleId": "nutriscore-reason-templates",
+      "sha256": "17727d0adec2c85ae5be7aa15088f813817a3d2743572ae6462247b8b62af868",
+      "sizeBytes": 5510,
+      "schemaVersion": 1,
+      "minAppContract": "0.2.0-draft",
+      "signature": "pinned-local-contract",
+      "signingKeyId": "ingradient-release-key-1",
+      "path": "evidence/reason-templates.json",
+      "licence": "project-authored; licence pending owner decision; facts from the cited official reports",
+      "sourceUrl": "https://github.com/vekhyat/Ingradient/tree/main/resources/evidence/reason-templates.json",
+      "accessDate": "2026-10-15",
+      "attribution": "Ingradient project; templates derived from facts in official Scientific Committee reports",
+      "alterationsUrl": "https://github.com/vekhyat/Ingradient/tree/main/resources/evidence/reason-templates.json"
+    },
+    {
+      "bundleId": "off-taxonomy-ingredients",
+      "sha256": "376642bed992a1de6dc55c5b3f4574285d79ad0079c042e6ec51a2253ab4b9ab",
+      "sizeBytes": 3074246,
+      "schemaVersion": 1,
+      "minAppContract": "0.2.0-draft",
+      "signature": "pinned-local-contract",
+      "signingKeyId": "ingradient-release-key-1",
+      "path": "taxonomy/ingredients.txt",
+      "licence": "Open Database License (ODbL) v1.0 / Database Contents License (DbCL) v1.0",
+      "sourceUrl": "https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/6a1862cc011287858267102152ce0087ea78674d/taxonomies/food/ingredients.txt",
+      "accessDate": "2026-10-15",
+      "attribution": "Open Food Facts contributors (https://world.openfoodfacts.org/terms-of-use)",
+      "alterationsUrl": "https://github.com/openfoodfacts/openfoodfacts-server/tree/main/taxonomies/food/ingredients.txt"
+    },
+    {
+      "bundleId": "off-taxonomy-additives",
+      "sha256": "9c24c74c63854ba4b778482672b93a0ec31c53071d2618d1c3e1c473e2a5530e",
+      "sizeBytes": 1121590,
+      "schemaVersion": 1,
+      "minAppContract": "0.2.0-draft",
+      "signature": "pinned-local-contract",
+      "signingKeyId": "ingradient-release-key-1",
+      "path": "taxonomy/additives.txt",
+      "licence": "Open Database License (ODbL) v1.0 / Database Contents License (DbCL) v1.0",
+      "sourceUrl": "https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/6a1862cc011287858267102152ce0087ea78674d/taxonomies/additives.txt",
+      "accessDate": "2026-10-15",
+      "attribution": "Open Food Facts contributors (https://world.openfoodfacts.org/terms-of-use)",
+      "alterationsUrl": "https://github.com/openfoodfacts/openfoodfacts-server/tree/main/taxonomies/additives.txt"
+    }
+  ],
+  "externalSources": [
+    {
+      "id": "sc-food-2022-report",
+      "url": "https://mpc.gouvernement.lu/dam-assets/le-minist%C3%A8re/consodur/2022-main-algorithm-report-update-final.pdf",
+      "cachedFilename": "scientific-committee-2022-food.bin",
+      "sha256": "9077d43957c3ee5f71c7ce9d395c3ef7ae0aa5b2d2a0eb8e25f66312555b4e9f",
+      "sizeBytes": 4456433,
+      "accessDate": "2026-10-15",
+      "status": "retrieved",
+      "licence": "Public Information / Transnational Governance"
+    },
+    {
+      "id": "sc-beverage-2023-report",
+      "url": "https://edepot.wur.nl/629571",
+      "cachedFilename": "beverage-update-2023-wur.bin",
+      "sha256": "1fe86b8cccae127f830274402d0cd527cbc6304423d3121879c54279b148ccca",
+      "sizeBytes": 2673462,
+      "accessDate": "2026-10-15",
+      "status": "retrieved",
+      "licence": "Wageningen University & Research eDepot / Open Access"
+    },
+    {
+      "id": "belgium-fps-calculator-2025",
+      "url": "https://www.health.belgium.be/sites/default/files/media/files/2025-10/va_nutri-score_calculation_tool_updated_algorithm.xlsx",
+      "cachedFilename": "belgium_calculator.bin",
+      "sha256": "c80ea768ee8fae68b25e4dc04584d8494e22d632e49cf9763af39c79ca8aa590",
+      "sizeBytes": 2431156,
+      "accessDate": "2026-10-15",
+      "status": "retrieved",
+      "licence": "Belgian FPS Public Health / Public Service"
+    },
+    {
+      "id": "belgium-fps-conditions-of-use",
+      "url": "https://www.health.belgium.be/sites/default/files/media/files/2025-10/va_conditions_of_use_nutriscore.pdf",
+      "cachedFilename": "belgium_conditions_of_use.bin",
+      "sha256": "f825092127213307eb529a585ff6af734b11b693ee81fa668b4f7cc0e3a55e2f",
+      "sizeBytes": 1920925,
+      "accessDate": "2026-10-15",
+      "status": "retrieved",
+      "licence": "Belgian FPS Public Health / Public Service"
+    },
+    {
+      "id": "spf-faq-v11",
+      "url": "https://www.santepubliquefrance.fr/sites/default/files/rdd/document/FAQ-updatedAlgo-V11.pdf",
+      "status": "failed_http_403_forbidden",
+      "accessDate": "2026-10-15",
+      "note": "Host server returned HTTP 403 Forbidden on direct fetch. All technical tables cross-verified using the official Belgian FPS Public Health tool and Luxembourg/WUR Scientific Committee reports."
+    }
+  ]
+}

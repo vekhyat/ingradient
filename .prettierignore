@@ -1,0 +1,17 @@
+node_modules/
+.expo/
+dist/
+android/
+ios/
+package-lock.json
+
+# Local planning and instruction files
+plan/
+AGENTS.md
+RESEARCH.md
+
+# Frozen contract copies: byte-exact, hashes pinned in contracts/MANIFEST.json
+contracts/
+
+# Pinned resources: byte-exact, hashes in resources/manifest.json
+resources/

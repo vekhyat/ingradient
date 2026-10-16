@@ -1,0 +1,12 @@
+{
+  "contractVersion": "0.2.0-draft",
+  "decisions": "D66-D70, D83, D104, D105",
+  "note": "Frozen copies. Change them only by revising the plan, re-running the freeze and recording a decision.",
+  "sha256": {
+    "local-contract.schema.json": "430e1a73ef9aecb77ce0cfbd1aa12c6d418bff089be346a9737a6c68ef5051f1",
+    "negative/local.json": "1b58e2bd585d95566f810609afc5b873fb3f2094292620fe4c2d85356092315b",
+    "negative/wire.json": "b8e2761f17fb41bc7a2a4dfc751f5989e36f99b007e342d618a4a2563922ee48",
+    "openapi-hybrid.yaml": "a4be1430bf8348cae6b1e9b7b4ddc6f8572bb3113c7757c8098a65f3f2101039",
+    "vectors/input-digest.json": "d2989c74d591ca11b3b8c0aa1c0c04bb81a5736c1871c805dd86d27a3ce57a8c"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "_source": "https://world.openfoodfacts.org/api/v3/product/8901058005578.json?fields=code,product_name,brands,countries_tags,categories_tags,ingredients_text,ingredients,nutriments,quantity,nutrition_data_per,rev,last_modified_t",
+  "_attribution": "Open Food Facts contributors",
+  "_licence": "ODbL 1.0 (https://opendatacommons.org/licenses/odbl/1.0/)",
+  "_retrieved_at": "2026-10-16T02:27:20.903Z",
+  "code": "8901058005578",
+  "errors": [],
+  "product": {
+    "brands": "Maggi",
+    "code": "8901058005578",
+    "countries_tags": ["en:india"],
+    "ecoscore_tags": ["unknown"],
+    "last_modified_t": 1730996788,
+    "rev": 4
+  },
+  "result": {
+    "id": "product_found",
+    "lc_name": "Product found",
+    "name": "Product found"
+  },
+  "status": "success",
+  "warnings": []
+}

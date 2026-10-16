@@ -1,0 +1,484 @@
+[
+  {
+    "schema": "AnalyzeRequest",
+    "name": "top-level personal profile is not a wire field",
+    "value": {
+      "contractVersion": "0.2.0-draft",
+      "product": {
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [],
+        "issues": []
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "profile": {
+        "allergies": [
+          "peanut"
+        ]
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "top-level image is not a wire field",
+    "value": {
+      "contractVersion": "0.2.0-draft",
+      "product": {
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [],
+        "issues": []
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "imageBase64": "aGVsbG8="
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "account identifier is not a wire field",
+    "value": {
+      "contractVersion": "0.2.0-draft",
+      "product": {
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [],
+        "issues": []
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "accountId": "acct-1"
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "device identifier is not a wire field",
+    "value": {
+      "contractVersion": "0.2.0-draft",
+      "product": {
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [],
+        "issues": []
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "deviceId": "device-1"
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "nested product image is not a wire field",
+    "value": {
+      "contractVersion": "0.2.0-draft",
+      "product": {
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [],
+        "issues": [],
+        "images": [
+          "aGVsbG8="
+        ]
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeResponse",
+    "name": "response cannot carry a personal outcome",
+    "value": {
+      "contractVersion": "0.2.0-draft",
+      "inputDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+      "product": {
+        "id": "fictional-snapshot",
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "sourceRefs": [],
+        "observations": [],
+        "ingredients": [],
+        "category": "unknown",
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence"
+      },
+      "scientific": {
+        "state": "method_unavailable",
+        "inputSnapshotId": "fictional-snapshot",
+        "reasons": [],
+        "issues": [
+          {
+            "code": "candidate_method_not_released",
+            "stage": "method",
+            "message": "A reviewed compatible method bundle is not available.",
+            "action": "none"
+          }
+        ]
+      },
+      "citations": [],
+      "issues": [
+        {
+          "code": "candidate_method_not_released",
+          "stage": "method",
+          "message": "A reviewed compatible method bundle is not available.",
+          "action": "none"
+        }
+      ],
+      "personal": {
+        "state": "graded",
+        "grade": "B"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "stable installation id hidden in a source id",
+    "value": {
+      "contractVersion": "0.2.0-draft",
+      "product": {
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "expo-install-3f2a9c",
+            "kind": "label",
+            "title": "Ingredient panel"
+          }
+        ],
+        "issues": []
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "method edition must be declared",
+    "value": {
+      "contractVersion": "0.2.0-draft",
+      "product": {
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [],
+        "issues": []
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "personal issue stage never leaves the phone",
+    "value": {
+      "contractVersion": "0.2.0-draft",
+      "product": {
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [],
+        "issues": [
+          {
+            "code": "allergy_conflict",
+            "stage": "personal",
+            "message": "x",
+            "action": "none"
+          }
+        ]
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeResponse",
+    "name": "response must echo the input digest",
+    "value": {
+      "contractVersion": "0.2.0-draft",
+      "product": {
+        "id": "fictional-snapshot",
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "sourceRefs": [],
+        "observations": [],
+        "ingredients": [],
+        "category": "unknown",
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence"
+      },
+      "scientific": {
+        "state": "method_unavailable",
+        "inputSnapshotId": "fictional-snapshot",
+        "reasons": [],
+        "issues": [
+          {
+            "code": "candidate_method_not_released",
+            "stage": "method",
+            "message": "A reviewed compatible method bundle is not available.",
+            "action": "none"
+          }
+        ]
+      },
+      "citations": [],
+      "issues": [
+        {
+          "code": "candidate_method_not_released",
+          "stage": "method",
+          "message": "A reviewed compatible method bundle is not available.",
+          "action": "none"
+        }
+      ]
+    }
+  },
+  {
+    "schema": "ScientificAssessment",
+    "name": "graded score below the beverage floor",
+    "value": {
+      "state": "graded",
+      "grade": "C",
+      "score": -19,
+      "route": "general",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "faq-v11-2025-03-17",
+        "bundleId": "fixture-method-1",
+        "bundleSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "fixture-1",
+      "reasons": [
+        {
+          "id": "fixture-reason",
+          "templateId": "fixture.reason",
+          "text": "Illustrative method reason; this fixture is not a scored product.",
+          "citationIds": [
+            "spf-faq-v11"
+          ],
+          "inputFields": [
+            "sugars"
+          ],
+          "step": "sugars-points"
+        }
+      ],
+      "trace": [
+        {
+          "component": "fixture-only",
+          "inputFields": [
+            "sugars"
+          ],
+          "points": 5,
+          "ruleLocator": "Fixture only; not an official calculation vector",
+          "citationIds": [
+            "spf-faq-v11"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "schema": "ScientificAssessment",
+    "name": "graded method label must be the accepted wording",
+    "value": {
+      "state": "graded",
+      "grade": "C",
+      "score": 5,
+      "route": "general",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "faq-v11-2025-03-17",
+        "bundleId": "fixture-method-1",
+        "bundleSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "label": "Healthy choice"
+      },
+      "inputSnapshotId": "fixture-1",
+      "reasons": [
+        {
+          "id": "fixture-reason",
+          "templateId": "fixture.reason",
+          "text": "Illustrative method reason; this fixture is not a scored product.",
+          "citationIds": [
+            "spf-faq-v11"
+          ],
+          "inputFields": [
+            "sugars"
+          ],
+          "step": "sugars-points"
+        }
+      ],
+      "trace": [
+        {
+          "component": "fixture-only",
+          "inputFields": [
+            "sugars"
+          ],
+          "points": 5,
+          "ruleLocator": "Fixture only; not an official calculation vector",
+          "citationIds": [
+            "spf-faq-v11"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "stable installation id hidden in a source title",
+    "value": {
+      "contractVersion": "0.2.0-draft",
+      "product": {
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "label",
+            "title": "expo-install-3f2a9c"
+          }
+        ],
+        "issues": []
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "method bundle hash must be declared",
+    "value": {
+      "contractVersion": "0.2.0-draft",
+      "product": {
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [],
+        "issues": []
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method"
+      }
+    }
+  },
+  {
+    "schema": "ScientificAssessment",
+    "name": "graded reason must name its reviewed template",
+    "value": {
+      "state": "graded",
+      "grade": "C",
+      "score": 5,
+      "route": "general",
+      "method": {
+        "id": "nutriscore-updated-2023",
+        "edition": "faq-v11-2025-03-17",
+        "bundleId": "fixture-method-1",
+        "bundleSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "label": "Nutrition grade · European reference"
+      },
+      "inputSnapshotId": "fixture-1",
+      "reasons": [
+        {
+          "id": "fixture-reason",
+          "text": "Illustrative method reason; this fixture is not a scored product.",
+          "citationIds": [
+            "spf-faq-v11"
+          ],
+          "inputFields": [
+            "sugars"
+          ],
+          "step": "sugars-points"
+        }
+      ],
+      "trace": [
+        {
+          "component": "fixture-only",
+          "inputFields": [
+            "sugars"
+          ],
+          "points": 5,
+          "ruleLocator": "Fixture only; not an official calculation vector",
+          "citationIds": [
+            "spf-faq-v11"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  }
+]
