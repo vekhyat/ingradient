@@ -12,44 +12,9 @@ import {
   type OffIngredientV3,
   type OffProductV3,
 } from './types';
+import { deriveScoringFacts } from './off-scoring-facts';
 
-const BEVERAGE_TAGS = new Set([
-  'en:beverages',
-  'en:beverages-and-beverages-preparations',
-  'en:drinks',
-  'en:waters',
-  'en:milks',
-  'en:milks-liquid-and-powder',
-  'en:whole-milks',
-  'en:fruit-juices',
-  'en:fruit-nectars',
-  'en:sodas',
-  'en:soft-drinks',
-  'en:plant-milks',
-  'en:teas',
-  'en:coffees',
-  'en:energy-drinks',
-]);
-
-const FATS_NUTS_SEEDS_TAGS = new Set([
-  'en:fats',
-  'en:vegetable-fats',
-  'en:vegetable-oils',
-  'en:fats-and-oils',
-  'en:nuts',
-  'en:nuts-and-their-products',
-  'en:seeds',
-  'en:oilseeds',
-  'en:butters',
-  'en:margarines',
-]);
-
-const EXCLUDED_TAGS = new Set([
-  'en:baby-foods',
-  'en:infant-formulas',
-  'en:alcoholic-beverages',
-  'en:dietary-supplements',
-]);
+import { resolveOffCategory } from './off-category';
 
 /**
  * Official European Union Member States (EU-27) + European Union tag.
@@ -96,33 +61,7 @@ export interface MapperOptions {
 /**
  * Determines whether the product belongs to a specific category.
  */
-export function resolveCategory(
-  categoriesTags?: readonly string[],
-): 'general' | 'fats_nuts_seeds' | 'beverage' | 'excluded' | 'unknown' {
-  if (!categoriesTags || categoriesTags.length === 0) {
-    return 'unknown';
-  }
-
-  for (const tag of categoriesTags) {
-    if (EXCLUDED_TAGS.has(tag)) {
-      return 'excluded';
-    }
-  }
-
-  for (const tag of categoriesTags) {
-    if (BEVERAGE_TAGS.has(tag)) {
-      return 'beverage';
-    }
-  }
-
-  for (const tag of categoriesTags) {
-    if (FATS_NUTS_SEEDS_TAGS.has(tag)) {
-      return 'fats_nuts_seeds';
-    }
-  }
-
-  return 'general';
-}
+export const resolveCategory = resolveOffCategory;
 
 /**
  * Determines the target market (IN, EU, or unknown) from country tags.
@@ -769,6 +708,10 @@ export function mapOffProductToSnapshot(
     taxonomyVersion,
     evidenceVersion,
   };
+  const scoringFacts = deriveScoringFacts(product, category, sourceRefId);
+  if (scoringFacts !== undefined) {
+    snapshot.scoringFacts = scoringFacts;
+  }
 
   const validator = localValidators.ProductSnapshot;
   if (!validator(snapshot)) {

@@ -1,8 +1,8 @@
 {
-  "revision": "2026-10-16.2",
-  "sequence": 2,
-  "publishedAt": "2026-10-16T00:00:00Z",
-  "description": "Resource manifest for Ingradient frozen resources: official Nutri-Score updated-2023 method bundle, canonical scoring vectors, evidence reason templates, and Open Food Facts taxonomies.",
+  "revision": "2026-10-17.1",
+  "sequence": 3,
+  "publishedAt": "2026-10-17T00:00:00Z",
+  "description": "Resource manifest for Ingradient frozen resources: official Nutri-Score updated-2023 method bundle, canonical scoring vectors, evidence reason templates, and Open Food Facts taxonomies. Includes project-authored source-derived exact-match engineering fixtures; these are not independent research labels.",
   "bundles": [
     {
       "bundleId": "nutriscore-updated-2023",
@@ -36,8 +36,8 @@
     },
     {
       "bundleId": "nutriscore-reason-templates",
-      "sha256": "17727d0adec2c85ae5be7aa15088f813817a3d2743572ae6462247b8b62af868",
-      "sizeBytes": 5510,
+      "sha256": "2231d21128cdc62e4b76d39584ebd59f956ee07828dc2cd3b30775d08fb6d038",
+      "sizeBytes": 7761,
       "schemaVersion": 1,
       "minAppContract": "0.2.0-draft",
       "signature": "pinned-local-contract",
@@ -78,6 +78,21 @@
       "accessDate": "2026-10-15",
       "attribution": "Open Food Facts contributors (https://world.openfoodfacts.org/terms-of-use)",
       "alterationsUrl": "https://github.com/openfoodfacts/openfoodfacts-server/tree/main/taxonomies/additives.txt"
+    },
+    {
+      "bundleId": "off-exact-match-vectors",
+      "sha256": "356d9e30067a576ed9f6b75cefe175c068ad777957427fef2f98e0f6a81109c4",
+      "sizeBytes": 20612,
+      "schemaVersion": 1,
+      "minAppContract": "0.3.0-draft",
+      "signature": "pinned-local-contract",
+      "signingKeyId": "ingradient-release-key-1",
+      "path": "vectors/match-vectors.json",
+      "licence": "OFF-derived expectations: ODbL v1.0 / DbCL v1.0; project-authored scaffolding licence pending owner/team decision",
+      "sourceUrl": "https://github.com/vekhyat/Ingradient/tree/main/tools/resources/build_match_vectors.py",
+      "accessDate": "2026-10-17",
+      "attribution": "Open Food Facts contributors (https://world.openfoodfacts.org/terms-of-use); Ingradient project source-derived engineering fixtures",
+      "alterationsUrl": "https://github.com/vekhyat/Ingradient/tree/main/tools/resources/build_match_vectors.py"
     }
   ],
   "externalSources": [

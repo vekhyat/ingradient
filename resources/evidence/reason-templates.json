@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "evidenceEdition": "nutriscore-reasons-2023.1",
+  "evidenceEdition": "nutriscore-reasons-2023.2",
   "description": "Reviewed non-alarmist scientific reason templates for Nutri-Score calculation components.",
   "templates": [
     {
@@ -103,12 +103,13 @@
     {
       "templateId": "nutriscore.sweetener",
       "component": "sweeteners",
-      "format": "Presence of authorized non-nutritive sweetener adds 4 adverse points in the beverage calculation route.",
+      "format": "Presence of an included non-nutritive sweetener adds 4 adverse points in the beverage calculation route.",
       "defaultText": "Under the updated beverage algorithm, the presence of non-nutritive sweeteners adds 4 adverse points.",
       "citationIds": [
         "sc-beverage-2023"
       ],
-      "scope": "Beverage route adverse points for non-nutritive sweeteners."
+      "scope": "Beverage reference scoring for included non-nutritive sweeteners; this is not a legal-authorisation assessment.",
+      "sourceLocator": "2023 beverages report p. 27 Table 2 and p. 73 beverage points table; pinned method routes.beverage.adverseComponents.sweeteners"
     },
     {
       "templateId": "nutriscore.cheese_rule",
@@ -119,6 +120,39 @@
         "sc-food-2022"
       ],
       "scope": "Cheese specific favourable component subtraction exception."
+    },
+    {
+      "templateId": "nutriscore.water_classification",
+      "component": "water_classification",
+      "format": "Supported plain water is classified as Grade A automatically under the European reference algorithm.",
+      "defaultText": "A supported plain-water classification uses the water exception rather than a nutrient-point calculation.",
+      "citationIds": [
+        "sc-beverage-2023"
+      ],
+      "scope": "Supported plain water only; zero energy alone does not establish this classification.",
+      "sourceLocator": "2023 beverages report p. 75 Final Nutri-Score thresholds; pinned method routes.beverage.scoring.waterRule"
+    },
+    {
+      "templateId": "nutriscore.protein_not_counted",
+      "component": "protein",
+      "format": "Protein earns {points} favourable point(s), but these points are not subtracted under the conditional protein rule.",
+      "defaultText": "The applicable reference route does not subtract protein points in this case.",
+      "citationIds": [
+        "sc-food-2022"
+      ],
+      "scope": "General-food and fats/oils/nuts/seeds conditional protein subtraction only.",
+      "sourceLocator": "2022 food report p. 132 section 1.3 and p. 135 section 2.4; pinned method routes.general.scoring.conditionalProteinRule and routes.fats_nuts_seeds.scoring.conditionalProteinRule"
+    },
+    {
+      "templateId": "nutriscore.energy_from_saturates",
+      "component": "energy_from_saturates",
+      "format": "Energy from saturated fatty acids of {value} {unit} contributes {points} adverse point(s).",
+      "defaultText": "For fats, oils, nuts and seeds, the energy component is calculated from saturated fatty acids, rather than total energy.",
+      "citationIds": [
+        "sc-food-2022"
+      ],
+      "scope": "Fats/oils/nuts/seeds energy from saturates; derived kJ per 100g.",
+      "sourceLocator": "2022 food report p. 133 Table 2.2 and its energy-from-saturates footnote; pinned method routes.fats_nuts_seeds.adverseComponents.energy"
     }
   ]
 }

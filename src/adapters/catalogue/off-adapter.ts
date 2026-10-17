@@ -213,6 +213,7 @@ export class OpenFoodFactsAdapter {
         headers: {
           'User-Agent': this.config.userAgent,
           Accept: 'application/json',
+          'Cache-Control': 'no-store',
         },
         signal: controller.signal,
       });

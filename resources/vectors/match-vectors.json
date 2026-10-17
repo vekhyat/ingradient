@@ -1,0 +1,779 @@
+{
+  "schemaVersion": 1,
+  "edition": "off-exact-match-2026-10-17.1",
+  "profile": "exact-identity",
+  "canonicalConvention": "First English taxonomy name, lowercased with spaces replaced by hyphens; significant code parentheses preserved.",
+  "scope": "Project-authored source-derived engineering fixtures. Not official OFF vectors, independent human research gold, food authorisation or health evidence.",
+  "licence": "OFF-derived taxonomy expectations: ODbL v1.0 / DbCL v1.0. Project-authored test scaffolding: project licence pending owner/team decision.",
+  "attribution": "Open Food Facts contributors (https://world.openfoodfacts.org/terms-of-use)",
+  "comparison": "Compare state, canonicalId and lexically sorted candidateIds for every exact-identity vector. Do not mix these counts with nutrition calculation parity. Fuzzy suggestions and parser wrapper handling require separate tests; they cannot upgrade identity.",
+  "sourcePins": [
+    {
+      "bundleId": "off-taxonomy-ingredients",
+      "path": "taxonomy/ingredients.txt",
+      "sha256": "376642bed992a1de6dc55c5b3f4574285d79ad0079c042e6ec51a2253ab4b9ab",
+      "sizeBytes": 3074246,
+      "sourceUrl": "https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/6a1862cc011287858267102152ce0087ea78674d/taxonomies/food/ingredients.txt",
+      "licence": "Open Database License (ODbL) v1.0 / Database Contents License (DbCL) v1.0",
+      "attribution": "Open Food Facts contributors (https://world.openfoodfacts.org/terms-of-use)"
+    },
+    {
+      "bundleId": "off-taxonomy-additives",
+      "path": "taxonomy/additives.txt",
+      "sha256": "9c24c74c63854ba4b778482672b93a0ec31c53071d2618d1c3e1c473e2a5530e",
+      "sizeBytes": 1121590,
+      "sourceUrl": "https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/6a1862cc011287858267102152ce0087ea78674d/taxonomies/additives.txt",
+      "licence": "Open Database License (ODbL) v1.0 / Database Contents License (DbCL) v1.0",
+      "attribution": "Open Food Facts contributors (https://world.openfoodfacts.org/terms-of-use)"
+    }
+  ],
+  "sources": {
+    "salt": {
+      "bundleId": "off-taxonomy-ingredients",
+      "line": 9278,
+      "englishEntry": "en: salt, table salt, common salt, cooking salt, dry salt, edible salt, edible common salt, food salt",
+      "canonicalId": "en:salt"
+    },
+    "water": {
+      "bundleId": "off-taxonomy-ingredients",
+      "line": 37053,
+      "englishEntry": "en: water, drinking water, tap water",
+      "canonicalId": "en:water"
+    },
+    "milk": {
+      "bundleId": "off-taxonomy-ingredients",
+      "line": 2590,
+      "englishEntry": "en: milk, milk ingredients",
+      "canonicalId": "en:milk"
+    },
+    "skimmed-milk": {
+      "bundleId": "off-taxonomy-ingredients",
+      "line": 2850,
+      "englishEntry": "en: skimmed milk, skim milk, non-fat milk, nonfat milk, fat-free milk, low-fat milk, 1% fat milk, lowfat milk",
+      "canonicalId": "en:skimmed-milk"
+    },
+    "whey": {
+      "bundleId": "off-taxonomy-ingredients",
+      "line": 4407,
+      "englishEntry": "en: whey, milk whey",
+      "canonicalId": "en:whey"
+    },
+    "lactose": {
+      "bundleId": "off-taxonomy-ingredients",
+      "line": 3877,
+      "englishEntry": "en: lactose, milk sugar, milk lactose",
+      "canonicalId": "en:lactose"
+    },
+    "turmeric": {
+      "bundleId": "off-taxonomy-ingredients",
+      "line": 73664,
+      "englishEntry": "en: turmeric, turmeric root",
+      "canonicalId": "en:turmeric"
+    },
+    "whole-wheat": {
+      "bundleId": "off-taxonomy-ingredients",
+      "line": 29201,
+      "englishEntry": "en: whole wheat flour, wholewheat flour, wholemeal wheat flour, atta",
+      "canonicalId": "en:whole-wheat-flour"
+    },
+    "atta": {
+      "bundleId": "off-taxonomy-ingredients",
+      "line": 29305,
+      "englishEntry": "en: atta",
+      "canonicalId": "en:atta"
+    },
+    "maida": {
+      "bundleId": "off-taxonomy-ingredients",
+      "line": 29020,
+      "englishEntry": "en: maida",
+      "canonicalId": "en:maida"
+    },
+    "refined-wheat": {
+      "bundleId": "off-taxonomy-ingredients",
+      "line": 29048,
+      "englishEntry": "en: refined wheat flour, maida",
+      "canonicalId": "en:refined-wheat-flour"
+    },
+    "e100": {
+      "bundleId": "off-taxonomy-additives",
+      "line": 56,
+      "englishEntry": "en: E100, Curcumin, Turmeric extract, curcuma extract, turmeric color",
+      "canonicalId": "en:e100"
+    },
+    "e503": {
+      "bundleId": "off-taxonomy-additives",
+      "line": 16770,
+      "englishEntry": "en: E503, Ammonium carbonates",
+      "canonicalId": "en:e503"
+    },
+    "e503ii": {
+      "bundleId": "off-taxonomy-additives",
+      "line": 16858,
+      "englishEntry": "en: E503(ii), Ammonium hydrogen carbonate, Baker's ammonia, Sal volatile, Salt of hartshorn, Ammonium bicarbonate",
+      "canonicalId": "en:e503(ii)"
+    },
+    "e160ai": {
+      "bundleId": "off-taxonomy-additives",
+      "line": 2025,
+      "englishEntry": "en: E160a(i), Beta-carotene, b-carotene, beta-carotene color",
+      "canonicalId": "en:e160a(i)"
+    },
+    "e150d": {
+      "bundleId": "off-taxonomy-additives",
+      "line": 1693,
+      "englishEntry": "en: E150d, Sulphite ammonia caramel, Sulfite ammonia caramel, Caramel Colour Ammonium Sulphite Process, Colour Sulphite Ammonia Caramel, Sulfite ammonia caramel, Colour E150d, Food Colour 150d, CAS 8028-89-5, acid-proof caramel, soft-drink caramel",
+      "canonicalId": "en:e150d"
+    }
+  },
+  "vectors": [
+    {
+      "id": "salt-exact",
+      "input": {
+        "text": "salt",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:salt",
+        "candidateIds": [
+          "en:salt"
+        ]
+      },
+      "sourceRefs": [
+        "salt"
+      ],
+      "rationale": "English canonical entry."
+    },
+    {
+      "id": "salt-synonym",
+      "input": {
+        "text": "table salt",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:salt",
+        "candidateIds": [
+          "en:salt"
+        ]
+      },
+      "sourceRefs": [
+        "salt"
+      ],
+      "rationale": "Explicit synonym on the same English line."
+    },
+    {
+      "id": "salt-whitespace-case",
+      "input": {
+        "text": "  TABLE   Salt  ",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:salt",
+        "candidateIds": [
+          "en:salt"
+        ]
+      },
+      "sourceRefs": [
+        "salt"
+      ],
+      "rationale": "Case/whitespace normalization only."
+    },
+    {
+      "id": "water-synonym",
+      "input": {
+        "text": "drinking water",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:water",
+        "candidateIds": [
+          "en:water"
+        ]
+      },
+      "sourceRefs": [
+        "water"
+      ],
+      "rationale": "Explicit English synonym; this is ingredient identity, not a plain-water product assertion."
+    },
+    {
+      "id": "milk-identity",
+      "input": {
+        "text": "milk",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:milk",
+        "candidateIds": [
+          "en:milk"
+        ]
+      },
+      "sourceRefs": [
+        "milk"
+      ],
+      "rationale": "No inferred derivative or allergen status."
+    },
+    {
+      "id": "numeric-leading-alias",
+      "input": {
+        "text": "1% fat milk",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:skimmed-milk",
+        "candidateIds": [
+          "en:skimmed-milk"
+        ]
+      },
+      "sourceRefs": [
+        "skimmed-milk"
+      ],
+      "rationale": "An exact numeric-leading English food alias is not malformed additive syntax."
+    },
+    {
+      "id": "lactose-synonym",
+      "input": {
+        "text": "milk sugar",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:lactose",
+        "candidateIds": [
+          "en:lactose"
+        ]
+      },
+      "sourceRefs": [
+        "lactose",
+        "milk"
+      ],
+      "rationale": "Source synonym resolves lactose, never milk identity."
+    },
+    {
+      "id": "whey-synonym",
+      "input": {
+        "text": "milk whey",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:whey",
+        "candidateIds": [
+          "en:whey"
+        ]
+      },
+      "sourceRefs": [
+        "whey",
+        "milk"
+      ],
+      "rationale": "Derivative relationship does not replace whey with milk."
+    },
+    {
+      "id": "turmeric-identity",
+      "input": {
+        "text": "turmeric",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:turmeric",
+        "candidateIds": [
+          "en:turmeric"
+        ]
+      },
+      "sourceRefs": [
+        "turmeric",
+        "e100"
+      ],
+      "rationale": "Turmeric is distinct from the additive identity E100."
+    },
+    {
+      "id": "curcumin-alias",
+      "input": {
+        "text": "Curcumin",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:e100",
+        "candidateIds": [
+          "en:e100"
+        ]
+      },
+      "sourceRefs": [
+        "e100",
+        "turmeric"
+      ],
+      "rationale": "Pinned additive English alias, distinct from turmeric root."
+    },
+    {
+      "id": "turmeric-extract-alias",
+      "input": {
+        "text": "Turmeric extract",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:e100",
+        "candidateIds": [
+          "en:e100"
+        ]
+      },
+      "sourceRefs": [
+        "e100",
+        "turmeric"
+      ],
+      "rationale": "This exact extract alias is listed for E100; the rule does not generalize to turmeric."
+    },
+    {
+      "id": "e-code-exact",
+      "input": {
+        "text": "E100",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:e100",
+        "candidateIds": [
+          "en:e100"
+        ]
+      },
+      "sourceRefs": [
+        "e100"
+      ],
+      "rationale": "Explicit E prefix establishes additive-code context."
+    },
+    {
+      "id": "e-code-spaced",
+      "input": {
+        "text": "E 100",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:e100",
+        "candidateIds": [
+          "en:e100"
+        ]
+      },
+      "sourceRefs": [
+        "e100"
+      ],
+      "rationale": "Spacing normalization preserves the source code identity."
+    },
+    {
+      "id": "ins-code",
+      "input": {
+        "text": "INS 100",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:e100",
+        "candidateIds": [
+          "en:e100"
+        ]
+      },
+      "sourceRefs": [
+        "e100"
+      ],
+      "rationale": "Accepted E/INS code normalization is identity lookup only; no jurisdictional permission inferred."
+    },
+    {
+      "id": "bare-number-refused",
+      "input": {
+        "text": "100",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "unresolved",
+        "canonicalId": null,
+        "candidateIds": []
+      },
+      "sourceRefs": [
+        "e100"
+      ],
+      "rationale": "A bare number outside additive context is not an additive assertion."
+    },
+    {
+      "id": "bare-number-contextual",
+      "input": {
+        "text": "100",
+        "additiveContext": true
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:e100",
+        "candidateIds": [
+          "en:e100"
+        ]
+      },
+      "sourceRefs": [
+        "e100"
+      ],
+      "rationale": "Explicit parser-provided additive context permits the code lookup."
+    },
+    {
+      "id": "e503-group",
+      "input": {
+        "text": "E503",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:e503",
+        "candidateIds": [
+          "en:e503"
+        ]
+      },
+      "sourceRefs": [
+        "e503",
+        "e503ii"
+      ],
+      "rationale": "A group does not auto-resolve to a specific suffix member."
+    },
+    {
+      "id": "suffix-roman",
+      "input": {
+        "text": "E503(ii)",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:e503(ii)",
+        "candidateIds": [
+          "en:e503(ii)"
+        ]
+      },
+      "sourceRefs": [
+        "e503ii"
+      ],
+      "rationale": "Meaningful parentheses remain in the canonical source key."
+    },
+    {
+      "id": "suffix-ins",
+      "input": {
+        "text": "INS503(ii)",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:e503(ii)",
+        "candidateIds": [
+          "en:e503(ii)"
+        ]
+      },
+      "sourceRefs": [
+        "e503ii"
+      ],
+      "rationale": "INS prefix plus meaningful suffix."
+    },
+    {
+      "id": "suffix-spaced",
+      "input": {
+        "text": "E503 ( ii )",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:e503(ii)",
+        "candidateIds": [
+          "en:e503(ii)"
+        ]
+      },
+      "sourceRefs": [
+        "e503ii"
+      ],
+      "rationale": "Internal code spacing changes no suffix meaning."
+    },
+    {
+      "id": "suffix-contextual",
+      "input": {
+        "text": "503(ii)",
+        "additiveContext": true
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:e503(ii)",
+        "candidateIds": [
+          "en:e503(ii)"
+        ]
+      },
+      "sourceRefs": [
+        "e503ii"
+      ],
+      "rationale": "Context permits the complete specific code, not its group."
+    },
+    {
+      "id": "suffix-without-context",
+      "input": {
+        "text": "503(ii)",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "unresolved",
+        "canonicalId": null,
+        "candidateIds": []
+      },
+      "sourceRefs": [
+        "e503ii"
+      ],
+      "rationale": "No E/INS prefix or explicit additive context."
+    },
+    {
+      "id": "letter-roman-suffix",
+      "input": {
+        "text": "E160a(i)",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:e160a(i)",
+        "candidateIds": [
+          "en:e160a(i)"
+        ]
+      },
+      "sourceRefs": [
+        "e160ai"
+      ],
+      "rationale": "Preserve both the letter and roman suffix."
+    },
+    {
+      "id": "letter-suffix",
+      "input": {
+        "text": "E150d",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "matched",
+        "canonicalId": "en:e150d",
+        "candidateIds": [
+          "en:e150d"
+        ]
+      },
+      "sourceRefs": [
+        "e150d"
+      ],
+      "rationale": "Letter suffix is part of the English source code."
+    },
+    {
+      "id": "letter-parenthesis-refused",
+      "input": {
+        "text": "E150(d)",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "unresolved",
+        "canonicalId": null,
+        "candidateIds": []
+      },
+      "sourceRefs": [
+        "e150d"
+      ],
+      "rationale": "Source has E150d, not E150(d); never repair unsupported syntax into a different code."
+    },
+    {
+      "id": "unsupported-roman-refused",
+      "input": {
+        "text": "E503(x)",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "unresolved",
+        "canonicalId": null,
+        "candidateIds": []
+      },
+      "sourceRefs": [
+        "e503",
+        "e503ii"
+      ],
+      "rationale": "A missing suffix identity must not collapse to the group."
+    },
+    {
+      "id": "repeated-suffix-refused",
+      "input": {
+        "text": "E503(ii)(ii)",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "unresolved",
+        "canonicalId": null,
+        "candidateIds": []
+      },
+      "sourceRefs": [
+        "e503ii"
+      ],
+      "rationale": "Malformed repeated suffix is not a valid source alias."
+    },
+    {
+      "id": "mixed-repeated-suffix-refused",
+      "input": {
+        "text": "E160a(i)(ii)",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "unresolved",
+        "canonicalId": null,
+        "candidateIds": []
+      },
+      "sourceRefs": [
+        "e160ai"
+      ],
+      "rationale": "Do not truncate a code to its first valid prefix."
+    },
+    {
+      "id": "trailing-code-junk-refused",
+      "input": {
+        "text": "E503(ii)junk",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "unresolved",
+        "canonicalId": null,
+        "candidateIds": []
+      },
+      "sourceRefs": [
+        "e503ii"
+      ],
+      "rationale": "Whole text must match; trailing junk is unresolved."
+    },
+    {
+      "id": "unknown-code",
+      "input": {
+        "text": "E9999",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "unresolved",
+        "canonicalId": null,
+        "candidateIds": []
+      },
+      "sourceRefs": [
+        "e100"
+      ],
+      "rationale": "No exact English source alias exists for the supplied code."
+    },
+    {
+      "id": "atta-collision",
+      "input": {
+        "text": "atta",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "ambiguous",
+        "canonicalId": null,
+        "candidateIds": [
+          "en:atta",
+          "en:whole-wheat-flour"
+        ]
+      },
+      "sourceRefs": [
+        "whole-wheat",
+        "atta"
+      ],
+      "rationale": "Two explicit English entries share this alias; retain both, choose neither."
+    },
+    {
+      "id": "maida-collision",
+      "input": {
+        "text": "maida",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "ambiguous",
+        "canonicalId": null,
+        "candidateIds": [
+          "en:maida",
+          "en:refined-wheat-flour"
+        ]
+      },
+      "sourceRefs": [
+        "maida",
+        "refined-wheat"
+      ],
+      "rationale": "Two exact source identities; no guessed canonical winner."
+    },
+    {
+      "id": "fuzzy-not-promoted",
+      "input": {
+        "text": "sallt",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "unresolved",
+        "canonicalId": null,
+        "candidateIds": []
+      },
+      "sourceRefs": [
+        "salt"
+      ],
+      "rationale": "Exact parity profile excludes fuzzy suggestions. Local suggestions may remain candidates, never a matched identity."
+    },
+    {
+      "id": "origin-prose-not-synonym",
+      "input": {
+        "text": "derived from milk",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "unresolved",
+        "canonicalId": null,
+        "candidateIds": []
+      },
+      "sourceRefs": [
+        "milk"
+      ],
+      "rationale": "Origin/derivation prose is not an English synonym."
+    },
+    {
+      "id": "advisory-not-synonym",
+      "input": {
+        "text": "may contain milk",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "unresolved",
+        "canonicalId": null,
+        "candidateIds": []
+      },
+      "sourceRefs": [
+        "milk"
+      ],
+      "rationale": "The scalar matcher must not turn an advisory declaration into ingredient identity; the parser retains its separate evidence kind."
+    },
+    {
+      "id": "wrapper-not-scalar-alias",
+      "input": {
+        "text": "Colour(E160a(i))",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "unresolved",
+        "canonicalId": null,
+        "candidateIds": []
+      },
+      "sourceRefs": [
+        "e160ai"
+      ],
+      "rationale": "This full wrapper is parser input, not an exact alias. Parser+matcher integration separately resolves the inner code and preserves the wrapper."
+    },
+    {
+      "id": "empty-input",
+      "input": {
+        "text": "",
+        "additiveContext": false
+      },
+      "expected": {
+        "state": "unresolved",
+        "canonicalId": null,
+        "candidateIds": []
+      },
+      "sourceRefs": [],
+      "rationale": "No text provides no identity."
+    }
+  ]
+}

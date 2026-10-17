@@ -20,6 +20,23 @@ describe('OpenFoodFactsAdapter (off-adapter.ts)', () => {
   const TEST_USER_AGENT =
     'Ingradient/0.1.0 (https://github.com/vekhyat/ingradient; placeholder@example.com)';
 
+  it('opts product lookups out of the native HTTP cache', async () => {
+    let requestedOptions: RequestInit | undefined;
+    const fakeFetch: typeof fetch = async (_url, options) => {
+      requestedOptions = options;
+      return new Response('{}', { status: 404 });
+    };
+    const adapter = createCatalogueAdapter({
+      userAgent: TEST_USER_AGENT,
+      fetch: fakeFetch,
+    });
+
+    expect((await adapter.lookupBarcode('8901063012493')).state).toBe('absent');
+    expect(new Headers(requestedOptions?.headers).get('Cache-Control')).toBe(
+      'no-store',
+    );
+  });
+
   describe('Acceptance Case 1: Preserve string GTINs and distinguish invalid / absent / throttled / unavailable', () => {
     it('returns "invalid" for corrupted or malformed GTINs without calling network', async () => {
       let networkCalled = false;

@@ -7,6 +7,8 @@ import type {
   ProductSnapshot,
   SourceRef,
 } from '../../domain/contracts/generated/local';
+import reasonTemplatesJson from '../../../resources/evidence/reason-templates.json';
+import manifestJson from '../../../resources/manifest.json';
 
 export type {
   IngredientMention,
@@ -19,11 +21,15 @@ export type {
 };
 
 /**
- * Pinned resource manifest defaults.
- * Manifest revision: 2026-10-16.2 (resources/manifest.json).
+ * Installed resource editions, read from the pinned files so phone and
+ * backend name the same editions (BE-12 uses the same rules).
+ * - Taxonomy: OFF ingredient bundle id @ manifest revision.
+ * - Evidence: the reason-template edition (evidenceEdition). This is not the
+ *   Nutri-Score method identity, which the request names separately.
  */
-export const DEFAULT_TAXONOMY_VERSION = 'off-taxonomy-ingredients@2026-10-16.2';
-export const DEFAULT_EVIDENCE_VERSION = 'nutriscore-updated-2023';
+export const DEFAULT_TAXONOMY_VERSION = `off-taxonomy-ingredients@${manifestJson.revision}`;
+export const DEFAULT_EVIDENCE_VERSION: string =
+  reasonTemplatesJson.evidenceEdition;
 
 /**
  * Configuration for the Open Food Facts catalogue adapter.
@@ -82,13 +88,13 @@ export interface CatalogueConfig {
 
   /**
    * Active taxonomy version tag.
-   * Defaults to DEFAULT_TAXONOMY_VERSION ('off-taxonomy-ingredients@2026-10-16.2').
+   * Defaults to DEFAULT_TAXONOMY_VERSION (ingredient bundle @ manifest revision).
    */
   readonly taxonomyVersion?: string;
 
   /**
-   * Scientific evidence version tag.
-   * Defaults to DEFAULT_EVIDENCE_VERSION ('nutriscore-updated-2023').
+   * Evidence (reason-template) edition.
+   * Defaults to DEFAULT_EVIDENCE_VERSION (reason-templates.json evidenceEdition).
    */
   readonly evidenceVersion?: string;
 }
@@ -130,6 +136,10 @@ export interface OffIngredientV3 {
   readonly text?: string;
   readonly percent?: number;
   readonly percent_estimate?: number;
+  /** OFF term recognition does not assert product-list completeness. */
+  readonly is_in_taxonomy?: number;
+  readonly vegan?: string;
+  readonly vegetarian?: string;
   readonly ingredients?: readonly OffIngredientV3[];
 }
 

@@ -1,0 +1,339 @@
+{
+  "sourceUrl": "https://world.openfoodfacts.org/api/v2/taxonomy?tagtype=categories\u0026tags=en%3Aalcoholic-beverages%2Cen%3Ababy-foods%2Cen%3Abeef%2Cen%3Abeef-and-its-products%2Cen%3Abeverage-preparations%2Cen%3Abeverages%2Cen%3Abiscuits%2Cen%3Abreads%2Cen%3Abutters%2Cen%3Acheeses%2Cen%3Achocolates%2Cen%3Achocolate-spreads%2Cen%3Acoffee-beans%2Cen%3Acoffee-drinks%2Cen%3Acoffees%2Cen%3Adehydrated-beverages%2Cen%3Adietary-supplements%2Cen%3Aenergy-drinks%2Cen%3Afats%2Cen%3Afruit-juices%2Cen%3Afruit-nectars%2Cen%3Afruits%2Cen%3Agoat-meat%2Cen%3Aground-coffees%2Cen%3Ahorse-meat%2Cen%3Ainfant-formulas%2Cen%3Ainstant-beverages%2Cen%3Ainstant-coffees%2Cen%3Alamb-meat%2Cen%3Amargarines%2Cen%3Ameals%2Cen%3Ameats%2Cen%3Amilk-powders%2Cen%3Amilks%2Cen%3Anuts%2Cen%3Anuts-and-their-products%2Cen%3Aplant-based-beverages%2Cen%3Apork%2Cen%3Apork-and-its-products%2Cen%3Aseeds%2Cen%3Asheep-meat%2Cen%3Asodas%2Cen%3Asoft-drinks%2Cen%3Aspring-waters%2Cen%3Atea-bags%2Cen%3Atea-based-beverages%2Cen%3Atea-leaves%2Cen%3Ateas%2Cen%3Aveal-meat%2Cen%3Avegetable-fats%2Cen%3Avegetable-oils%2Cen%3Avegetables%2Cen%3Avenison%2Cen%3Awaters%2Cen%3Awhole-milks\u0026fields=name,parents",
+  "checkedAt": "2026-10-18",
+  "attribution": "Open Food Facts contributors",
+  "licence": "ODbL1.0/DbCL1.0",
+  "note": "Provider taxonomy identity fixture; engineering route assertions are project-authored; no as-consumed basis is supplied",
+  "categories": {
+    "en:alcoholic-beverages": {
+      "name": {
+        "en": "Alcoholic beverages"
+      },
+      "parents": ["en:beverages"]
+    },
+    "en:baby-foods": {
+      "name": {
+        "en": "Baby foods"
+      }
+    },
+    "en:beef": {
+      "name": {
+        "en": "Beef"
+      },
+      "parents": ["en:beef-and-its-products", "en:meats"]
+    },
+    "en:beef-and-its-products": {
+      "name": {
+        "en": "Beef and its products"
+      },
+      "parents": ["en:meats-and-their-products"]
+    },
+    "en:beverage-preparations": {
+      "name": {
+        "en": "Beverage preparations"
+      },
+      "parents": ["en:beverages-and-beverages-preparations"]
+    },
+    "en:beverages": {
+      "name": {
+        "en": "Beverages"
+      },
+      "parents": ["en:beverages-and-beverages-preparations"]
+    },
+    "en:biscuits": {
+      "name": {
+        "en": "Biscuits"
+      },
+      "parents": ["en:biscuits-and-cakes", "en:biscuits-and-crackers"]
+    },
+    "en:breads": {
+      "name": {
+        "en": "Breads"
+      },
+      "parents": ["en:cereals-and-their-products"]
+    },
+    "en:butters": {
+      "name": {
+        "en": "Butters"
+      },
+      "parents": ["en:animal-fats", "en:dairy-spreads", "en:milkfat"]
+    },
+    "en:cheeses": {
+      "name": {
+        "en": "Cheeses"
+      },
+      "parents": ["en:fermented-milk-products"]
+    },
+    "en:chocolate-spreads": {
+      "name": {
+        "en": "Chocolate spreads"
+      },
+      "parents": ["en:sweet-spreads", "fr:pates-a-tartiner"]
+    },
+    "en:chocolates": {
+      "name": {
+        "en": "Chocolates"
+      },
+      "parents": ["en:cocoa-and-its-products", "en:sweet-snacks"]
+    },
+    "en:coffee-beans": {
+      "name": {
+        "en": "Coffee beans"
+      },
+      "parents": ["en:beverage-preparations", "en:coffees"]
+    },
+    "en:coffee-drinks": {
+      "name": {
+        "en": "Coffee drinks"
+      },
+      "parents": ["en:beverages"]
+    },
+    "en:coffees": {
+      "name": {
+        "en": "Coffees"
+      },
+      "parents": ["en:plant-based-foods"]
+    },
+    "en:dehydrated-beverages": {
+      "name": {
+        "en": "Dehydrated beverages"
+      },
+      "parents": ["en:beverages", "en:dried-products-to-be-rehydrated"]
+    },
+    "en:dietary-supplements": {
+      "name": {
+        "en": "Dietary supplements"
+      }
+    },
+    "en:energy-drinks": {
+      "name": {
+        "en": "Energy drinks"
+      },
+      "parents": ["en:beverages"]
+    },
+    "en:fats": {
+      "name": {
+        "en": "Fats"
+      }
+    },
+    "en:fruit-juices": {
+      "name": {
+        "en": "Fruit juices"
+      },
+      "parents": ["en:fruit-based-beverages", "en:juices-and-nectars"]
+    },
+    "en:fruit-nectars": {
+      "name": {
+        "en": "Fruit nectars"
+      },
+      "parents": ["en:fruit-based-beverages", "en:juices-and-nectars"]
+    },
+    "en:fruits": {
+      "name": {
+        "en": "Fruits"
+      },
+      "parents": ["en:fruit-based-foods"]
+    },
+    "en:goat-meat": {
+      "name": {
+        "en": "Goat meat"
+      },
+      "parents": ["en:meats"]
+    },
+    "en:ground-coffees": {
+      "name": {
+        "en": "Ground coffees"
+      },
+      "parents": ["en:beverage-preparations", "en:coffees"]
+    },
+    "en:horse-meat": {
+      "name": {
+        "en": "Horse meat"
+      },
+      "parents": ["en:meats"]
+    },
+    "en:infant-formulas": {
+      "name": {
+        "en": "Infant formulas"
+      },
+      "parents": ["en:baby-milks"]
+    },
+    "en:instant-beverages": {
+      "name": {
+        "en": "Instant beverages"
+      },
+      "parents": ["en:beverage-preparations"]
+    },
+    "en:instant-coffees": {
+      "name": {
+        "en": "Instant coffees"
+      },
+      "parents": ["en:instant-beverages"]
+    },
+    "en:lamb-meat": {
+      "name": {
+        "en": "Lamb meat"
+      },
+      "parents": ["en:meats"]
+    },
+    "en:margarines": {
+      "name": {
+        "en": "Margarines"
+      },
+      "parents": ["en:spreadable-fats"]
+    },
+    "en:meals": {
+      "name": {
+        "en": "Meals"
+      }
+    },
+    "en:meats": {
+      "name": {
+        "en": "Meats"
+      },
+      "parents": ["en:meats-and-their-products"]
+    },
+    "en:milk-powders": {
+      "name": {
+        "en": "Milk powders"
+      },
+      "parents": [
+        "en:dehydrated-beverages",
+        "en:dried-products-to-be-rehydrated",
+        "en:milks-liquid-and-powder"
+      ]
+    },
+    "en:milks": {
+      "name": {
+        "en": "Milks"
+      },
+      "parents": ["en:milks-liquid-and-powder"]
+    },
+    "en:nuts": {
+      "name": {
+        "en": "Nuts"
+      },
+      "parents": ["en:nuts-and-their-products"]
+    },
+    "en:nuts-and-their-products": {
+      "name": {
+        "en": "Nuts and their products"
+      },
+      "parents": ["en:plant-based-foods"]
+    },
+    "en:plant-based-beverages": {
+      "name": {
+        "en": "Plant-based beverages"
+      },
+      "parents": ["en:beverages", "en:plant-based-foods-and-beverages"]
+    },
+    "en:pork": {
+      "name": {
+        "en": "Pork"
+      },
+      "parents": ["en:meats", "en:pork-and-its-products"]
+    },
+    "en:pork-and-its-products": {
+      "name": {
+        "en": "Pork and its products"
+      },
+      "parents": ["en:meats-and-their-products"]
+    },
+    "en:seeds": {
+      "name": {
+        "en": "Seeds"
+      },
+      "parents": ["en:plant-based-foods"]
+    },
+    "en:sheep-meat": {
+      "name": {
+        "en": "Sheep meat"
+      },
+      "parents": ["en:meats"]
+    },
+    "en:sodas": {
+      "name": {
+        "en": "Sodas"
+      },
+      "parents": ["en:carbonated-drinks", "en:soft-drinks"]
+    },
+    "en:soft-drinks": {
+      "name": {
+        "en": "Soft drinks"
+      },
+      "parents": ["en:non-alcoholic-beverages"]
+    },
+    "en:spring-waters": {
+      "name": {
+        "en": "Spring waters"
+      },
+      "parents": ["en:waters"]
+    },
+    "en:tea-bags": {
+      "name": {
+        "en": "Tea bags"
+      },
+      "parents": ["en:tea-leaves"]
+    },
+    "en:tea-based-beverages": {
+      "name": {
+        "en": "Tea-based beverages"
+      },
+      "parents": ["en:beverages"]
+    },
+    "en:tea-leaves": {
+      "name": {
+        "en": "Tea leaves"
+      },
+      "parents": ["en:beverage-preparations"]
+    },
+    "en:teas": {
+      "name": {
+        "en": "Teas"
+      },
+      "parents": ["en:hot-beverages", "en:plant-based-beverages"]
+    },
+    "en:veal-meat": {
+      "name": {
+        "en": "Veal meat"
+      },
+      "parents": ["en:meats"]
+    },
+    "en:vegetable-fats": {
+      "name": {
+        "en": "Vegetable fats"
+      },
+      "parents": ["en:fats", "en:plant-based-foods"]
+    },
+    "en:vegetable-oils": {
+      "name": {
+        "en": "Vegetable oils"
+      },
+      "parents": ["en:vegetable-fats"]
+    },
+    "en:vegetables": {
+      "name": {
+        "en": "Vegetables"
+      },
+      "parents": ["en:vegetables-based-foods"]
+    },
+    "en:venison": {
+      "name": {
+        "en": "Venison"
+      },
+      "parents": ["en:game"]
+    },
+    "en:waters": {
+      "name": {
+        "en": "Waters"
+      },
+      "parents": ["en:beverages"]
+    },
+    "en:whole-milks": {
+      "name": {
+        "en": "Whole milks"
+      },
+      "parents": ["en:milks"]
+    }
+  }
+}

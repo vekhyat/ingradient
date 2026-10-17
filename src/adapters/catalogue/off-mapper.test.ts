@@ -42,7 +42,8 @@ describe('Open Food Facts Mapper (off-mapper.ts)', () => {
     it('identifies beverage categories', () => {
       expect(resolveCategory(['en:beverages'])).toBe('beverage');
       expect(resolveCategory(['en:fruit-juices'])).toBe('beverage');
-      expect(resolveCategory(['en:plant-milks'])).toBe('beverage');
+      expect(resolveCategory(['en:plant-based-beverages'])).toBe('beverage');
+      expect(resolveCategory(['en:plant-milks'])).toBe('unknown');
     });
 
     it('identifies fats, nuts, and seeds categories', () => {
@@ -55,7 +56,7 @@ describe('Open Food Facts Mapper (off-mapper.ts)', () => {
       expect(resolveCategory(['en:alcoholic-beverages'])).toBe('excluded');
     });
 
-    it('defaults to general for standard foods and unknown for empty', () => {
+    it('requires known route evidence and keeps unknown or empty tags unknown', () => {
       expect(resolveCategory(['en:biscuits'])).toBe('general');
       expect(resolveCategory([])).toBe('unknown');
       expect(resolveCategory(undefined)).toBe('unknown');
