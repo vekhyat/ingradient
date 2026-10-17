@@ -25,7 +25,7 @@ const repoRoot = join(here, '..', '..', '..', '..');
 const contractsDir = join(repoRoot, 'contracts');
 const generatedDir = join(here, '..', 'generated');
 
-const WIRE_ID = 'urn:ingradient:wire-contract:0.2.0-draft';
+const WIRE_ID = 'urn:ingradient:wire-contract:0.3.0-draft';
 const HEADER = `/**
  * generated, do not edit
  *

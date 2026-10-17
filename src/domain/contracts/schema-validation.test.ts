@@ -13,7 +13,7 @@ import { wireValidators } from './generated/validate-wire';
 import { validationDetail, validatorByName, type ContractValidator } from './validator-types';
 
 const contractsDir = join(__dirname, '..', '..', '..', 'contracts');
-const WIRE_ID = 'urn:ingradient:wire-contract:0.2.0-draft';
+const WIRE_ID = 'urn:ingradient:wire-contract:0.3.0-draft';
 
 // Same roots as LOCAL_RUNTIME_ROOTS / WIRE_RUNTIME_ROOTS in codegen/generate.mjs.
 const LOCAL_RUNTIME_ROOTS = [

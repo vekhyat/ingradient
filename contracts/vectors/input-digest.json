@@ -407,6 +407,105 @@
       "sha256": "47f601468ff852ee1e3479538aac42ae1ac441ee0b9b597ca65c6253fe81c799"
     },
     {
+      "name": "category and scoring facts present",
+      "kind": "product",
+      "value": {
+        "barcode": "8901234567890",
+        "name": "Roasted chana",
+        "market": "IN",
+        "ingredientsText": "Bengal gram (98%), salt, edible vegetable oil",
+        "ingredientsStatus": "complete",
+        "observations": [
+          {
+            "field": "energy",
+            "kind": "read",
+            "value": 1550,
+            "unit": "kJ",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "sugars",
+            "kind": "read",
+            "value": 2.5,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "saturates",
+            "kind": "read",
+            "value": 0.1,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "salt",
+            "kind": "read",
+            "value": 1.0,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          },
+          {
+            "field": "protein",
+            "kind": "read",
+            "value": 21.75,
+            "unit": "g",
+            "basis": "per_100_g",
+            "sourceIds": [
+              "src-0"
+            ],
+            "issues": []
+          }
+        ],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "label",
+            "title": "Nutrition panel"
+          }
+        ],
+        "issues": [],
+        "category": "general",
+        "scoringFacts": {
+          "categorySourceIds": [
+            "src-0"
+          ],
+          "cheese": {
+            "state": "unknown"
+          },
+          "redMeat": {
+            "state": "absent",
+            "sourceIds": [
+              "src-0"
+            ]
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
+      },
+      "canonical": "{\"barcode\":\"8901234567890\",\"category\":\"general\",\"ingredientsStatus\":\"complete\",\"ingredientsText\":\"Bengal gram (98%), salt, edible vegetable oil\",\"issues\":[],\"market\":\"IN\",\"name\":\"Roasted chana\",\"observations\":[{\"basis\":\"per_100_g\",\"field\":\"energy\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"kJ\",\"value\":1550},{\"basis\":\"per_100_g\",\"field\":\"sugars\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":2.5},{\"basis\":\"per_100_g\",\"field\":\"saturates\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":0.1},{\"basis\":\"per_100_g\",\"field\":\"salt\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":1},{\"basis\":\"per_100_g\",\"field\":\"protein\",\"issues\":[],\"kind\":\"read\",\"sourceIds\":[\"src-0\"],\"unit\":\"g\",\"value\":21.75}],\"scoringFacts\":{\"categorySourceIds\":[\"src-0\"],\"cheese\":{\"state\":\"unknown\"},\"nonNutritiveSweetener\":{\"state\":\"unknown\"},\"plainWater\":{\"state\":\"unknown\"},\"redMeat\":{\"sourceIds\":[\"src-0\"],\"state\":\"absent\"}},\"sourceRefs\":[{\"id\":\"src-0\",\"kind\":\"label\",\"title\":\"Nutrition panel\"}]}",
+      "sha256": "c40dc1635f019d94be6c50de0f0ead540132170506cdf2bc4ef91bb0e84a2605"
+    },
+    {
       "name": "number formatting",
       "kind": "canonicalization",
       "value": {

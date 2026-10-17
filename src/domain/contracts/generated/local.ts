@@ -132,6 +132,23 @@ export type LookupOutcome =
       retryAfterSeconds?: number;
     };
 /**
+ * ADR013 (D146). present or absent: at least one source of this product supports the fact. unknown: no supporting evidence, and no sources. Unknown differs from an observed absence; a missing category tag or an incomplete ingredient list never proves absence.
+ *
+ * This interface was referenced by `LocalContract`'s JSON-Schema
+ * via the `definition` "PresenceFact".
+ */
+export type PresenceFact =
+  | {
+      state: 'present' | 'absent';
+      /**
+       * @minItems 1
+       */
+      sourceIds: [string, ...string[]];
+    }
+  | {
+      state: 'unknown';
+    };
+/**
  * This interface was referenced by `LocalContract`'s JSON-Schema
  * via the `definition` "NutrientObservation".
  */
@@ -413,6 +430,8 @@ export interface LocalProfile {
   }[];
 }
 /**
+ * LOCAL ONLY. ADR013 (D146): category and scoringFacts are optional; omission means unknown, never general or absent. categorySourceIds must be empty unless the category is known. Cheese and red meat are general-route facts and plain water is a beverage-route fact, so a stated category of another route contradicts them. Snapshots saved before local contract 0.3.0-draft have no scoringFacts and still load: their facts are unknown. Source and citation existence are validated by domain code.
+ *
  * This interface was referenced by `LocalContract`'s JSON-Schema
  * via the `definition` "ProductSnapshot".
  */
@@ -436,6 +455,7 @@ export interface ProductSnapshot {
    */
   panels: PanelRegion[];
   category: 'general' | 'fats_nuts_seeds' | 'beverage' | 'excluded' | 'unknown';
+  scoringFacts?: ScoringFacts;
   taxonomyVersion: string;
   evidenceVersion: string;
 }
@@ -462,6 +482,22 @@ export interface PanelRegion {
   regionId: string | null;
   text?: string;
   issues: Issue[];
+}
+/**
+ * ADR013 (D146). Source-backed facts that select Nutri-Score route exceptions. Omit the whole object when nothing is known: omission means every fact is unknown and category provenance is unavailable, never absent or general. A partial object is invalid. Each id appears once per list and must name a sourceRef of the same product (domain validation). Plain water excludes a present cheese, red-meat or sweetener fact. Examples are fictional shape checks, not product data.
+ *
+ * This interface was referenced by `LocalContract`'s JSON-Schema
+ * via the `definition` "ScoringFacts".
+ */
+export interface ScoringFacts {
+  /**
+   * Sources supporting the product category. Empty when the category is unknown or not stated.
+   */
+  categorySourceIds: string[];
+  cheese: PresenceFact;
+  redMeat: PresenceFact;
+  plainWater: PresenceFact;
+  nonNutritiveSweetener: PresenceFact;
 }
 /**
  * LOCAL ONLY. Proposed experimental engineering policy, not accepted or scientifically validated parameters.

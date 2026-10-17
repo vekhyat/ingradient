@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:ingradient:local-contract:0.1.0-draft",
+  "$id": "urn:ingradient:local-contract:0.3.0-draft",
   "$ref": "#/$defs/LocalAssessment",
   "$defs": {
     "Citation": {
@@ -1379,6 +1379,64 @@
       ],
       "description": "LOCAL ONLY. Proposed experimental engineering policy, not accepted or scientifically validated parameters."
     },
+    "PresenceFact": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "type": "string",
+              "enum": [
+                "present",
+                "absent"
+              ]
+            },
+            "sourceIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "state",
+            "sourceIds"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "const": "unknown"
+            }
+          },
+          "required": [
+            "state"
+          ]
+        }
+      ],
+      "discriminator": {
+        "propertyName": "state"
+      },
+      "description": "ADR013 (D146). present or absent: at least one source of this product supports the fact. unknown: no supporting evidence, and no sources. Unknown differs from an observed absence; a missing category tag or an incomplete ingredient list never proves absence.",
+      "examples": [
+        {
+          "state": "absent",
+          "sourceIds": [
+            "label:1"
+          ]
+        },
+        {
+          "state": "unknown"
+        }
+      ]
+    },
     "ProductSnapshot": {
       "type": "object",
       "additionalProperties": false,
@@ -1451,6 +1509,9 @@
             "unknown"
           ]
         },
+        "scoringFacts": {
+          "$ref": "#/$defs/ScoringFacts"
+        },
         "taxonomyVersion": {
           "type": "string",
           "minLength": 1,
@@ -1475,6 +1536,197 @@
         "category",
         "taxonomyVersion",
         "evidenceVersion"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "category"
+            ],
+            "properties": {
+              "category": {
+                "enum": [
+                  "general",
+                  "fats_nuts_seeds",
+                  "beverage",
+                  "excluded"
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "scoringFacts": {
+                "properties": {
+                  "categorySourceIds": {
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "scoringFacts"
+            ],
+            "properties": {
+              "scoringFacts": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "cheese"
+                    ],
+                    "properties": {
+                      "cheese": {
+                        "type": "object",
+                        "required": [
+                          "state"
+                        ],
+                        "properties": {
+                          "state": {
+                            "const": "present"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "redMeat"
+                    ],
+                    "properties": {
+                      "redMeat": {
+                        "type": "object",
+                        "required": [
+                          "state"
+                        ],
+                        "properties": {
+                          "state": {
+                            "const": "present"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "category": {
+                "not": {
+                  "enum": [
+                    "fats_nuts_seeds",
+                    "beverage"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "scoringFacts"
+            ],
+            "properties": {
+              "scoringFacts": {
+                "type": "object",
+                "required": [
+                  "plainWater"
+                ],
+                "properties": {
+                  "plainWater": {
+                    "type": "object",
+                    "required": [
+                      "state"
+                    ],
+                    "properties": {
+                      "state": {
+                        "const": "present"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "category": {
+                "not": {
+                  "enum": [
+                    "general",
+                    "fats_nuts_seeds"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "description": "LOCAL ONLY. ADR013 (D146): category and scoringFacts are optional; omission means unknown, never general or absent. categorySourceIds must be empty unless the category is known. Cheese and red meat are general-route facts and plain water is a beverage-route fact, so a stated category of another route contradicts them. Snapshots saved before local contract 0.3.0-draft have no scoringFacts and still load: their facts are unknown. Source and citation existence are validated by domain code.",
+      "examples": [
+        {
+          "id": "fixture-legacy",
+          "barcode": null,
+          "name": null,
+          "market": "IN",
+          "capturedAt": "2026-10-16T00:00:00.000Z",
+          "sourceRefs": [],
+          "observations": [],
+          "ingredients": [],
+          "panels": [],
+          "category": "unknown",
+          "taxonomyVersion": "fictional-taxonomy",
+          "evidenceVersion": "fictional-evidence"
+        },
+        {
+          "id": "fixture-scoring-facts",
+          "barcode": "8901234567890",
+          "name": null,
+          "market": "IN",
+          "capturedAt": "2026-10-16T00:00:00.000Z",
+          "sourceRefs": [
+            {
+              "id": "off:8901234567890",
+              "kind": "off",
+              "title": "Open Food Facts product",
+              "edition": "rev-3"
+            }
+          ],
+          "observations": [],
+          "ingredients": [],
+          "panels": [],
+          "category": "general",
+          "scoringFacts": {
+            "categorySourceIds": [
+              "off:8901234567890"
+            ],
+            "cheese": {
+              "state": "present",
+              "sourceIds": [
+                "off:8901234567890"
+              ]
+            },
+            "redMeat": {
+              "state": "unknown"
+            },
+            "plainWater": {
+              "state": "unknown"
+            },
+            "nonNutritiveSweetener": {
+              "state": "unknown"
+            }
+          },
+          "taxonomyVersion": "fictional-taxonomy",
+          "evidenceVersion": "fictional-evidence"
+        }
       ]
     },
     "ScientificAssessment": {
@@ -1695,6 +1947,118 @@
         "citationIds",
         "inputFields",
         "step"
+      ]
+    },
+    "ScoringFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "categorySourceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "uniqueItems": true,
+          "description": "Sources supporting the product category. Empty when the category is unknown or not stated."
+        },
+        "cheese": {
+          "$ref": "#/$defs/PresenceFact"
+        },
+        "redMeat": {
+          "$ref": "#/$defs/PresenceFact"
+        },
+        "plainWater": {
+          "$ref": "#/$defs/PresenceFact"
+        },
+        "nonNutritiveSweetener": {
+          "$ref": "#/$defs/PresenceFact"
+        }
+      },
+      "required": [
+        "categorySourceIds",
+        "cheese",
+        "redMeat",
+        "plainWater",
+        "nonNutritiveSweetener"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "plainWater"
+            ],
+            "properties": {
+              "plainWater": {
+                "type": "object",
+                "required": [
+                  "state"
+                ],
+                "properties": {
+                  "state": {
+                    "const": "present"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "cheese": {
+                "properties": {
+                  "state": {
+                    "not": {
+                      "const": "present"
+                    }
+                  }
+                }
+              },
+              "redMeat": {
+                "properties": {
+                  "state": {
+                    "not": {
+                      "const": "present"
+                    }
+                  }
+                }
+              },
+              "nonNutritiveSweetener": {
+                "properties": {
+                  "state": {
+                    "not": {
+                      "const": "present"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "description": "ADR013 (D146). Source-backed facts that select Nutri-Score route exceptions. Omit the whole object when nothing is known: omission means every fact is unknown and category provenance is unavailable, never absent or general. A partial object is invalid. Each id appears once per list and must name a sourceRef of the same product (domain validation). Plain water excludes a present cheese, red-meat or sweetener fact. Examples are fictional shape checks, not product data.",
+      "examples": [
+        {
+          "categorySourceIds": [
+            "off:8901234567890"
+          ],
+          "cheese": {
+            "state": "present",
+            "sourceIds": [
+              "off:8901234567890"
+            ]
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
       ]
     },
     "SourceRef": {

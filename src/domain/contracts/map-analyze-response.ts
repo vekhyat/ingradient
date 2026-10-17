@@ -14,9 +14,11 @@ import type {
   NutrientObservation,
   PanelRegion,
   PersonalAssessment,
+  PresenceFact,
   ProductSnapshot,
   ScientificAssessment,
   ScientificReason,
+  ScoringFacts,
   SourceRef,
   TraceStep,
 } from './generated/local';
@@ -28,8 +30,10 @@ import type {
   Issue as WireIssue,
   ProductInputObservation,
   ProductInputSource,
+  PresenceFact as WirePresenceFact,
   ScientificAssessment as WireScientific,
   ScientificReason as WireReason,
+  ScoringFacts as WireScoringFacts,
   TraceStep as WireTrace,
 } from './generated/wire';
 import { validateAnalyzeResponse } from './generated/validate-wire';
@@ -268,7 +272,49 @@ function mapScientific(scientific: WireScientific): ScientificAssessment {
   };
 }
 
+/**
+ * ADR013: every fact source must name a source in this product. The schema
+ * cannot check that, so a dangling reference rejects the response.
+ */
+function knownSources(ids: readonly string[], sourceIds: ReadonlySet<string>, label: string): string[] {
+  for (const id of ids) {
+    if (!sourceIds.has(id)) {
+      throw new ContractValidationError(label, `references unknown source ${id}.`);
+    }
+  }
+  return [...ids];
+}
+
+function copyPresence(
+  fact: WirePresenceFact,
+  sourceIds: ReadonlySet<string>,
+  label: string,
+): PresenceFact {
+  if (fact.state === 'unknown') {
+    return { state: 'unknown' };
+  }
+  return {
+    state: fact.state,
+    sourceIds: atLeastOne(knownSources(fact.sourceIds, sourceIds, label), label),
+  };
+}
+
+function copyScoringFacts(facts: WireScoringFacts, sourceIds: ReadonlySet<string>): ScoringFacts {
+  return {
+    categorySourceIds: knownSources(facts.categorySourceIds, sourceIds, 'category sources'),
+    cheese: copyPresence(facts.cheese, sourceIds, 'cheese sources'),
+    redMeat: copyPresence(facts.redMeat, sourceIds, 'red meat sources'),
+    plainWater: copyPresence(facts.plainWater, sourceIds, 'plain water sources'),
+    nonNutritiveSweetener: copyPresence(
+      facts.nonNutritiveSweetener,
+      sourceIds,
+      'sweetener sources',
+    ),
+  };
+}
+
 function mapProduct(product: AnalyzedProduct, context: LocalResultContext): ProductSnapshot {
+  const sourceIds = new Set(product.sourceRefs.map((source) => source.id));
   return {
     id: product.id,
     barcode: product.barcode,
@@ -282,6 +328,9 @@ function mapProduct(product: AnalyzedProduct, context: LocalResultContext): Prod
     category: product.category,
     taxonomyVersion: product.taxonomyVersion,
     evidenceVersion: product.evidenceVersion,
+    ...(product.scoringFacts === undefined
+      ? {}
+      : { scoringFacts: copyScoringFacts(product.scoringFacts, sourceIds) }),
   };
 }
 

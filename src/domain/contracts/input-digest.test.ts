@@ -57,15 +57,15 @@ describe('inputDigest', () => {
     if (product === undefined || named === undefined) {
       return;
     }
-    const absentBody = JSON.stringify({ contractVersion: '0.2.0-draft', product: product.value });
-    const nullBody = JSON.stringify({ contractVersion: '0.2.0-draft', product: named.value });
+    const absentBody = JSON.stringify({ contractVersion: '0.3.0-draft', product: product.value });
+    const nullBody = JSON.stringify({ contractVersion: '0.3.0-draft', product: named.value });
     expect(inputDigestOfRequestBody(absentBody)).toBe(product.sha256);
     expect(inputDigestOfRequestBody(nullBody)).toBe(named.sha256);
     expect(product.sha256).not.toBe(named.sha256);
   });
 
   it('rejects a body with no product value', () => {
-    expect(() => inputDigestOfRequestBody('{"contractVersion":"0.2.0-draft"}')).toThrow(
+    expect(() => inputDigestOfRequestBody('{"contractVersion":"0.3.0-draft"}')).toThrow(
       /product/,
     );
   });

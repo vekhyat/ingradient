@@ -37,7 +37,7 @@ import {
 
 function sampleAnalyzeRequest(): AnalyzeRequest {
   return {
-    contractVersion: '0.2.0-draft',
+    contractVersion: '0.3.0-draft',
     product: {
       barcode: '8901030000001',
       name: 'Oat Crunch Cereal',
@@ -427,7 +427,7 @@ describe('MockBackendTransport (FE-04)', () => {
       const health = res.body as Health;
       expect(wireValidators.Health(health)).toBe(true);
       expect(health.status).toBe('ok');
-      expect(health.contractVersion).toBe('0.2.0-draft');
+      expect(health.contractVersion).toBe('0.3.0-draft');
     });
 
     it('respects unavailable scenario on health route', async () => {

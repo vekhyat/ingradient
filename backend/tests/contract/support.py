@@ -101,7 +101,7 @@ def _rewrite_refs(node: Any) -> Any:
 
 def analysis_body(product: Any) -> dict[str, Any]:
     return {
-        "contractVersion": "0.2.0-draft",
+        "contractVersion": "0.3.0-draft",
         "product": product,
         "resourceCompatibility": dict(COMPATIBILITY),
     }

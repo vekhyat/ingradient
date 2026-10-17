@@ -126,6 +126,25 @@ export type ProductInputObservation =
         | 'not_available';
       issues: Issue[];
     };
+/**
+ * ADR013 (D146). present or absent: at least one source of this product supports the fact. unknown: no supporting evidence, and no sources. Unknown differs from an observed absence; a missing category tag or an incomplete ingredient list never proves absence.
+ *
+ * This interface was referenced by `WireContract`'s JSON-Schema
+ * via the `definition` "PresenceFact".
+ */
+export type PresenceFact =
+  | {
+      state: 'present' | 'absent';
+      /**
+       * @minItems 1
+       *
+       * Items: Per-request local label (src-0, src-1, ...). Carries no stable or device-derived value (D73).
+       */
+      sourceIds: [string, ...string[]];
+    }
+  | {
+      state: 'unknown';
+    };
 
 /**
  * Phone view of the frozen OpenAPI component schemas. Profile and personal state are not in this document.
@@ -346,7 +365,7 @@ export interface LicenceEntry {
  */
 export interface Health {
   status: 'ok';
-  contractVersion: '0.2.0-draft';
+  contractVersion: '0.3.0-draft';
 }
 /**
  * This interface was referenced by `WireContract`'s JSON-Schema
@@ -370,6 +389,26 @@ export interface ProductInputSource {
   edition?: string;
 }
 /**
+ * ADR013 (D146). Source-backed facts that select Nutri-Score route exceptions. Omit the whole object when nothing is known: omission means every fact is unknown and category provenance is unavailable, never absent or general. A partial object is invalid. Each id appears once per list and must name a sourceRef of the same product (domain validation). Plain water excludes a present cheese, red-meat or sweetener fact. Examples are fictional shape checks, not product data.
+ *
+ * This interface was referenced by `WireContract`'s JSON-Schema
+ * via the `definition` "ScoringFacts".
+ */
+export interface ScoringFacts {
+  /**
+   * Sources supporting the product category. Empty when the category is unknown or not stated.
+   *
+   * Items: Per-request local label (src-0, src-1, ...). Carries no stable or device-derived value (D73).
+   */
+  categorySourceIds: string[];
+  cheese: PresenceFact;
+  redMeat: PresenceFact;
+  plainWater: PresenceFact;
+  nonNutritiveSweetener: PresenceFact;
+}
+/**
+ * ADR013 (D146): category and scoringFacts are optional; omission means unknown, never general or absent. categorySourceIds must be empty unless the category is known. Cheese and red meat are general-route facts and plain water is a beverage-route fact, so a stated category of another route contradicts them.
+ *
  * This interface was referenced by `WireContract`'s JSON-Schema
  * via the `definition` "ProductAnalysisInput".
  */
@@ -391,6 +430,12 @@ export interface ProductAnalysisInput {
    * @maxItems 100
    */
   issues: Issue[];
+  /**
+   * Optional (ADR013, D146). Omission means unknown, never general.
+   */
+  category?:
+    'general' | 'fats_nuts_seeds' | 'beverage' | 'excluded' | 'unknown';
+  scoringFacts?: ScoringFacts;
 }
 /**
  * D67 product-only request. No images/crops/coordinates/profile/allergies/behaviour/account/device/session identifiers. Server learning persistence requires separately released D71-D75 policy; payload shape is not consent evidence.
@@ -399,7 +444,7 @@ export interface ProductAnalysisInput {
  * via the `definition` "AnalyzeRequest".
  */
 export interface AnalyzeRequest {
-  contractVersion: '0.2.0-draft';
+  contractVersion: '0.3.0-draft';
   product: ProductAnalysisInput;
   /**
    * Installed public-resource compatibility only; no personal policy/profile version.
@@ -412,6 +457,8 @@ export interface AnalyzeRequest {
   };
 }
 /**
+ * ADR013 (D146): category and scoringFacts are optional; omission means unknown, never general or absent. categorySourceIds must be empty unless the category is known. Cheese and red meat are general-route facts and plain water is a beverage-route fact, so a stated category of another route contradicts them.
+ *
  * This interface was referenced by `WireContract`'s JSON-Schema
  * via the `definition` "AnalyzedProduct".
  */
@@ -430,6 +477,7 @@ export interface AnalyzedProduct {
    */
   ingredients: IngredientMention[];
   category: 'general' | 'fats_nuts_seeds' | 'beverage' | 'excluded' | 'unknown';
+  scoringFacts?: ScoringFacts;
   taxonomyVersion: string;
   evidenceVersion: string;
 }
@@ -440,7 +488,7 @@ export interface AnalyzedProduct {
  * via the `definition` "AnalyzeResponse".
  */
 export interface AnalyzeResponse {
-  contractVersion: '0.2.0-draft';
+  contractVersion: '0.3.0-draft';
   product: AnalyzedProduct;
   scientific: ScientificAssessment;
   citations: Citation[];

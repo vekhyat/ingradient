@@ -3,7 +3,7 @@
     "schema": "AnalyzeRequest",
     "name": "top-level personal profile is not a wire field",
     "value": {
-      "contractVersion": "0.2.0-draft",
+      "contractVersion": "0.3.0-draft",
       "product": {
         "barcode": null,
         "name": null,
@@ -31,7 +31,7 @@
     "schema": "AnalyzeRequest",
     "name": "top-level image is not a wire field",
     "value": {
-      "contractVersion": "0.2.0-draft",
+      "contractVersion": "0.3.0-draft",
       "product": {
         "barcode": null,
         "name": null,
@@ -55,7 +55,7 @@
     "schema": "AnalyzeRequest",
     "name": "account identifier is not a wire field",
     "value": {
-      "contractVersion": "0.2.0-draft",
+      "contractVersion": "0.3.0-draft",
       "product": {
         "barcode": null,
         "name": null,
@@ -79,7 +79,7 @@
     "schema": "AnalyzeRequest",
     "name": "device identifier is not a wire field",
     "value": {
-      "contractVersion": "0.2.0-draft",
+      "contractVersion": "0.3.0-draft",
       "product": {
         "barcode": null,
         "name": null,
@@ -103,7 +103,7 @@
     "schema": "AnalyzeRequest",
     "name": "nested product image is not a wire field",
     "value": {
-      "contractVersion": "0.2.0-draft",
+      "contractVersion": "0.3.0-draft",
       "product": {
         "barcode": null,
         "name": null,
@@ -129,7 +129,7 @@
     "schema": "AnalyzeResponse",
     "name": "response cannot carry a personal outcome",
     "value": {
-      "contractVersion": "0.2.0-draft",
+      "contractVersion": "0.3.0-draft",
       "inputDigest": "0000000000000000000000000000000000000000000000000000000000000000",
       "product": {
         "id": "fictional-snapshot",
@@ -175,7 +175,7 @@
     "schema": "AnalyzeRequest",
     "name": "stable installation id hidden in a source id",
     "value": {
-      "contractVersion": "0.2.0-draft",
+      "contractVersion": "0.3.0-draft",
       "product": {
         "barcode": null,
         "name": null,
@@ -204,7 +204,7 @@
     "schema": "AnalyzeRequest",
     "name": "method edition must be declared",
     "value": {
-      "contractVersion": "0.2.0-draft",
+      "contractVersion": "0.3.0-draft",
       "product": {
         "barcode": null,
         "name": null,
@@ -226,7 +226,7 @@
     "schema": "AnalyzeRequest",
     "name": "personal issue stage never leaves the phone",
     "value": {
-      "contractVersion": "0.2.0-draft",
+      "contractVersion": "0.3.0-draft",
       "product": {
         "barcode": null,
         "name": null,
@@ -256,7 +256,7 @@
     "schema": "AnalyzeResponse",
     "name": "response must echo the input digest",
     "value": {
-      "contractVersion": "0.2.0-draft",
+      "contractVersion": "0.3.0-draft",
       "product": {
         "id": "fictional-snapshot",
         "barcode": null,
@@ -389,7 +389,7 @@
     "schema": "AnalyzeRequest",
     "name": "stable installation id hidden in a source title",
     "value": {
-      "contractVersion": "0.2.0-draft",
+      "contractVersion": "0.3.0-draft",
       "product": {
         "barcode": null,
         "name": null,
@@ -418,7 +418,7 @@
     "schema": "AnalyzeRequest",
     "name": "method bundle hash must be declared",
     "value": {
-      "contractVersion": "0.2.0-draft",
+      "contractVersion": "0.3.0-draft",
       "product": {
         "barcode": null,
         "name": null,
@@ -479,6 +479,938 @@
         }
       ],
       "issues": []
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "unknown scoring fact cannot carry sources",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "scoringFacts": {
+          "categorySourceIds": [],
+          "cheese": {
+            "state": "unknown",
+            "sourceIds": [
+              "src-0"
+            ]
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "present scoring fact needs a source",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "scoringFacts": {
+          "categorySourceIds": [],
+          "cheese": {
+            "state": "present",
+            "sourceIds": []
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "absent scoring fact needs a source list",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "scoringFacts": {
+          "categorySourceIds": [],
+          "cheese": {
+            "state": "unknown"
+          },
+          "redMeat": {
+            "state": "absent"
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "scoring fact cites each source once",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "category": "beverage",
+        "scoringFacts": {
+          "categorySourceIds": [],
+          "cheese": {
+            "state": "unknown"
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "present",
+            "sourceIds": [
+              "src-0",
+              "src-0"
+            ]
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "category source cited once",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "category": "general",
+        "scoringFacts": {
+          "categorySourceIds": [
+            "src-0",
+            "src-0"
+          ],
+          "cheese": {
+            "state": "unknown"
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "omitted category cannot cite category sources",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "scoringFacts": {
+          "categorySourceIds": [
+            "src-0"
+          ],
+          "cheese": {
+            "state": "unknown"
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "unknown category cannot cite category sources",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "category": "unknown",
+        "scoringFacts": {
+          "categorySourceIds": [
+            "src-0"
+          ],
+          "cheese": {
+            "state": "unknown"
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "plain water cannot also be cheese",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "scoringFacts": {
+          "categorySourceIds": [],
+          "cheese": {
+            "state": "present",
+            "sourceIds": [
+              "src-0"
+            ]
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "present",
+            "sourceIds": [
+              "src-0"
+            ]
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "plain water cannot also be red meat",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "scoringFacts": {
+          "categorySourceIds": [],
+          "cheese": {
+            "state": "unknown"
+          },
+          "redMeat": {
+            "state": "present",
+            "sourceIds": [
+              "src-0"
+            ]
+          },
+          "plainWater": {
+            "state": "present",
+            "sourceIds": [
+              "src-0"
+            ]
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "plain water cannot contain a non-nutritive sweetener",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "category": "beverage",
+        "scoringFacts": {
+          "categorySourceIds": [],
+          "cheese": {
+            "state": "unknown"
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "present",
+            "sourceIds": [
+              "src-0"
+            ]
+          },
+          "nonNutritiveSweetener": {
+            "state": "present",
+            "sourceIds": [
+              "src-0"
+            ]
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "cheese is not a beverage-route fact",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "category": "beverage",
+        "scoringFacts": {
+          "categorySourceIds": [],
+          "cheese": {
+            "state": "present",
+            "sourceIds": [
+              "src-0"
+            ]
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "red meat is not a fats/nuts/seeds-route fact",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "category": "fats_nuts_seeds",
+        "scoringFacts": {
+          "categorySourceIds": [],
+          "cheese": {
+            "state": "unknown"
+          },
+          "redMeat": {
+            "state": "present",
+            "sourceIds": [
+              "src-0"
+            ]
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "plain water is not a general-route fact",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "category": "general",
+        "scoringFacts": {
+          "categorySourceIds": [],
+          "cheese": {
+            "state": "unknown"
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "present",
+            "sourceIds": [
+              "src-0"
+            ]
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "scoring facts name all four flags",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "scoringFacts": {
+          "categorySourceIds": [],
+          "cheese": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "scoring facts are omitted, not null",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "scoringFacts": null
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "request category is omitted, not null",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "scoringFacts": {
+          "categorySourceIds": [],
+          "cheese": {
+            "state": "unknown"
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        },
+        "category": null
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeRequest",
+    "name": "scoring fact source must be a per-request label",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "product": {
+        "barcode": "8901234567890",
+        "name": null,
+        "market": "IN",
+        "ingredientsText": null,
+        "ingredientsStatus": "missing",
+        "observations": [],
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "off",
+            "title": "Open Food Facts product",
+            "edition": "rev-3"
+          }
+        ],
+        "issues": [],
+        "scoringFacts": {
+          "categorySourceIds": [],
+          "cheese": {
+            "state": "present",
+            "sourceIds": [
+              "off:8901234567890"
+            ]
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        }
+      },
+      "resourceCompatibility": {
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence",
+        "methodEdition": "fictional-method",
+        "methodBundleSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  {
+    "schema": "AnalyzeResponse",
+    "name": "response unknown category cannot cite category sources",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "inputDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+      "product": {
+        "id": "fictional-snapshot",
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "label",
+            "title": "Combined label photo"
+          }
+        ],
+        "observations": [],
+        "ingredients": [],
+        "category": "unknown",
+        "scoringFacts": {
+          "categorySourceIds": [
+            "src-0"
+          ],
+          "cheese": {
+            "state": "unknown"
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "unknown"
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        },
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence"
+      },
+      "scientific": {
+        "state": "method_unavailable",
+        "inputSnapshotId": "fictional-snapshot",
+        "reasons": [],
+        "issues": [
+          {
+            "code": "candidate_method_not_released",
+            "stage": "method",
+            "message": "A reviewed compatible method bundle is not available.",
+            "action": "none"
+          }
+        ]
+      },
+      "citations": [],
+      "issues": [
+        {
+          "code": "candidate_method_not_released",
+          "stage": "method",
+          "message": "A reviewed compatible method bundle is not available.",
+          "action": "none"
+        }
+      ]
+    }
+  },
+  {
+    "schema": "AnalyzeResponse",
+    "name": "response plain water contradicts a general category",
+    "value": {
+      "contractVersion": "0.3.0-draft",
+      "inputDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+      "product": {
+        "id": "fictional-snapshot",
+        "barcode": null,
+        "name": null,
+        "market": "IN",
+        "sourceRefs": [
+          {
+            "id": "src-0",
+            "kind": "label",
+            "title": "Combined label photo"
+          }
+        ],
+        "observations": [],
+        "ingredients": [],
+        "category": "general",
+        "scoringFacts": {
+          "categorySourceIds": [],
+          "cheese": {
+            "state": "unknown"
+          },
+          "redMeat": {
+            "state": "unknown"
+          },
+          "plainWater": {
+            "state": "present",
+            "sourceIds": [
+              "src-0"
+            ]
+          },
+          "nonNutritiveSweetener": {
+            "state": "unknown"
+          }
+        },
+        "taxonomyVersion": "fictional-taxonomy",
+        "evidenceVersion": "fictional-evidence"
+      },
+      "scientific": {
+        "state": "method_unavailable",
+        "inputSnapshotId": "fictional-snapshot",
+        "reasons": [],
+        "issues": [
+          {
+            "code": "candidate_method_not_released",
+            "stage": "method",
+            "message": "A reviewed compatible method bundle is not available.",
+            "action": "none"
+          }
+        ]
+      },
+      "citations": [],
+      "issues": [
+        {
+          "code": "candidate_method_not_released",
+          "stage": "method",
+          "message": "A reviewed compatible method bundle is not available.",
+          "action": "none"
+        }
+      ]
     }
   }
 ]

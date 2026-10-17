@@ -7,7 +7,7 @@ import { validateLocalAssessment, validateProductSnapshot } from './generated/va
 import { ContractValidationError, mapAnalyzeResponse } from './map-analyze-response';
 
 const response: AnalyzeResponse = {
-  contractVersion: '0.2.0-draft',
+  contractVersion: '0.3.0-draft',
   inputDigest: '0000000000000000000000000000000000000000000000000000000000000000',
   product: {
     id: 'fictional-snapshot',
@@ -117,6 +117,49 @@ describe('mapAnalyzeResponse', () => {
       scientific: { ...response.scientific, inputSnapshotId: 'other-snapshot' },
     };
     expect(() => mapAnalyzeResponse(mismatched, context)).toThrow(ContractValidationError);
+  });
+
+  it('carries ADR013 scoring facts and their sources into the snapshot', () => {
+    const withFacts: AnalyzeResponse = {
+      ...response,
+      product: {
+        ...response.product,
+        category: 'general',
+        scoringFacts: {
+          categorySourceIds: ['src-0'],
+          cheese: { state: 'present', sourceIds: ['src-0'] },
+          redMeat: { state: 'absent', sourceIds: ['src-0'] },
+          plainWater: { state: 'unknown' },
+          nonNutritiveSweetener: { state: 'unknown' },
+        },
+      },
+    };
+    const mapped = mapAnalyzeResponse(withFacts, context);
+    expect(mapped.snapshot.scoringFacts).toEqual(withFacts.product.scoringFacts);
+    expect(validateProductSnapshot(mapped.snapshot)).toBe(true);
+  });
+
+  it('leaves facts omitted, meaning unknown, when the response has none', () => {
+    const mapped = mapAnalyzeResponse(response, context);
+    expect(Object.hasOwn(mapped.snapshot, 'scoringFacts')).toBe(false);
+  });
+
+  it('rejects a scoring fact that names a source the product does not have', () => {
+    const dangling: AnalyzeResponse = {
+      ...response,
+      product: {
+        ...response.product,
+        category: 'general',
+        scoringFacts: {
+          categorySourceIds: ['src-0'],
+          cheese: { state: 'present', sourceIds: ['src-9'] },
+          redMeat: { state: 'unknown' },
+          plainWater: { state: 'unknown' },
+          nonNutritiveSweetener: { state: 'unknown' },
+        },
+      },
+    };
+    expect(() => mapAnalyzeResponse(dangling, context)).toThrow(/unknown source src-9/);
   });
 
   it('rejects a response that carries a personal outcome', () => {

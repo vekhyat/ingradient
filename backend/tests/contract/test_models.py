@@ -135,3 +135,33 @@ def test_every_wire_negative_fails_validation() -> None:
         with pytest.raises(ValidationError):
             _reject_model(models[name], value)
     assert seen == {"AnalyzeRequest", "AnalyzeResponse", "ScientificAssessment"}
+
+
+def _with_facts(cheese_sources: list[str]) -> dict[str, Any]:
+    request = request_example(openapi())
+    request["product"]["sourceRefs"] = [
+        {"id": "src-0", "kind": "label", "title": "Combined label photo"}
+    ]
+    request["product"]["category"] = "general"
+    request["product"]["scoringFacts"] = {
+        "categorySourceIds": ["src-0"],
+        "cheese": {"state": "present", "sourceIds": cheese_sources},
+        "redMeat": {"state": "unknown"},
+        "plainWater": {"state": "unknown"},
+        "nonNutritiveSweetener": {"state": "unknown"},
+    }
+    return request
+
+
+def test_scoring_facts_round_trip_on_the_request() -> None:
+    request = _with_facts(["src-0"])
+    parsed = AnalyzeRequest.model_validate(request)
+    dumped = parsed.model_dump(mode="json", exclude_none=True)
+    assert dumped["product"]["scoringFacts"] == request["product"]["scoringFacts"]
+
+
+def test_scoring_fact_with_an_unknown_source_is_rejected() -> None:
+    """ADR013: the schema cannot see that a source id exists; the model must."""
+
+    with pytest.raises(ValidationError, match="unknown source id"):
+        AnalyzeRequest.model_validate(_with_facts(["src-99"]))

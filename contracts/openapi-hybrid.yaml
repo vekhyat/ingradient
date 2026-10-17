@@ -2,10 +2,10 @@ openapi: 3.1.0
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 info:
   title: Ingradient hybrid product-analysis contract candidate
-  version: 0.2.0-draft
-  description: Accepted shape D83, revised by the D100 review (D104); frozen at INT-00. D66 hybrid; D67 text/nutrition/local
-    OCR; D68 Python/FastAPI; D69 fallback start 2000 ms; D70 explicit late update. Examples are fictional shape checks, not
-    official scoring vectors.
+  version: 0.3.0-draft
+  description: Accepted shape D83, revised by the D100 review (D104); frozen at INT-00; optional request category and source-backed
+    scoringFacts added by ADR013 (D146). D66 hybrid; D67 text/nutrition/local OCR; D68 Python/FastAPI; D69 fallback start
+    2000 ms; D70 explicit late update. Examples are fictional shape checks, not official scoring vectors.
 servers:
 - url: https://analysis.ingradient.invalid
   description: Placeholder; no host/account selected
@@ -41,7 +41,7 @@ paths:
                 $ref: '#/components/schemas/Health'
               example:
                 status: ok
-                contractVersion: 0.2.0-draft
+                contractVersion: 0.3.0-draft
         '400': &id002
           description: Unknown or invalid parameter; no content recorded
           content:
@@ -145,7 +145,7 @@ paths:
             schema:
               $ref: '#/components/schemas/AnalyzeRequest'
             example: &id020
-              contractVersion: 0.2.0-draft
+              contractVersion: 0.3.0-draft
               product:
                 barcode: null
                 name: null
@@ -168,7 +168,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/AnalyzeResponse'
               example: &id021
-                contractVersion: 0.2.0-draft
+                contractVersion: 0.3.0-draft
                 inputDigest: '0000000000000000000000000000000000000000000000000000000000000000'
                 product:
                   id: fictional-snapshot
@@ -815,13 +815,13 @@ components:
         status:
           const: ok
         contractVersion:
-          const: 0.2.0-draft
+          const: 0.3.0-draft
       required:
       - status
       - contractVersion
       examples:
       - status: ok
-        contractVersion: 0.2.0-draft
+        contractVersion: 0.3.0-draft
     ProductInputObservation:
       oneOf:
       - type: object
@@ -1000,6 +1000,118 @@ components:
       - id
       - kind
       - title
+    PresenceFact:
+      oneOf:
+      - type: object
+        additionalProperties: false
+        properties:
+          state:
+            type: string
+            enum:
+            - present
+            - absent
+          sourceIds:
+            type: array
+            items:
+              type: string
+              pattern: ^src-[0-9]{1,3}$
+              description: Per-request local label (src-0, src-1, ...). Carries no stable or device-derived value (D73).
+            minItems: 1
+            uniqueItems: true
+        required:
+        - state
+        - sourceIds
+      - type: object
+        additionalProperties: false
+        properties:
+          state:
+            const: unknown
+        required:
+        - state
+      discriminator:
+        propertyName: state
+      description: 'ADR013 (D146). present or absent: at least one source of this product supports the fact. unknown: no supporting
+        evidence, and no sources. Unknown differs from an observed absence; a missing category tag or an incomplete ingredient
+        list never proves absence.'
+      examples:
+      - state: present
+        sourceIds:
+        - src-0
+      - state: unknown
+    ScoringFacts:
+      type: object
+      additionalProperties: false
+      properties:
+        categorySourceIds:
+          type: array
+          items:
+            type: string
+            pattern: ^src-[0-9]{1,3}$
+            description: Per-request local label (src-0, src-1, ...). Carries no stable or device-derived value (D73).
+          uniqueItems: true
+          description: Sources supporting the product category. Empty when the category is unknown or not stated.
+        cheese:
+          $ref: '#/components/schemas/PresenceFact'
+        redMeat:
+          $ref: '#/components/schemas/PresenceFact'
+        plainWater:
+          $ref: '#/components/schemas/PresenceFact'
+        nonNutritiveSweetener:
+          $ref: '#/components/schemas/PresenceFact'
+      required:
+      - categorySourceIds
+      - cheese
+      - redMeat
+      - plainWater
+      - nonNutritiveSweetener
+      allOf:
+      - if:
+          type: object
+          required:
+          - plainWater
+          properties:
+            plainWater:
+              type: object
+              required:
+              - state
+              properties:
+                state:
+                  const: present
+        then:
+          properties:
+            cheese:
+              properties:
+                state:
+                  not:
+                    const: present
+            redMeat:
+              properties:
+                state:
+                  not:
+                    const: present
+            nonNutritiveSweetener:
+              properties:
+                state:
+                  not:
+                    const: present
+      description: 'ADR013 (D146). Source-backed facts that select Nutri-Score route exceptions. Omit the whole object when
+        nothing is known: omission means every fact is unknown and category provenance is unavailable, never absent or general.
+        A partial object is invalid. Each id appears once per list and must name a sourceRef of the same product (domain validation).
+        Plain water excludes a present cheese, red-meat or sweetener fact. Examples are fictional shape checks, not product
+        data.'
+      examples:
+      - categorySourceIds:
+        - src-0
+        cheese:
+          state: present
+          sourceIds:
+          - src-0
+        redMeat:
+          state: unknown
+        plainWater:
+          state: unknown
+        nonNutritiveSweetener:
+          state: unknown
     ProductAnalysisInput:
       type: object
       additionalProperties: false
@@ -1047,6 +1159,17 @@ components:
           items:
             $ref: '#/components/schemas/Issue'
           maxItems: 100
+        category:
+          type: string
+          enum:
+          - general
+          - fats_nuts_seeds
+          - beverage
+          - excluded
+          - unknown
+          description: Optional (ADR013, D146). Omission means unknown, never general.
+        scoringFacts:
+          $ref: '#/components/schemas/ScoringFacts'
       required:
       - barcode
       - market
@@ -1065,12 +1188,89 @@ components:
             ingredientsText:
               type: string
               minLength: 1
+      - if:
+          required:
+          - category
+          properties:
+            category:
+              enum:
+              - general
+              - fats_nuts_seeds
+              - beverage
+              - excluded
+        else:
+          properties:
+            scoringFacts:
+              properties:
+                categorySourceIds:
+                  maxItems: 0
+      - if:
+          required:
+          - scoringFacts
+          properties:
+            scoringFacts:
+              anyOf:
+              - type: object
+                required:
+                - cheese
+                properties:
+                  cheese:
+                    type: object
+                    required:
+                    - state
+                    properties:
+                      state:
+                        const: present
+              - type: object
+                required:
+                - redMeat
+                properties:
+                  redMeat:
+                    type: object
+                    required:
+                    - state
+                    properties:
+                      state:
+                        const: present
+        then:
+          properties:
+            category:
+              not:
+                enum:
+                - fats_nuts_seeds
+                - beverage
+      - if:
+          required:
+          - scoringFacts
+          properties:
+            scoringFacts:
+              type: object
+              required:
+              - plainWater
+              properties:
+                plainWater:
+                  type: object
+                  required:
+                  - state
+                  properties:
+                    state:
+                      const: present
+        then:
+          properties:
+            category:
+              not:
+                enum:
+                - general
+                - fats_nuts_seeds
+      description: 'ADR013 (D146): category and scoringFacts are optional; omission means unknown, never general or absent.
+        categorySourceIds must be empty unless the category is known. Cheese and red meat are general-route facts and plain
+        water is a beverage-route fact, so a stated category of another route contradicts them.'
     AnalyzeRequest:
       type: object
       additionalProperties: false
       properties:
         contractVersion:
-          const: 0.2.0-draft
+          const: 0.3.0-draft
         product:
           $ref: '#/components/schemas/ProductAnalysisInput'
         resourceCompatibility:
@@ -1107,6 +1307,39 @@ components:
         evidence.
       examples:
       - *id020
+      - contractVersion: 0.3.0-draft
+        product:
+          barcode: '8901234567890'
+          name: null
+          market: IN
+          ingredientsText: null
+          ingredientsStatus: missing
+          observations: []
+          sourceRefs:
+          - id: src-0
+            kind: 'off'
+            title: Open Food Facts product
+            edition: rev-3
+          issues: []
+          category: beverage
+          scoringFacts:
+            categorySourceIds:
+            - src-0
+            cheese:
+              state: unknown
+            redMeat:
+              state: unknown
+            plainWater:
+              state: unknown
+            nonNutritiveSweetener:
+              state: present
+              sourceIds:
+              - src-0
+        resourceCompatibility:
+          taxonomyVersion: fictional-taxonomy
+          evidenceVersion: fictional-evidence
+          methodEdition: fictional-method
+          methodBundleSha256: '0000000000000000000000000000000000000000000000000000000000000000'
     AnalyzedProduct:
       type: object
       additionalProperties: false
@@ -1153,6 +1386,8 @@ components:
           - beverage
           - excluded
           - unknown
+        scoringFacts:
+          $ref: '#/components/schemas/ScoringFacts'
         taxonomyVersion:
           type: string
           minLength: 1
@@ -1172,12 +1407,117 @@ components:
       - category
       - taxonomyVersion
       - evidenceVersion
+      allOf:
+      - if:
+          required:
+          - category
+          properties:
+            category:
+              enum:
+              - general
+              - fats_nuts_seeds
+              - beverage
+              - excluded
+        else:
+          properties:
+            scoringFacts:
+              properties:
+                categorySourceIds:
+                  maxItems: 0
+      - if:
+          required:
+          - scoringFacts
+          properties:
+            scoringFacts:
+              anyOf:
+              - type: object
+                required:
+                - cheese
+                properties:
+                  cheese:
+                    type: object
+                    required:
+                    - state
+                    properties:
+                      state:
+                        const: present
+              - type: object
+                required:
+                - redMeat
+                properties:
+                  redMeat:
+                    type: object
+                    required:
+                    - state
+                    properties:
+                      state:
+                        const: present
+        then:
+          properties:
+            category:
+              not:
+                enum:
+                - fats_nuts_seeds
+                - beverage
+      - if:
+          required:
+          - scoringFacts
+          properties:
+            scoringFacts:
+              type: object
+              required:
+              - plainWater
+              properties:
+                plainWater:
+                  type: object
+                  required:
+                  - state
+                  properties:
+                    state:
+                      const: present
+        then:
+          properties:
+            category:
+              not:
+                enum:
+                - general
+                - fats_nuts_seeds
+      description: 'ADR013 (D146): category and scoringFacts are optional; omission means unknown, never general or absent.
+        categorySourceIds must be empty unless the category is known. Cheese and red meat are general-route facts and plain
+        water is a beverage-route fact, so a stated category of another route contradicts them.'
+      examples:
+      - id: fictional-snapshot
+        barcode: null
+        name: null
+        market: IN
+        sourceRefs:
+        - id: src-0
+          kind: label
+          title: Combined label photo
+        observations: []
+        ingredients: []
+        category: general
+        scoringFacts:
+          categorySourceIds:
+          - src-0
+          cheese:
+            state: unknown
+          redMeat:
+            state: absent
+            sourceIds:
+            - src-0
+          plainWater:
+            state: unknown
+          nonNutritiveSweetener:
+            state: unknown
+        taxonomyVersion: fictional-taxonomy
+        evidenceVersion: fictional-evidence
     AnalyzeResponse:
       type: object
       additionalProperties: false
       properties:
         contractVersion:
-          const: 0.2.0-draft
+          const: 0.3.0-draft
         product:
           $ref: '#/components/schemas/AnalyzedProduct'
         scientific:
@@ -1208,7 +1548,7 @@ components:
         editions before an update offer; same input/method/resources must pass the shared Python/mobile vectors.
       examples:
       - *id021
-x-status: accepted_D83_revised_D104_freeze_at_INT-00
+x-status: accepted_D83_revised_D104_D146_freeze_at_INT-00
 x-draft-client-policy:
   analysisFallbackStartMs: 2000
   offlineOrExplicitBackendFailure: immediate local fallback
@@ -1263,3 +1603,8 @@ x-runtime-invariants:
 - A graded result is offered only if scientific.method.bundleSha256 equals the request methodBundleSha256.
 - The phone renders reason text from its own reviewed template for templateId; an unknown templateId drops that reason with
   an issue.
+- scoringFacts and request category are optional; omission means every fact is unknown, never absent or general (ADR013, D146).
+- Every scoringFacts source id names a sourceRef of the same product; a request with a dangling id is rejected with 400 and
+  a response with one is not offered.
+- A known category needs nonempty categorySourceIds before a new calculation treats it as supported; a missing source tag
+  never proves an exception absent.

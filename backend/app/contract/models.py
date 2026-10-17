@@ -264,6 +264,89 @@ ProductInputObservation = Annotated[
 ]
 
 
+class KnownFact(WireModel):
+    """ADR013: a present or absent fact names at least one supporting source."""
+
+    state: Literal["present", "absent"]
+    sourceIds: list[SourceId] = Field(min_length=1)
+
+
+class UnknownFact(WireModel):
+    """ADR013: no supporting evidence. Unknown never means absent."""
+
+    state: Literal["unknown"]
+
+
+PresenceFact = Annotated[KnownFact | UnknownFact, Field(discriminator="state")]
+
+Category = Literal["general", "fats_nuts_seeds", "beverage", "excluded", "unknown"]
+_STATED_CATEGORIES = {"general", "fats_nuts_seeds", "beverage", "excluded"}
+
+
+def _present(fact: KnownFact | UnknownFact) -> bool:
+    return fact.state == "present"
+
+
+class ScoringFacts(WireModel):
+    """Source-backed facts that select Nutri-Score route exceptions (ADR013, D146)."""
+
+    categorySourceIds: list[SourceId]
+    cheese: PresenceFact
+    redMeat: PresenceFact
+    plainWater: PresenceFact
+    nonNutritiveSweetener: PresenceFact
+
+    @model_validator(mode="after")
+    def enforce_fact_rules(self) -> Self:
+        """Plain water excludes a present cheese, red-meat or sweetener fact."""
+
+        if _present(self.plainWater) and (
+            _present(self.cheese)
+            or _present(self.redMeat)
+            or _present(self.nonNutritiveSweetener)
+        ):
+            raise ValueError("plain water contradicts another present fact")
+        return self
+
+    def source_lists(self) -> list[list[str]]:
+        lists = [self.categorySourceIds]
+        for fact in (
+            self.cheese,
+            self.redMeat,
+            self.plainWater,
+            self.nonNutritiveSweetener,
+        ):
+            if isinstance(fact, KnownFact):
+                lists.append(fact.sourceIds)
+        return lists
+
+
+def _check_scoring_facts(
+    category: str | None,
+    facts: ScoringFacts | None,
+    defined: set[str],
+) -> None:
+    """Category/fact consistency and source resolution for request and response."""
+
+    if facts is None:
+        return
+    if category not in _STATED_CATEGORIES and facts.categorySourceIds:
+        raise ValueError("category sources require a stated category")
+    if (_present(facts.cheese) or _present(facts.redMeat)) and category in {
+        "fats_nuts_seeds",
+        "beverage",
+    }:
+        raise ValueError("cheese and red meat are general-route facts")
+    if _present(facts.plainWater) and category in {"general", "fats_nuts_seeds"}:
+        raise ValueError("plain water is a beverage-route fact")
+    for source_ids in facts.source_lists():
+        if len(source_ids) != len(set(source_ids)):
+            raise ValueError("duplicate source id")
+        for source_id in source_ids:
+            if source_id not in defined:
+                raise ValueError("unknown source id")
+
+
 def _source_lists(
     observation: ReadObservation
     | UncertainObservation
@@ -287,6 +370,10 @@ class ProductAnalysisInput(WireModel):
     observations: list[ProductInputObservation] = Field(max_length=100)
     sourceRefs: list[ProductInputSource] = Field(max_length=100)
     issues: list[Issue] = Field(max_length=100)
+    category: Annotated[Category | None, BeforeValidator(_reject_explicit_null)] = None
+    scoringFacts: Annotated[
+        ScoringFacts | None, BeforeValidator(_reject_explicit_null)
+    ] = None
 
     @model_validator(mode="after")
     def enforce_product_rules(self) -> Self:
@@ -314,6 +401,7 @@ class ProductAnalysisInput(WireModel):
                 for source_id in source_ids:
                     if source_id not in defined:
                         raise ValueError("unknown source id")
+        _check_scoring_facts(self.category, self.scoringFacts, defined)
         return self
 
 
@@ -325,7 +413,7 @@ class ResourceCompatibility(WireModel):
 
 
 class AnalyzeRequest(WireModel):
-    contractVersion: Literal["0.2.0-draft"]
+    contractVersion: Literal["0.3.0-draft"]
     product: ProductAnalysisInput
     resourceCompatibility: ResourceCompatibility
 
@@ -349,13 +437,25 @@ class AnalyzedProduct(WireModel):
     sourceRefs: list[ProductInputSource]
     observations: list[ProductInputObservation] = Field(max_length=100)
     ingredients: list[IngredientMention] = Field(max_length=300)
-    category: Literal["general", "fats_nuts_seeds", "beverage", "excluded", "unknown"]
+    category: Category
     taxonomyVersion: ShortText
     evidenceVersion: ShortText
+    scoringFacts: Annotated[
+        ScoringFacts | None, BeforeValidator(_reject_explicit_null)
+    ] = None
+
+    @model_validator(mode="after")
+    def enforce_fact_sources(self) -> Self:
+        _check_scoring_facts(
+            self.category,
+            self.scoringFacts,
+            {source.id for source in self.sourceRefs},
+        )
+        return self
 
 
 class AnalyzeResponse(WireModel):
-    contractVersion: Literal["0.2.0-draft"]
+    contractVersion: Literal["0.3.0-draft"]
     inputDigest: Annotated[str, Field(pattern=_SHA256)]
     product: AnalyzedProduct
     scientific: ScientificAssessment

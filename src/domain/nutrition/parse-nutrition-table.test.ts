@@ -154,7 +154,7 @@ function check(result: NutritionParseResult): NutritionParseResult {
     }
   }
   const request = {
-    contractVersion: '0.2.0-draft',
+    contractVersion: '0.3.0-draft',
     product: {
       barcode: null,
       name: null,

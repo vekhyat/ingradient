@@ -196,5 +196,339 @@
       ],
       "experimental": true
     }
+  },
+  {
+    "schema": "ProductSnapshot",
+    "name": "unknown scoring fact cannot carry sources",
+    "value": {
+      "id": "fixture-scoring-facts",
+      "barcode": "8901234567890",
+      "name": null,
+      "market": "IN",
+      "capturedAt": "2026-10-16T00:00:00.000Z",
+      "sourceRefs": [
+        {
+          "id": "off:8901234567890",
+          "kind": "off",
+          "title": "Open Food Facts product",
+          "edition": "rev-3"
+        }
+      ],
+      "observations": [],
+      "ingredients": [],
+      "panels": [],
+      "category": "general",
+      "scoringFacts": {
+        "categorySourceIds": [
+          "off:8901234567890"
+        ],
+        "cheese": {
+          "state": "unknown",
+          "sourceIds": [
+            "off:8901234567890"
+          ]
+        },
+        "redMeat": {
+          "state": "unknown"
+        },
+        "plainWater": {
+          "state": "unknown"
+        },
+        "nonNutritiveSweetener": {
+          "state": "unknown"
+        }
+      },
+      "taxonomyVersion": "fictional-taxonomy",
+      "evidenceVersion": "fictional-evidence"
+    }
+  },
+  {
+    "schema": "ProductSnapshot",
+    "name": "present scoring fact needs a source",
+    "value": {
+      "id": "fixture-scoring-facts",
+      "barcode": "8901234567890",
+      "name": null,
+      "market": "IN",
+      "capturedAt": "2026-10-16T00:00:00.000Z",
+      "sourceRefs": [
+        {
+          "id": "off:8901234567890",
+          "kind": "off",
+          "title": "Open Food Facts product",
+          "edition": "rev-3"
+        }
+      ],
+      "observations": [],
+      "ingredients": [],
+      "panels": [],
+      "category": "general",
+      "scoringFacts": {
+        "categorySourceIds": [
+          "off:8901234567890"
+        ],
+        "cheese": {
+          "state": "unknown"
+        },
+        "redMeat": {
+          "state": "present",
+          "sourceIds": []
+        },
+        "plainWater": {
+          "state": "unknown"
+        },
+        "nonNutritiveSweetener": {
+          "state": "unknown"
+        }
+      },
+      "taxonomyVersion": "fictional-taxonomy",
+      "evidenceVersion": "fictional-evidence"
+    }
+  },
+  {
+    "schema": "ProductSnapshot",
+    "name": "scoring fact cites each source once",
+    "value": {
+      "id": "fixture-scoring-facts",
+      "barcode": "8901234567890",
+      "name": null,
+      "market": "IN",
+      "capturedAt": "2026-10-16T00:00:00.000Z",
+      "sourceRefs": [
+        {
+          "id": "off:8901234567890",
+          "kind": "off",
+          "title": "Open Food Facts product",
+          "edition": "rev-3"
+        }
+      ],
+      "observations": [],
+      "ingredients": [],
+      "panels": [],
+      "category": "general",
+      "scoringFacts": {
+        "categorySourceIds": [
+          "off:8901234567890"
+        ],
+        "cheese": {
+          "state": "absent",
+          "sourceIds": [
+            "off:8901234567890",
+            "off:8901234567890"
+          ]
+        },
+        "redMeat": {
+          "state": "unknown"
+        },
+        "plainWater": {
+          "state": "unknown"
+        },
+        "nonNutritiveSweetener": {
+          "state": "unknown"
+        }
+      },
+      "taxonomyVersion": "fictional-taxonomy",
+      "evidenceVersion": "fictional-evidence"
+    }
+  },
+  {
+    "schema": "ProductSnapshot",
+    "name": "unknown category cannot cite category sources",
+    "value": {
+      "id": "fixture-scoring-facts",
+      "barcode": "8901234567890",
+      "name": null,
+      "market": "IN",
+      "capturedAt": "2026-10-16T00:00:00.000Z",
+      "sourceRefs": [
+        {
+          "id": "off:8901234567890",
+          "kind": "off",
+          "title": "Open Food Facts product",
+          "edition": "rev-3"
+        }
+      ],
+      "observations": [],
+      "ingredients": [],
+      "panels": [],
+      "category": "unknown",
+      "scoringFacts": {
+        "categorySourceIds": [
+          "off:8901234567890"
+        ],
+        "cheese": {
+          "state": "unknown"
+        },
+        "redMeat": {
+          "state": "unknown"
+        },
+        "plainWater": {
+          "state": "unknown"
+        },
+        "nonNutritiveSweetener": {
+          "state": "unknown"
+        }
+      },
+      "taxonomyVersion": "fictional-taxonomy",
+      "evidenceVersion": "fictional-evidence"
+    }
+  },
+  {
+    "schema": "ProductSnapshot",
+    "name": "plain water cannot contain a non-nutritive sweetener",
+    "value": {
+      "id": "fixture-scoring-facts",
+      "barcode": "8901234567890",
+      "name": null,
+      "market": "IN",
+      "capturedAt": "2026-10-16T00:00:00.000Z",
+      "sourceRefs": [
+        {
+          "id": "off:8901234567890",
+          "kind": "off",
+          "title": "Open Food Facts product",
+          "edition": "rev-3"
+        }
+      ],
+      "observations": [],
+      "ingredients": [],
+      "panels": [],
+      "category": "beverage",
+      "scoringFacts": {
+        "categorySourceIds": [
+          "off:8901234567890"
+        ],
+        "cheese": {
+          "state": "unknown"
+        },
+        "redMeat": {
+          "state": "unknown"
+        },
+        "plainWater": {
+          "state": "present",
+          "sourceIds": [
+            "off:8901234567890"
+          ]
+        },
+        "nonNutritiveSweetener": {
+          "state": "present",
+          "sourceIds": [
+            "off:8901234567890"
+          ]
+        }
+      },
+      "taxonomyVersion": "fictional-taxonomy",
+      "evidenceVersion": "fictional-evidence"
+    }
+  },
+  {
+    "schema": "ProductSnapshot",
+    "name": "cheese is not a fats/nuts/seeds-route fact",
+    "value": {
+      "id": "fixture-scoring-facts",
+      "barcode": "8901234567890",
+      "name": null,
+      "market": "IN",
+      "capturedAt": "2026-10-16T00:00:00.000Z",
+      "sourceRefs": [
+        {
+          "id": "off:8901234567890",
+          "kind": "off",
+          "title": "Open Food Facts product",
+          "edition": "rev-3"
+        }
+      ],
+      "observations": [],
+      "ingredients": [],
+      "panels": [],
+      "category": "fats_nuts_seeds",
+      "scoringFacts": {
+        "categorySourceIds": [
+          "off:8901234567890"
+        ],
+        "cheese": {
+          "state": "present",
+          "sourceIds": [
+            "off:8901234567890"
+          ]
+        },
+        "redMeat": {
+          "state": "unknown"
+        },
+        "plainWater": {
+          "state": "unknown"
+        },
+        "nonNutritiveSweetener": {
+          "state": "unknown"
+        }
+      },
+      "taxonomyVersion": "fictional-taxonomy",
+      "evidenceVersion": "fictional-evidence"
+    }
+  },
+  {
+    "schema": "ProductSnapshot",
+    "name": "scoring facts name all four flags",
+    "value": {
+      "id": "fixture-scoring-facts",
+      "barcode": "8901234567890",
+      "name": null,
+      "market": "IN",
+      "capturedAt": "2026-10-16T00:00:00.000Z",
+      "sourceRefs": [
+        {
+          "id": "off:8901234567890",
+          "kind": "off",
+          "title": "Open Food Facts product",
+          "edition": "rev-3"
+        }
+      ],
+      "observations": [],
+      "ingredients": [],
+      "panels": [],
+      "category": "general",
+      "scoringFacts": {
+        "categorySourceIds": [
+          "off:8901234567890"
+        ],
+        "cheese": {
+          "state": "unknown"
+        },
+        "redMeat": {
+          "state": "unknown"
+        },
+        "nonNutritiveSweetener": {
+          "state": "unknown"
+        }
+      },
+      "taxonomyVersion": "fictional-taxonomy",
+      "evidenceVersion": "fictional-evidence"
+    }
+  },
+  {
+    "schema": "ProductSnapshot",
+    "name": "scoring facts are omitted, not null",
+    "value": {
+      "id": "fixture-scoring-facts",
+      "barcode": "8901234567890",
+      "name": null,
+      "market": "IN",
+      "capturedAt": "2026-10-16T00:00:00.000Z",
+      "sourceRefs": [
+        {
+          "id": "off:8901234567890",
+          "kind": "off",
+          "title": "Open Food Facts product",
+          "edition": "rev-3"
+        }
+      ],
+      "observations": [],
+      "ingredients": [],
+      "panels": [],
+      "category": "general",
+      "scoringFacts": null,
+      "taxonomyVersion": "fictional-taxonomy",
+      "evidenceVersion": "fictional-evidence"
+    }
   }
 ]

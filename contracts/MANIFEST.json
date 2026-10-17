@@ -1,12 +1,12 @@
 {
-  "contractVersion": "0.2.0-draft",
-  "decisions": "D66-D70, D83, D104, D105",
+  "contractVersion": "0.3.0-draft",
+  "decisions": "D66-D70, D83, D104, D105, D146",
   "note": "Frozen copies. Change them only by revising the plan, re-running the freeze and recording a decision.",
   "sha256": {
-    "local-contract.schema.json": "430e1a73ef9aecb77ce0cfbd1aa12c6d418bff089be346a9737a6c68ef5051f1",
-    "negative/local.json": "1b58e2bd585d95566f810609afc5b873fb3f2094292620fe4c2d85356092315b",
-    "negative/wire.json": "b8e2761f17fb41bc7a2a4dfc751f5989e36f99b007e342d618a4a2563922ee48",
-    "openapi-hybrid.yaml": "a4be1430bf8348cae6b1e9b7b4ddc6f8572bb3113c7757c8098a65f3f2101039",
-    "vectors/input-digest.json": "d2989c74d591ca11b3b8c0aa1c0c04bb81a5736c1871c805dd86d27a3ce57a8c"
+    "local-contract.schema.json": "4988aecb785563c1718d1359bc4c87384d7e96b5b9c4d6542784bc24c611a1bf",
+    "negative/local.json": "cb35802cc51327dbf88dc79a1495a41ae2b1be7dce03215eeba2b4ff598470c8",
+    "negative/wire.json": "8657bc12069243ac86b9241b987e6f960d7361f2ad391ef6c990d15884b40450",
+    "openapi-hybrid.yaml": "2a4d0e1cf421136c5ea01df1c4a57acacdb0271c4bfeb5f7e3f99ec881e6155a",
+    "vectors/input-digest.json": "3adf0df62dba20e9dc940e9d79529b452b8294426cda35931e34c53346626bf9"
   }
 }

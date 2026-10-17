@@ -42,7 +42,7 @@ export const MOCK_HTML_WAKEUP = `<!DOCTYPE html>
 export function buildMockHealth(): Health {
   const health: Health = {
     status: 'ok',
-    contractVersion: '0.2.0-draft',
+    contractVersion: '0.3.0-draft',
   };
   if (!wireValidators.Health(health)) {
     throw new Error('Mock Health response failed schema validation.');
@@ -192,7 +192,7 @@ export function buildMockAnalyzeResponse(
   };
 
   const response: AnalyzeResponse = {
-    contractVersion: '0.2.0-draft',
+    contractVersion: '0.3.0-draft',
     product: {
       id: snapshotId,
       barcode: activeProduct.barcode ?? null,

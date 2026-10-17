@@ -113,7 +113,7 @@ def test_openapi_example_returns_a_named_gap(client: TestClient) -> None:
     assert body["product"]["ingredients"] == []
     assert body["product"]["category"] == "unknown"
     assert body["citations"] == []
-    assert body["contractVersion"] == "0.2.0-draft"
+    assert body["contractVersion"] == "0.3.0-draft"
 
 
 def test_product_digest_vectors_round_trip_on_the_route(client: TestClient) -> None:
@@ -344,8 +344,8 @@ def test_duplicate_keys_non_finite_and_unsafe_integers_are_400(
     spec = openapi()
     example = json.dumps(request_example(spec), separators=(",", ":")).encode()
     duplicate = example.replace(
-        b'"contractVersion":"0.2.0-draft"',
-        b'"contractVersion":"0.2.0-draft","contractVersion":"0.2.0-draft"',
+        b'"contractVersion":"0.3.0-draft"',
+        b'"contractVersion":"0.3.0-draft","contractVersion":"0.3.0-draft"',
         1,
     )
     assert _post(
