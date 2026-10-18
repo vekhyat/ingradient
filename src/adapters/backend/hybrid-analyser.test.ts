@@ -8,6 +8,8 @@ import {
 } from '@jest/globals';
 
 import type { ProductSnapshot } from '../../domain/contracts/generated/local';
+import { wireValidators } from '../../domain/contracts/generated/validate-wire';
+import type { AnalyzeResponse } from '../../domain/contracts/generated/wire';
 import {
   ANALYSIS_FALLBACK_START_MS,
   ANALYSIS_REQUEST_LIFETIME_MS,
@@ -358,6 +360,55 @@ describe('hybrid analysis client (HYB-01)', () => {
       'Reviewed local sentence.',
     );
     expect(result?.assessment.citations).toEqual([LOCAL_CITATION]);
+  });
+
+  it('keeps no server citations on a gap answer (D105)', async () => {
+    const transport = createMockBackendTransport({ scenario: 'fast' });
+    const gapFetch: typeof fetch = async (input, init) => {
+      const response = await transport.fetch(input, init);
+      if (response.status !== 200) {
+        return response;
+      }
+      const body = JSON.parse(await response.text()) as AnalyzeResponse;
+      const gap: AnalyzeResponse = {
+        ...body,
+        scientific: {
+          state: 'insufficient_data',
+          inputSnapshotId: body.scientific.inputSnapshotId,
+          reasons: [],
+          issues: [
+            {
+              code: 'missing_cheese',
+              stage: 'completeness',
+              field: 'cheese',
+              message: SERVER_TEXT,
+              action: 'edit',
+            },
+          ],
+        },
+      };
+      expect(wireValidators.AnalyzeResponse(gap)).toBe(true);
+      return new Response(JSON.stringify(gap), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    };
+    const hybrid = createHybridAnalyser({
+      baseUrl: 'https://analysis.example.invalid/',
+      fetch: gapFetch,
+      local: methodNotInstalledAnalyser,
+      context: { acceptedNoticeVersion: () => '1-draft' },
+      resources,
+      renderReasons: replayRenderer,
+      clock,
+    });
+    const run = hybrid.analyse(snapshot, new AbortController().signal);
+    await jest.advanceTimersByTimeAsync(150);
+    const result = await run;
+    expect(result.executor).toBe('backend');
+    expect(result.assessment.scientific.state).toBe('insufficient_data');
+    expect(result.assessment.citations).toEqual([]);
+    expect(JSON.stringify(result.assessment)).not.toContain(SERVER_TEXT);
   });
 
   it('never uses a reasoned answer the phone cannot replay', async () => {

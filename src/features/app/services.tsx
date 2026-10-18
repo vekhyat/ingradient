@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import {
   createContext,
@@ -11,11 +12,8 @@ import {
 } from 'react';
 import { AppState, Platform } from 'react-native';
 
-import {
-  createHybridAnalyser,
-  type HybridAnalyser,
-} from '../../adapters/backend/hybrid-analyser';
 import { createCatalogueAdapter } from '../../adapters/catalogue';
+import { buildOffUserAgent } from '../../adapters/catalogue/user-agent';
 import { recogniseLabel } from '../../adapters/native/text-recognition';
 import { StorageError } from '../../adapters/storage/records';
 import {
@@ -32,52 +30,26 @@ import {
   openEncryptedDatabase,
   sqlRecordTable,
 } from '../../adapters/storage/sqlcipher-table';
-import { installedResources } from '../../domain/hybrid/resources';
 import { LabelFlow } from '../capture/label-flow';
-import {
-  methodNotInstalledAnalyser,
-  type AnalyserContext,
-  type ProductAnalyser,
-} from '../scan/analyser';
 import { ScanSession, newOperationId } from '../scan/scan-session';
+import { createAnalysis } from './analysis';
 
 /** Open Food Facts asks every app to identify itself and give a contact. */
-const USER_AGENT = `Ingradient - ${Platform.OS === 'ios' ? 'iOS' : 'Android'} - Version 0.1.0 - https://github.com/vekhyat/ingradient`;
+const USER_AGENT = buildOffUserAgent(
+  Platform.OS,
+  Constants.expoConfig?.version ?? '',
+);
 
 /** ONB-01: the notice version the user must accept before analysis. */
 export const NOTICE_VERSION = '1-draft';
 const NOTICE_KEY = 'ingradient.notice.accepted';
 
 /**
- * The analysis server. Unset means phone-only: no backend is deployed yet
- * (BE-14 waits on the owner's accounts). For a local FastAPI run on the
+ * The optional analysis server URL. Unset means phone-only even when a
+ * deployed backend is available (D174). For a local FastAPI run on the
  * Android emulator, EXPO_PUBLIC_ANALYSIS_URL=http://10.0.2.2:8000.
  */
 const ANALYSIS_URL = process.env.EXPO_PUBLIC_ANALYSIS_URL ?? '';
-
-/**
- * The analyser the app runs: the backend first with the phone as fallback
- * (D66), or the phone alone. SCI-01 replaces the phone stand-in here. The
- * context carries the accepted notice version, so nothing is sent before
- * onboarding (APP-01 case 7, HYB-01 case 6).
- */
-function createAnalysis(context: AnalyserContext): {
-  analyser: ProductAnalyser;
-  hybrid: HybridAnalyser | null;
-} {
-  const local = methodNotInstalledAnalyser;
-  if (ANALYSIS_URL.length === 0) {
-    return { analyser: local, hybrid: null };
-  }
-  const hybrid = createHybridAnalyser({
-    baseUrl: ANALYSIS_URL,
-    fetch: (input, init) => fetch(input, init),
-    local,
-    context,
-    resources: installedResources(),
-  });
-  return { analyser: hybrid, hybrid };
-}
 
 /** The accepted notice version, read by analysers at call time. */
 class AcceptedNotice {
@@ -114,7 +86,10 @@ export function AppServicesProvider({ children }: { children: ReactNode }) {
   // Read at analysis time, so acceptance applies without rebuilding services.
   const [acceptedNotice] = useState(() => new AcceptedNotice());
   const [analysis] = useState(() =>
-    createAnalysis({ acceptedNoticeVersion: acceptedNotice.get }),
+    createAnalysis(
+      { acceptedNoticeVersion: acceptedNotice.get },
+      { baseUrl: ANALYSIS_URL, fetch: (input, init) => fetch(input, init) },
+    ),
   );
   const [scan] = useState(
     () =>
@@ -187,7 +162,11 @@ export function AppServicesProvider({ children }: { children: ReactNode }) {
         scan.dropPendingUpdates();
       }
     });
-    return () => subscription.remove();
+    return () => {
+      subscription.remove();
+      analysis.hybrid?.cancelAll();
+      scan.dropPendingUpdates();
+    };
   }, [scan, analysis]);
 
   const value = useMemo<Services>(

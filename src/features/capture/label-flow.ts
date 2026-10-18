@@ -121,7 +121,17 @@ export class LabelFlow {
       this.deps.deletePhoto(rawUri);
       return this.finishRead(token, { kind: 'capture_failed' });
     }
-    const ocr = await this.deps.recognise(uri);
+    if (token !== this.readToken || this.state.session?.id !== session.id) {
+      this.deps.deletePhoto(uri);
+      return { kind: 'capture_failed' };
+    }
+    let ocr: OcrOutcome;
+    try {
+      ocr = await this.deps.recognise(uri);
+    } catch {
+      this.deps.deletePhoto(uri);
+      return this.finishRead(token, { kind: 'engine_error' });
+    }
     if (token !== this.readToken || this.state.session?.id !== session.id) {
       this.deps.deletePhoto(uri);
       return { kind: 'capture_failed' };

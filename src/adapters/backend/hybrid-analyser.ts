@@ -72,7 +72,7 @@ export interface HybridAnalyserDeps {
   local: ProductAnalyser;
   context: AnalyserContext;
   resources: ResourceCompatibility;
-  /** Absent until PIPE-01 supplies the phone replay; reasoned answers are then unusable. */
+  /** When supplied, replay checks every state, including answers without reasons. */
   renderReasons?: ReasonRenderer;
   clock?: HybridClock;
 }
@@ -249,8 +249,9 @@ export function createHybridAnalyser(deps: HybridAnalyserDeps): HybridAnalyser {
         // The digest proved the server analysed this snapshot's product.
         inputSnapshotId: snapshot.id,
       });
-      let citations = mapped.assessment.citations;
-      if (scientific.reasons.length > 0) {
+      // Server citation titles are server text too; only replayed ones are kept.
+      let citations: LocalAssessment['citations'] = [];
+      if (deps.renderReasons !== undefined || scientific.reasons.length > 0) {
         const local = deps.renderReasons?.(snapshot, scientific) ?? null;
         if (local === null) {
           return null;
@@ -273,7 +274,7 @@ export function createHybridAnalyser(deps: HybridAnalyserDeps): HybridAnalyser {
             issues: [...scientific.issues, ...local.issues],
           };
         }
-        citations = local.citations;
+        citations = local.reasons.length > 0 ? local.citations : [];
       }
       const assessment: LocalAssessment = {
         ...mapped.assessment,
