@@ -15,6 +15,7 @@ import { AppText } from '../../components/AppText';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { CaptureViewfinder } from '../../components/CaptureViewfinder';
+import { OperationStatus } from '../../components/OperationStatus';
 import { Sheet } from '../../components/Sheet';
 import { TextField, type BarcodeFieldError } from '../../components/TextField';
 import { enGB } from '../../copy/en-GB';
@@ -65,12 +66,15 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { scan, label } = useServices();
+  const { scan, label, warmUpBackend } = useServices();
   const labelState = useLabelState();
   const [permission, requestPermission] = useCameraPermissions();
   const camera = useRef<CameraView>(null);
   const window = useWindowDimensions();
   const [pictureSize, setPictureSize] = useState<string | undefined>();
+  const [focusPoint, setFocusPoint] = useState<
+    { x: number; y: number; request: number } | undefined
+  >();
   // Height of the area above the nav bar; the camera fills it on the Scan tab.
   const [areaHeight, setAreaHeight] = useState(window.height);
 
@@ -88,25 +92,37 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
     BarcodeFieldError | undefined
   >();
   const [capturing, setCapturing] = useState(false);
+  const [analysing, setAnalysing] = useState(false);
+  const [analysisFailed, setAnalysisFailed] = useState(false);
+  const analysis = useRef<AbortController | null>(null);
   const lockedRef = useRef(false);
 
   useFocusEffect(
     useCallback(() => {
+      warmUpBackend();
       setFocused(true);
       lockedRef.current = false;
       setLocked(false);
       return () => {
+        analysis.current?.abort();
+        analysis.current = null;
+        setAnalysing(false);
         setFocused(false);
+        setReady(false);
         setTorch(false);
       };
-    }, []),
+    }, [warmUpBackend]),
   );
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
       setForeground(state === 'active');
       if (state !== 'active') {
+        analysis.current?.abort();
+        analysis.current = null;
+        setAnalysing(false);
         setTorch(false);
+        setReady(false);
       }
     });
     return () => subscription.remove();
@@ -126,6 +142,13 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
   const cameraActive = focused && foreground && permissionState === 'granted';
 
   const session = labelState.session;
+  useEffect(() => {
+    if (!labelState.session && analysis.current) {
+      analysis.current.abort();
+      analysis.current = null;
+      setAnalysing(false);
+    }
+  }, [labelState.session]);
   const anyPanel =
     session !== null &&
     (session.ingredients.state !== 'missing' ||
@@ -186,7 +209,7 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
   };
 
   const takePhoto = async () => {
-    if (!camera.current || capturing) {
+    if (!camera.current || capturing || analysis.current) {
       return;
     }
     // Any photo is read as a label; the session starts on the first one.
@@ -204,6 +227,44 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
       // The flow reports capture failures through lastOutcome.
     } finally {
       setCapturing(false);
+    }
+  };
+
+  const seeResults = async () => {
+    if (analysis.current || capturing || label.getState().reading) {
+      return;
+    }
+    const snapshot = label.buildSnapshot(new Date().toISOString());
+    if (!snapshot) {
+      return;
+    }
+    const abort = new AbortController();
+    analysis.current = abort;
+    setAnalysing(true);
+    setAnalysisFailed(false);
+    try {
+      const key = await scan.analyseSnapshot(snapshot, abort.signal);
+      if (abort.signal.aborted) {
+        return;
+      }
+      if (!key) {
+        setAnalysisFailed(true);
+        return;
+      }
+      // Clear before navigation: the late-update offer must remain eligible.
+      analysis.current = null;
+      label.discard();
+      if (router.canDismiss()) router.dismissAll();
+      router.push({ pathname: '/result/[key]', params: { key } });
+    } catch {
+      if (!abort.signal.aborted) {
+        setAnalysisFailed(true);
+      }
+    } finally {
+      if (analysis.current === abort) {
+        analysis.current = null;
+        setAnalysing(false);
+      }
     }
   };
 
@@ -261,7 +322,7 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
           torch={torch ? 'on' : 'off'}
           panels={panels}
           locked={locked}
-          capturing={capturing || labelState.reading}
+          capturing={capturing || labelState.reading || analysing}
           showPanels={labelOnly || anyPanel}
           rounded={labelOnly || anyPanel}
           contentInsets={{ top: labelOnly ? 0 : insets.top, bottom: 0 }}
@@ -281,6 +342,8 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
                 ref={camera}
                 style={{ flex: 1 }}
                 facing="back"
+                autofocus="off"
+                {...{ focusPoint }}
                 active={cameraActive}
                 enableTorch={torch}
                 animateShutter={false}
@@ -293,6 +356,12 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
                 pictureSize={pictureSize}
                 onCameraReady={() => {
                   setReady(true);
+                  // Acquire the label in the centre, then return to continuous AF.
+                  setFocusPoint((point) => ({
+                    x: 0.5,
+                    y: 0.5,
+                    request: (point?.request ?? 0) + 1,
+                  }));
                   void pickLargestPictureSize();
                 }}
                 onMountError={() => setMountError(true)}
@@ -300,6 +369,12 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
             ) : null
           }
           onCapture={() => void takePhoto()}
+          onFocusPoint={(point) =>
+            setFocusPoint((previous) => ({
+              ...point,
+              request: (previous?.request ?? 0) + 1,
+            }))
+          }
           onTorch={() => setTorch((on) => !on)}
           onManualBarcode={() => setManualOpen(true)}
           onAllow={() => void requestPermission()}
@@ -308,6 +383,23 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
       </View>
 
       <View style={{ padding: space.s4, gap: space.s4 }}>
+        {analysing || analysisFailed ? (
+          <OperationStatus
+            stage="analysis"
+            state={analysing ? 'pending' : 'failed'}
+            message={
+              analysing
+                ? enGB.status.analysis.server
+                : enGB.status.analysis.failed
+            }
+            onRetry={() => void seeResults()}
+            onCancel={() => {
+              analysis.current?.abort();
+              analysis.current = null;
+              setAnalysing(false);
+            }}
+          />
+        ) : null}
         {!anyPanel && !labelOnly ? (
           <>
             {message ? (
@@ -348,17 +440,31 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
             <Button
               label={enGB.capture.seeResults}
               variant="primary"
+              busy={analysing}
               disabledReason={
-                readyForReview
+                readyForReview && !capturing && !labelState.reading
                   ? undefined
                   : enGB.capture.needOther(missing[0] ?? '')
               }
-              onPress={() => router.push('/review')}
+              onPress={() => void seeResults()}
             />
+            {readyForReview ? (
+              <Button
+                label={enGB.review.title}
+                variant="text"
+                disabledReason={
+                  analysing ? enGB.status.analysis.server : undefined
+                }
+                onPress={() => router.push('/review')}
+              />
+            ) : null}
             {!labelOnly && anyPanel ? (
               <Button
                 label={enGB.scan.startOver}
                 variant="text"
+                disabledReason={
+                  analysing ? enGB.status.analysis.server : undefined
+                }
                 onPress={() => label.discard()}
               />
             ) : null}
@@ -383,6 +489,7 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
         <TextField
           purpose="barcode"
           label={enGB.scan.manualTitle}
+          autoFocus
           value={manualValue}
           error={manualError}
           onChange={(next) => {

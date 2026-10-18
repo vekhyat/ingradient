@@ -11,7 +11,7 @@ import { Touchable } from './Touchable';
 
 export interface ProductIdentityProps {
   product: LocalProductView;
-  density: 'hero' | 'row';
+  density: 'hero' | 'row' | 'summary';
   onInspectSource?: () => void;
 }
 
@@ -46,6 +46,24 @@ export function ProductIdentity({
     .join(' · ');
   const showOffCredit = product.dataCredit !== 'label_photo';
   const largeText = PixelRatio.getFontScale() >= 1.5;
+
+  if (density === 'summary') {
+    return (
+      <View style={{ gap: space.s1 }}>
+        <AppText variant="heading" heading>
+          {name}
+        </AppText>
+        <AppText variant="bodySm" color="ink2">
+          {meta}
+        </AppText>
+        {showOffCredit ? (
+          <AppText variant="bodySm" color="ink3">
+            {enGB.identity.offCredit}
+          </AppText>
+        ) : null}
+      </View>
+    );
+  }
 
   if (density === 'row') {
     return (

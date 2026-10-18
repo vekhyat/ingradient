@@ -1,4 +1,5 @@
 import type {
+  Issue,
   LocalAssessment,
   ProductSnapshot,
 } from '../../domain/contracts/generated/local';
@@ -11,6 +12,23 @@ import type {
 export interface AnalysisResult {
   assessment: LocalAssessment;
   executor: 'phone' | 'backend';
+  /**
+   * D70: a backend result that arrived after the phone result was shown.
+   * The client (HYB-01) decides eligibility (digest, editions, method
+   * bundle, active scan revision) and resolves null when there is none or
+   * the request was cancelled. The screen only offers it; it never applies
+   * it by itself.
+   */
+  lateUpdate?: Promise<AnalysisUpdate | null>;
+  /** Why the phone answered instead of the backend, when it was not timing. */
+  fallbackIssue?: Issue;
+}
+
+export interface AnalysisUpdate {
+  assessment: LocalAssessment;
+  executor: 'backend';
+  /** True when the update adds a hard finding the displayed result lacks. */
+  introducesHardFinding: boolean;
 }
 
 export interface ProductAnalyser {
@@ -18,6 +36,15 @@ export interface ProductAnalyser {
     snapshot: ProductSnapshot,
     signal: AbortSignal,
   ): Promise<AnalysisResult>;
+}
+
+/** What an analyser may know about the app, read at call time. */
+export interface AnalyserContext {
+  /**
+   * ONB-01: the onboarding notice version the user accepted, or null. A
+   * backend analyser must refuse to submit while this is null (HYB-01 case 6).
+   */
+  acceptedNoticeVersion(): string | null;
 }
 
 function hasNutritionValues(snapshot: ProductSnapshot): boolean {

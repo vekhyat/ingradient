@@ -31,7 +31,9 @@
       ],
       ["expo-sqlite", { "useSQLCipher": true }],
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      "./plugins/with-android-font-scale",
+      "./plugins/with-camera-focus"
     ]
   }
 }

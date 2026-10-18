@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   withTiming,
@@ -42,6 +42,7 @@ export interface CaptureViewfinderProps {
   onManualBarcode: () => void;
   onAllow: () => void;
   onSettings: () => void;
+  onFocusPoint?: (point: { x: number; y: number; request: number }) => void;
 }
 
 function Corner({
@@ -197,8 +198,37 @@ export function CaptureViewfinder({
   onManualBarcode,
   onAllow,
   onSettings,
+  onFocusPoint,
 }: CaptureViewfinderProps) {
   const colors = useColors();
+  const [bounds, setBounds] = useState({ width: 0, height: 0 });
+  const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+  const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const focusRequest = useRef(0);
+  useEffect(
+    () => () => {
+      if (focusTimer.current) clearTimeout(focusTimer.current);
+    },
+    [],
+  );
+  const requestFocus = (x: number, y: number) => {
+    if (!bounds.width || !bounds.height) return;
+    // Accessibility activation has no touch coordinates; focus the centre.
+    const point = {
+      x: x > 0 ? Math.min(x, bounds.width) : bounds.width / 2,
+      y: y > 0 ? Math.min(y, bounds.height) : bounds.height / 2,
+    };
+    setFocusPoint(point);
+    onFocusPoint?.({
+      x: point.x / bounds.width,
+      y: point.y / bounds.height,
+      request: ++focusRequest.current,
+    });
+    if (focusTimer.current) clearTimeout(focusTimer.current);
+    focusTimer.current = setTimeout(() => setFocusPoint(null), 1200);
+  };
 
   const blocked = permission === 'denied' || permission === 'blocked';
   let notice: string | null = null;
@@ -221,11 +251,12 @@ export function CaptureViewfinder({
           : enGB.capture.hint;
   const statusHint =
     !locked && !capturing && cameraState !== 'starting' && scanningBarcodes
-      ? enGB.scan.barcodeAuto
+      ? `${enGB.scan.tapToFocus} · ${enGB.scan.barcodeAuto}`
       : undefined;
 
   return (
     <View
+      onLayout={(event) => setBounds(event.nativeEvent.layout)}
       style={{
         backgroundColor: colors.camera,
         borderBottomLeftRadius: rounded ? radius.lg : 0,
@@ -242,7 +273,40 @@ export function CaptureViewfinder({
         </View>
       ) : null}
 
+      {onFocusPoint && permission === 'granted' && cameraState === 'ready' ? (
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          accessibilityRole="button"
+          accessibilityLabel={enGB.scan.focusCamera}
+          accessibilityHint={enGB.scan.focusHint}
+          disabled={capturing || locked}
+          onPress={(event) =>
+            requestFocus(
+              event.nativeEvent.locationX,
+              event.nativeEvent.locationY,
+            )
+          }
+          onAccessibilityTap={() => requestFocus(0, 0)}
+        />
+      ) : null}
+      {focusPoint ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: Math.max(0, Math.min(focusPoint.x - 28, bounds.width - 56)),
+            top: Math.max(0, Math.min(focusPoint.y - 28, bounds.height - 56)),
+            width: 56,
+            height: 56,
+            borderRadius: radius.sm,
+            borderWidth: 2,
+            borderColor: colors.onCamera,
+          }}
+        />
+      ) : null}
+
       <View
+        pointerEvents="box-none"
         style={{
           padding: space.s4,
           paddingTop: space.s4 + contentInsets.top,
@@ -252,6 +316,7 @@ export function CaptureViewfinder({
         }}
       >
         <View
+          pointerEvents="box-none"
           style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -336,6 +401,7 @@ export function CaptureViewfinder({
         ) : (
           <>
             <View
+              pointerEvents="none"
               style={{
                 flex: 1,
                 minHeight: 200,

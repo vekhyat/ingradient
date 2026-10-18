@@ -1,3 +1,4 @@
+import type { Ref } from 'react';
 import { Text, type TextProps } from 'react-native';
 
 import { useColors } from '../theme/ThemeProvider';
@@ -10,6 +11,7 @@ export interface AppTextProps extends TextProps {
   color?: ColorToken;
   /** Marks the text as a heading for screen readers. */
   heading?: boolean;
+  ref?: Ref<Text>;
 }
 
 /**

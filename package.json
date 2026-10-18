@@ -2,6 +2,15 @@
   "name": "ingradient",
   "version": "0.1.0",
   "main": "expo-router/entry",
+  "expo": {
+    "autolinking": {
+      "android": {
+        "buildFromSource": [
+          "expo-camera"
+        ]
+      }
+    }
+  },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/material-symbols-rounded": "^0.4.62",
@@ -51,6 +60,7 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
+    "postinstall": "node tools/camera/patch-focus.cjs",
     "start": "expo start --dev-client",
     "android": "expo run:android --device",
     "prebuild": "expo prebuild",

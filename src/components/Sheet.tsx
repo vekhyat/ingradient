@@ -18,6 +18,7 @@ import { AppText } from './AppText';
 import { Button, type ButtonProps } from './Button';
 import { Icon } from './Icon';
 import { Touchable } from './Touchable';
+import { useInitialFocus } from './useInitialFocus';
 
 export interface SheetProps {
   visible: boolean;
@@ -48,6 +49,7 @@ export function Sheet({
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+  const titleRef = useInitialFocus(visible);
 
   const requestClose = () => {
     if (dirty) {
@@ -117,6 +119,7 @@ export function Sheet({
             }}
           >
             <AppText
+              ref={titleRef}
               variant="heading"
               heading
               style={{ flex: 1, paddingTop: space.s3 }}

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, TextInput, View } from 'react-native';
 
 import { enGB } from '../copy/en-GB';
 import { useColors } from '../theme/ThemeProvider';
@@ -25,6 +25,11 @@ export type TextFieldProps =
       value: string;
       error?: BarcodeFieldError;
       disabled?: boolean;
+      /**
+       * Open the keyboard when the field appears. Skipped while a screen
+       * reader runs, so its focus stays on the sheet title (component 04).
+       */
+      autoFocus?: boolean;
       onChange: (next: string) => void;
       onSubmit: () => void;
     }
@@ -50,6 +55,25 @@ const SIX_LINES = type.body.lineHeight * 6;
 export function TextField(props: TextFieldProps) {
   const colors = useColors();
   const [focused, setFocused] = useState(false);
+  const input = useRef<TextInput>(null);
+  const autoFocus = props.purpose === 'barcode' && props.autoFocus === true;
+
+  useEffect(() => {
+    if (!autoFocus) {
+      return;
+    }
+    let active = true;
+    AccessibilityInfo.isScreenReaderEnabled()
+      .then((screenReader) => {
+        if (active && !screenReader) {
+          input.current?.focus();
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [autoFocus]);
   const errorText =
     props.error === undefined
       ? null
@@ -86,6 +110,7 @@ export function TextField(props: TextFieldProps) {
         }}
       >
         <TextInput
+          ref={input}
           accessibilityLabel={props.label}
           accessibilityLabelledBy={`${props.purpose}-label`}
           accessibilityState={{ disabled: props.disabled ?? false }}

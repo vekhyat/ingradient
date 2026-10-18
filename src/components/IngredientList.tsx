@@ -53,7 +53,9 @@ export function IngredientList({
         style={{ flexDirection: 'row', gap: space.s3, alignItems: 'center' }}
       >
         <ActivityIndicator color={colors.primary} />
-        <AppText color="ink2">{enGB.ingredients.loading}</AppText>
+        <AppText color="ink2" style={{ flexShrink: 1 }}>
+          {enGB.ingredients.loading}
+        </AppText>
       </View>
     );
   }

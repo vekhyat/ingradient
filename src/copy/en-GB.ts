@@ -233,6 +233,9 @@ export const enGB = {
     manualTitle: 'Type the barcode',
     lookUp: 'Look up',
     cameraStarting: 'Starting the camera',
+    tapToFocus: 'Tap to focus',
+    focusCamera: 'Focus camera',
+    focusHint: 'Double tap to focus on the centre of the label.',
     cameraInterrupted: 'The camera stopped. Return to the app to restart it.',
     cameraUnavailable: 'No camera is available. You can still type a barcode.',
     permissionTitle: 'Camera access',
@@ -351,6 +354,67 @@ export const enGB = {
     privacy: 'Privacy notice',
     method: 'How grades work',
     profileLater: 'Allergy and preference settings arrive in a later version.',
+  },
+
+  /**
+   * Phone-side copy for gaps the analysis server names by code (BE-12
+   * catalogue, 2026-10-18). The server's own message is never shown.
+   */
+  backendIssue: {
+    unknown: 'The analysis server reported a gap this app cannot describe.',
+    nutrientLabel: {
+      energy: 'energy',
+      sugars: 'total sugars',
+      saturates: 'saturated fat',
+      salt: 'salt',
+      protein: 'protein',
+      fibre: 'fibre',
+      fat: 'total fat',
+      fvl: 'fruit, vegetables and legumes',
+    },
+    missing: (label: string) => `No usable ${label} value was found.`,
+    conflicting: (label: string) =>
+      `More than one ${label} value was found, so none was used.`,
+    unsupportedBasis: (label: string) =>
+      `The ${label} value is not given per 100 g, or per 100 ml for drinks, in the expected unit.`,
+    invalid: (label: string) =>
+      `The ${label} value is outside the possible range.`,
+    unusable: (label: string) =>
+      `The ${label} value is uncertain or needs checking, so it was not used.`,
+    fixed: {
+      unsupported_category:
+        'The grading method does not cover this kind of product.',
+      conflicting_scoring_facts:
+        'The facts about what kind of product this is contradict each other.',
+      missing_cheese:
+        'It is not known whether this product is a cheese, which changes how it is graded.',
+      missing_redmeat:
+        'It is not known whether this product contains red meat, which changes how it is graded.',
+      missing_plainwater: 'It is not known whether this drink is plain water.',
+      sweetener_presence_unknown:
+        'It is not known whether this drink contains a non-nutritive sweetener.',
+      conflicting_water_facts:
+        'This product is marked as plain water but lists nutrients.',
+      inconsistent_fat: 'Saturated fat is listed as higher than total fat.',
+      method_score_out_of_bounds:
+        'The grading method gave a result outside its range, so no grade is shown.',
+      unsupported_method_resource:
+        'The grading method could not be applied to this product.',
+      incompatible_resources:
+        'The analysis server uses a different method edition from this app.',
+      missing_category_provenance:
+        'The product type has no source, so the right grading rules cannot be chosen.',
+      candidate_method_not_released:
+        'The grading method is not available on the analysis server yet.',
+      allergen_statement_separate:
+        "The pack's Contains or May contain statement is kept separate from the ingredients.",
+      ingredients_unavailable: 'No ingredient list was available.',
+      ingredient_structure_unresolved:
+        'The ingredient list could not be split into separate ingredients.',
+      ingredients_incomplete: 'The ingredient list may be incomplete.',
+      ingredient_identity_unresolved:
+        'Some ingredients could not be identified.',
+    },
   },
 
   onboarding: {

@@ -63,7 +63,9 @@ export function HistoryList({
         style={{ flexDirection: 'row', gap: space.s3, alignItems: 'center' }}
       >
         <ActivityIndicator color={colors.primary} />
-        <AppText color="ink2">{enGB.history.loading}</AppText>
+        <AppText color="ink2" style={{ flexShrink: 1 }}>
+          {enGB.history.loading}
+        </AppText>
       </View>
     );
   }

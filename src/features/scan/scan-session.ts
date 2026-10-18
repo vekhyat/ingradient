@@ -1,4 +1,5 @@
 import type {
+  Issue,
   LocalAssessment,
   LookupOutcome,
   ProductSnapshot,
@@ -9,7 +10,7 @@ import {
   toScientificView,
 } from '../../view-models/map-result';
 import type { LookupFailure } from '../../view-models/types';
-import type { ProductAnalyser } from './analyser';
+import type { AnalysisUpdate, ProductAnalyser } from './analyser';
 
 /**
  * In-memory state for one app session: the current lookup, and the results
@@ -29,6 +30,33 @@ export interface StoredResult {
   analysedAt: string;
   origin: 'new' | 'history';
   savedId: string | null;
+  /** D70: an eligible later backend result, offered but never applied. */
+  pendingUpdate: PendingUpdate | null;
+  /** Set on a result opened from an update: the result it was offered on. */
+  updateOf: string | null;
+  /** Why the phone answered instead of the backend (HYB-01), if not timing. */
+  fallbackIssue: Issue | null;
+}
+
+export interface PendingUpdate {
+  assessment: LocalAssessment;
+  executor: 'backend';
+  introducesHardFinding: boolean;
+  /** False when the grade (or the named gap) is the same as on screen. */
+  differsFromDisplayed: boolean;
+}
+
+/** Same headline: same state and, when graded, the same letter. */
+function sameHeadline(a: LocalAssessment, b: LocalAssessment): boolean {
+  const left = toScientificView(a.scientific);
+  const right = toScientificView(b.scientific);
+  if (left.status !== right.status) {
+    return false;
+  }
+  return (
+    left.status !== 'supported' ||
+    (right.status === 'supported' && left.letter === right.letter)
+  );
 }
 
 export type LookupState =
@@ -83,6 +111,8 @@ export class ScanSession {
   private state: ScanSessionState = { lookup: { status: 'idle' }, results: {} };
   private readonly listeners = new Set<Listener>();
   private controller: AbortController | null = null;
+  /** Bumped when offers are dropped; older late updates are then ignored. */
+  private updateEpoch = 0;
 
   constructor(
     private readonly catalogue: CatalogueLookup,
@@ -194,6 +224,8 @@ export class ScanSession {
       analysed.assessment,
       analysed.executor,
     );
+    this.noteFallback(resultKey, analysed.fallbackIssue);
+    this.watchUpdate(resultKey, analysed.lateUpdate, controller.signal);
     this.set({ lookup: { status: 'opened', operationId, barcode, resultKey } });
     return this.state.lookup;
   }
@@ -234,7 +266,116 @@ export class ScanSession {
     if (analysed === null || signal.aborted) {
       return null;
     }
-    return this.addResult(snapshot, analysed.assessment, analysed.executor);
+    const resultKey = this.addResult(
+      snapshot,
+      analysed.assessment,
+      analysed.executor,
+    );
+    this.noteFallback(resultKey, analysed.fallbackIssue);
+    this.watchUpdate(resultKey, analysed.lateUpdate, signal);
+    return resultKey;
+  }
+
+  private noteFallback(resultKey: string, issue: Issue | undefined): void {
+    const result = this.state.results[resultKey];
+    if (issue && result) {
+      this.setResult({ ...result, fallbackIssue: issue });
+    }
+  }
+
+  /**
+   * Stores a late backend result as an offer on the displayed result (D70).
+   * It is dropped when the scan was cancelled or superseded (the signal is
+   * aborted), when the result is gone, or when it came from History.
+   */
+  private watchUpdate(
+    resultKey: string,
+    lateUpdate: Promise<AnalysisUpdate | null> | undefined,
+    signal: AbortSignal,
+  ): void {
+    if (!lateUpdate) {
+      return;
+    }
+    const epoch = this.updateEpoch;
+    lateUpdate.then(
+      (update) => {
+        const result = this.state.results[resultKey];
+        if (
+          update === null ||
+          signal.aborted ||
+          epoch !== this.updateEpoch ||
+          !result ||
+          result.origin !== 'new'
+        ) {
+          return;
+        }
+        this.setResult({
+          ...result,
+          pendingUpdate: {
+            assessment: update.assessment,
+            executor: update.executor,
+            introducesHardFinding: update.introducesHardFinding,
+            differsFromDisplayed: !sameHeadline(
+              result.assessment,
+              update.assessment,
+            ),
+          },
+        });
+      },
+      () => undefined,
+    );
+  }
+
+  /**
+   * The user opened the offered update. It becomes a new result, so the
+   * phone result stays exactly as it was and Back returns to it. Returns the
+   * new result key, or null when there is no offer.
+   */
+  openUpdate(resultKey: string): string | null {
+    const result = this.state.results[resultKey];
+    const update = result?.pendingUpdate;
+    if (!result || !update) {
+      return null;
+    }
+    this.setResult({ ...result, pendingUpdate: null });
+    const updatedKey = this.addResult(
+      result.snapshot,
+      update.assessment,
+      update.executor,
+    );
+    const updated = this.state.results[updatedKey];
+    if (updated) {
+      this.setResult({ ...updated, updateOf: resultKey });
+    }
+    return updatedKey;
+  }
+
+  /**
+   * Leaving the foreground (HYB-01 case 5): clear offers not yet opened and
+   * ignore late updates still on their way. The hybrid client cancels its
+   * own request; the displayed results are untouched.
+   */
+  dropPendingUpdates(): void {
+    this.updateEpoch += 1;
+    const results: Record<string, StoredResult> = {};
+    let changed = false;
+    for (const [key, result] of Object.entries(this.state.results)) {
+      if (result.pendingUpdate) {
+        changed = true;
+        results[key] = { ...result, pendingUpdate: null };
+      } else {
+        results[key] = result;
+      }
+    }
+    if (changed) {
+      this.set({ results });
+    }
+  }
+
+  private setResult(result: StoredResult): void {
+    this.set({
+      results: { ...this.state.results, [result.resultKey]: result },
+    });
   }
 
   addResult(
@@ -257,6 +398,9 @@ export class ScanSession {
           analysedAt,
           origin,
           savedId,
+          pendingUpdate: null,
+          updateOf: null,
+          fallbackIssue: null,
         },
       },
     });
@@ -268,9 +412,7 @@ export class ScanSession {
     if (!result) {
       return;
     }
-    this.set({
-      results: { ...this.state.results, [resultKey]: { ...result, savedId } },
-    });
+    this.setResult({ ...result, savedId });
   }
 
   /** Drops the saved link after the saved copy is deleted. */

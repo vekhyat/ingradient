@@ -209,14 +209,25 @@ export class LabelFlow {
 
   /** True when there is anything the user would lose by leaving. */
   isDirty(): boolean {
-    const session = this.state.session;
-    if (!session) {
-      return false;
-    }
-    return (
-      session.photos.length > 0 ||
-      session.ingredients.state !== 'missing' ||
-      session.nutrition.state !== 'missing'
-    );
+    return hasUnsavedLabelWork(this.state);
   }
+}
+
+/**
+ * Work the user would lose by leaving: a photo, a panel they marked as not
+ * on the pack, or a correction. Panels an earlier record supplied are not
+ * the user's work, so a fresh "add the nutrition table" session is clean.
+ */
+export function hasUnsavedLabelWork(state: LabelFlowState): boolean {
+  const { session, corrections } = state;
+  if (!session) {
+    return false;
+  }
+  return (
+    session.photos.length > 0 ||
+    session.ingredients.state === 'user_marked_absent' ||
+    session.nutrition.state === 'user_marked_absent' ||
+    Object.keys(corrections.ingredients).length > 0 ||
+    Object.keys(corrections.nutrients).length > 0
+  );
 }

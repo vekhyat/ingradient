@@ -7,6 +7,7 @@ import { radius, size, space } from '../theme/tokens';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
 import { Touchable } from './Touchable';
+import { useInitialFocus } from './useInitialFocus';
 
 export interface AppBarProps {
   title: string;
@@ -22,6 +23,7 @@ export interface AppBarProps {
 export function AppBar({ title, onBack }: AppBarProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const titleRef = useInitialFocus();
   return (
     <View
       style={{
@@ -53,6 +55,7 @@ export function AppBar({ title, onBack }: AppBarProps) {
           <Icon name="arrow_back" color={colors.ink} />
         </Touchable>
         <AppText
+          ref={titleRef}
           variant="title"
           heading
           style={{ flex: 1, paddingVertical: space.s3, paddingRight: space.s4 }}

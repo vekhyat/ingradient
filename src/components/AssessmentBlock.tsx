@@ -93,10 +93,7 @@ export function AssessmentBlock({
             ].join('. ')}
             style={{ flex: stacked ? undefined : 1, gap: space.s1 }}
           >
-            <AppText variant="label" color="ink2">
-              {enGB.assessment.productGrade.toUpperCase()}
-            </AppText>
-            <AppText variant="display" heading>
+            <AppText variant="heading" heading>
               {enGB.grade.name(science.letter)}
             </AppText>
             {summary ? <AppText color="ink2">{summary}</AppText> : null}

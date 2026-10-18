@@ -90,6 +90,8 @@ export async function openEncryptedDatabase(): Promise<SQLiteDatabase> {
       'Saved results could not be decrypted with this phone’s key.',
     );
   }
+  // Deleted rows are overwritten, not left as readable free pages (NAT-01 finding 4).
+  await db.execAsync('PRAGMA secure_delete = ON;');
   await db.execAsync('PRAGMA journal_mode = WAL;');
   await db.execAsync(SCHEMA);
   return db;
@@ -97,11 +99,32 @@ export async function openEncryptedDatabase(): Promise<SQLiteDatabase> {
 
 /**
  * Deletes the database file and its key. Used only after the user confirms
- * "Erase saved results" while the data cannot be opened.
+ * "Erase saved results" while the data cannot be opened. A file that is
+ * still there afterwards is reported, and the key is kept so a retry still
+ * matches the file.
  */
 export async function destroyEncryptedDatabase(): Promise<void> {
-  await deleteDatabaseAsync(DATABASE_NAME).catch(() => undefined);
+  let reason = '';
+  await deleteDatabaseAsync(DATABASE_NAME).catch((error: unknown) => {
+    reason = (error as Error).message;
+  });
+  if (databaseFileExists()) {
+    throw new StorageError(
+      'write_failed',
+      `Saved results could not be erased: ${reason || 'the file remains'}`,
+    );
+  }
   await secureStoreVault.remove();
+}
+
+/**
+ * Moves deleted pages out of the write-ahead log and rebuilds the file, so
+ * erased rows do not stay on disk as encrypted leftovers.
+ */
+async function compactAfterDelete(db: SQLiteDatabase): Promise<void> {
+  await db.execAsync('PRAGMA wal_checkpoint(TRUNCATE);');
+  await db.execAsync('VACUUM;');
+  await db.execAsync('PRAGMA wal_checkpoint(TRUNCATE);');
 }
 
 export function sqlRecordTable(db: SQLiteDatabase): RecordTable {
@@ -142,11 +165,14 @@ export function sqlRecordTable(db: SQLiteDatabase): RecordTable {
     },
     async remove(id) {
       await db.runAsync('DELETE FROM saved_results WHERE id = ?;', [id]);
+      await db.execAsync('PRAGMA wal_checkpoint(TRUNCATE);');
     },
     async clear() {
       await db.withTransactionAsync(async () => {
         await db.runAsync('DELETE FROM saved_results;');
       });
+      // VACUUM cannot run inside a transaction.
+      await compactAfterDelete(db);
     },
     async count() {
       const row = await db.getFirstAsync<{ n: number }>(

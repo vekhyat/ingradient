@@ -11,6 +11,7 @@ import { EvidenceReason } from '../../components/EvidenceReason';
 import { formatSavedDate } from '../../components/HistoryList';
 import { IngredientList } from '../../components/IngredientList';
 import { ProductIdentity } from '../../components/ProductIdentity';
+import { ResultDisclosure } from '../../components/ResultDisclosure';
 import { enGB } from '../../copy/en-GB';
 import { DockItem, ScreenFrame } from '../../features/app/ScreenFrame';
 import { useServices } from '../../features/app/services';
@@ -46,10 +47,10 @@ function Reveal({
 }
 
 /**
- * U08 Result, ingredients first (D131). Order: what the pack is, what its
- * ingredient list says, the ingredients, then the nutrition grade and table.
- * Without a nutrition table the grade block asks for it instead of
- * dominating the screen. The v18 reveal plays once per new result (D58).
+ * U08 Result: product, assessment and label declarations first. Supporting
+ * ingredients, nutrition and cited reasons expand in place. Missing inputs
+ * still produce a named gap, never a guessed letter (D131). The v18 reveal
+ * plays once per new result (D58).
  * Saving says "Saved on this phone" only after the encrypted store confirms.
  */
 export default function ResultScreen() {
@@ -136,12 +137,20 @@ export default function ResultScreen() {
     }
   };
 
+  // D70: the update opens as its own result; Back returns to this one.
+  const openUpdate = () => {
+    const updatedKey = scan.openUpdate(stored.resultKey);
+    if (updatedKey) {
+      router.push({ pathname: '/result/[key]', params: { key: updatedKey } });
+    }
+  };
+
   const addNutrition = () => {
     label.start(stored.snapshot);
     router.push('/capture');
   };
 
-  const reasons = view.reasons.slice(0, 3);
+  const reasons = view.reasons;
   const citationTitles: Record<string, string> = {};
   for (const citation of Object.values(view.citations)) {
     citationTitles[citation.id] = citation.title;
@@ -194,90 +203,7 @@ export default function ResultScreen() {
       ) : null}
 
       <Reveal progress={reveal.progress} index={section++}>
-        <ProductIdentity
-          product={view.product}
-          density="hero"
-          onInspectSource={() =>
-            router.push({
-              pathname: '/method/[key]',
-              params: { key: view.resultKey },
-            })
-          }
-        />
-      </Reveal>
-
-      <Reveal progress={reveal.progress} index={section++}>
-        {facts ? (
-          <LabelFactsCard facts={facts} />
-        ) : (
-          <Card>
-            <AppText color="ink2">{enGB.facts.none}</AppText>
-          </Card>
-        )}
-      </Reveal>
-
-      {needsNutrition && stored.origin === 'new' ? (
-        <Reveal progress={reveal.progress} index={section++}>
-          <Card style={{ gap: space.s3 }}>
-            <AppText variant="heading" heading>
-              {enGB.addNutrition.title}
-            </AppText>
-            <AppText color="ink2">{enGB.addNutrition.body}</AppText>
-            <Button
-              label={enGB.addNutrition.action}
-              variant="tonal"
-              icon="photo_camera"
-              onPress={addNutrition}
-            />
-          </Card>
-        </Reveal>
-      ) : null}
-
-      <Reveal progress={reveal.progress} index={section++}>
-        <Card style={{ gap: space.s1 }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              justifyContent: 'space-between',
-              alignItems: 'baseline',
-              gap: space.s2,
-            }}
-          >
-            <AppText variant="heading" heading>
-              {enGB.ingredients.title}
-            </AppText>
-            {view.ingredients.length > 0 ? (
-              <AppText variant="bodySm" color="ink2">
-                {enGB.ingredients.countInOrder(view.ingredients.length)}
-              </AppText>
-            ) : null}
-          </View>
-          <IngredientList
-            items={view.ingredients}
-            state={view.ingredients.length > 0 ? 'ready' : 'missing'}
-            limit={PREVIEW_INGREDIENTS}
-            onOpen={(occurrence) =>
-              router.push({
-                pathname: '/ingredient/[key]/[occurrence]',
-                params: { key: view.resultKey, occurrence },
-              })
-            }
-            onRetry={() => undefined}
-          />
-          {view.ingredients.length > PREVIEW_INGREDIENTS ? (
-            <Button
-              label={enGB.ingredients.all(view.ingredients.length)}
-              variant="text"
-              onPress={() =>
-                router.push({
-                  pathname: '/ingredients/[key]',
-                  params: { key: view.resultKey },
-                })
-              }
-            />
-          ) : null}
-        </Card>
+        <ProductIdentity product={view.product} density="summary" />
       </Reveal>
 
       <Reveal progress={reveal.progress} index={section++}>
@@ -288,8 +214,17 @@ export default function ResultScreen() {
           summary={view.summary}
           personalPending={false}
           motion={motion}
-          updateOffer={null}
-          onOpenUpdate={() => undefined}
+          updateOffer={
+            stored.pendingUpdate
+              ? {
+                  introducesHardFinding:
+                    stored.pendingUpdate.introducesHardFinding,
+                  differsFromDisplayed:
+                    stored.pendingUpdate.differsFromDisplayed,
+                }
+              : null
+          }
+          onOpenUpdate={openUpdate}
           onOpenMethod={() =>
             router.push({
               pathname: '/method/[key]',
@@ -299,55 +234,124 @@ export default function ResultScreen() {
         />
       </Reveal>
 
-      {reasons.length > 0 ? (
-        <Reveal progress={reveal.progress} index={section++}>
-          <Card style={{ gap: space.s2 }}>
-            <AppText variant="heading" heading>
-              {enGB.reasons.title}
-            </AppText>
-            {reasons.map((reason) => (
-              <EvidenceReason
-                key={reason.id}
-                id={reason.id}
-                text={reason.text}
-                citationIds={reason.citationIds}
-                citationTitles={citationTitles}
-                inputText={reason.inputText}
-                state="supported"
-                onOpenSource={(citationId) =>
-                  router.push({
-                    pathname: '/reason/[key]/[reasonId]',
-                    params: {
-                      key: view.resultKey,
-                      reasonId: reason.id,
-                      citationId,
-                    },
-                  })
-                }
-              />
-            ))}
-          </Card>
-        </Reveal>
+      {facts && (facts.contains.length > 0 || facts.mayContain.length > 0) ? (
+        <View style={{ gap: space.s2 }}>
+          {facts.contains.length > 0 ? (
+            <AppText>{`${enGB.facts.contains}: ${facts.contains.join(', ')}`}</AppText>
+          ) : null}
+          {facts.mayContain.length > 0 ? (
+            <AppText>{`${enGB.facts.mayContain}: ${facts.mayContain.join(', ')}`}</AppText>
+          ) : null}
+        </View>
       ) : null}
 
-      {!needsNutrition ? (
+      {needsNutrition && stored.origin === 'new' ? (
         <Reveal progress={reveal.progress} index={section++}>
-          <NutritionTable
-            rows={view.nutrients}
-            onCheck={() =>
-              router.push({
-                pathname: '/method/[key]',
-                params: { key: view.resultKey },
-              })
-            }
+          <Button
+            label={enGB.addNutrition.action}
+            variant="tonal"
+            icon="photo_camera"
+            onPress={addNutrition}
           />
         </Reveal>
       ) : null}
 
+      <View>
+        {reasons.length > 0 ? (
+          <ResultDisclosure title={enGB.reasons.title}>
+            <View style={{ gap: space.s3 }}>
+              {reasons.map((reason) => (
+                <EvidenceReason
+                  key={reason.id}
+                  id={reason.id}
+                  text={reason.text}
+                  citationIds={reason.citationIds}
+                  citationTitles={citationTitles}
+                  inputText={reason.inputText}
+                  state="supported"
+                  onOpenSource={(citationId) =>
+                    router.push({
+                      pathname: '/reason/[key]/[reasonId]',
+                      params: {
+                        key: view.resultKey,
+                        reasonId: reason.id,
+                        citationId,
+                      },
+                    })
+                  }
+                />
+              ))}
+            </View>
+          </ResultDisclosure>
+        ) : null}
+
+        <ResultDisclosure title={enGB.ingredients.title}>
+          {facts ? <LabelFactsCard facts={facts} /> : null}
+          <Card style={{ gap: space.s1 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                justifyContent: 'space-between',
+                alignItems: 'baseline',
+                gap: space.s2,
+              }}
+            >
+              <AppText variant="heading" heading>
+                {enGB.ingredients.title}
+              </AppText>
+              {view.ingredients.length > 0 ? (
+                <AppText variant="bodySm" color="ink2">
+                  {enGB.ingredients.countInOrder(view.ingredients.length)}
+                </AppText>
+              ) : null}
+            </View>
+            <IngredientList
+              items={view.ingredients}
+              state={view.ingredients.length > 0 ? 'ready' : 'missing'}
+              limit={PREVIEW_INGREDIENTS}
+              onOpen={(occurrence) =>
+                router.push({
+                  pathname: '/ingredient/[key]/[occurrence]',
+                  params: { key: view.resultKey, occurrence },
+                })
+              }
+              onRetry={() => undefined}
+            />
+            {view.ingredients.length > PREVIEW_INGREDIENTS ? (
+              <Button
+                label={enGB.ingredients.all(view.ingredients.length)}
+                variant="text"
+                onPress={() =>
+                  router.push({
+                    pathname: '/ingredients/[key]',
+                    params: { key: view.resultKey },
+                  })
+                }
+              />
+            ) : null}
+          </Card>
+        </ResultDisclosure>
+
+        {!needsNutrition ? (
+          <ResultDisclosure title={enGB.nutrition.title}>
+            <NutritionTable
+              rows={view.nutrients}
+              onCheck={() =>
+                router.push({
+                  pathname: '/method/[key]',
+                  params: { key: view.resultKey },
+                })
+              }
+            />
+          </ResultDisclosure>
+        ) : null}
+      </View>
+
       <AppText variant="bodySm" color="ink3">
         {view.executor === 'backend'
           ? enGB.result.analysedOnServer
-          : enGB.result.analysedOnPhone}
+          : (stored.fallbackIssue?.message ?? enGB.result.analysedOnPhone)}
       </AppText>
     </ScreenFrame>
   );

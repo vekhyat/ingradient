@@ -221,12 +221,17 @@ export function renderBackendReasons(
   return { reasons, issues };
 }
 
+/** Same set of references, in any order; a repeated reference on either side never matches. */
 function sameReferences(
   expected: readonly string[],
   actual: readonly string[],
 ): boolean {
+  const want = new Set(expected);
+  const got = new Set(actual);
   return (
-    expected.length === actual.length &&
-    expected.every((reference) => actual.includes(reference))
+    want.size === expected.length &&
+    got.size === actual.length &&
+    want.size === got.size &&
+    [...want].every((reference) => got.has(reference))
   );
 }

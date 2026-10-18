@@ -5,7 +5,11 @@ import type {
   ProductSnapshot,
 } from '../../domain/contracts/generated/local';
 import { getLocalScenario } from '../../fixtures/scenarios';
-import { methodNotInstalledAnalyser } from './analyser';
+import {
+  methodNotInstalledAnalyser,
+  type AnalysisUpdate,
+  type ProductAnalyser,
+} from './analyser';
 import { checkTypedBarcode } from './barcode-input';
 import { ScanSession, type CatalogueLookup } from './scan-session';
 
@@ -147,6 +151,206 @@ describe('results', () => {
     expect(session.getResult(key)?.savedId).toBe('saved-1');
     session.forgetSaved('saved-1');
     expect(session.getResult(key)?.savedId).toBeNull();
+  });
+});
+
+describe('late backend update (D70)', () => {
+  const graded = getLocalScenario('complete_graded');
+
+  /** Phone answers at once; the backend's late answer is released by hand. */
+  function lateAnalyser() {
+    const late: ((update: AnalysisUpdate | null) => void)[] = [];
+    const analyser: ProductAnalyser = {
+      async analyse(snapshot, signal) {
+        const local = await methodNotInstalledAnalyser.analyse(
+          snapshot,
+          signal,
+        );
+        return {
+          ...local,
+          lateUpdate: new Promise<AnalysisUpdate | null>((resolve) =>
+            late.push(resolve),
+          ),
+        };
+      },
+    };
+    return { analyser, late };
+  }
+
+  const backendUpdate: AnalysisUpdate = {
+    assessment: graded.assessment,
+    executor: 'backend',
+    introducesHardFinding: false,
+  };
+
+  async function openedResult(analyser: ProductAnalyser) {
+    const { catalogue, pending } = manualCatalogue();
+    const session = new ScanSession(catalogue, analyser);
+    const running = session.lookup('8901030000001');
+    pending[0]?.resolve({ state: 'found', snapshot: withNutrition });
+    const state = await running;
+    if (state.status !== 'opened') {
+      throw new Error(`expected opened, got ${state.status}`);
+    }
+    return { session, key: state.resultKey };
+  }
+
+  /** Lets the resolved late promise's handler run. */
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  it('offers the update without replacing the displayed result', async () => {
+    const { analyser, late } = lateAnalyser();
+    const { session, key } = await openedResult(analyser);
+    const shown = session.getResult(key)?.assessment;
+    late[0]?.(backendUpdate);
+    await settle();
+    const result = session.getResult(key);
+    expect(result?.assessment).toBe(shown);
+    expect(result?.executor).toBe('phone');
+    expect(result?.pendingUpdate).toMatchObject({
+      differsFromDisplayed: true,
+      introducesHardFinding: false,
+    });
+  });
+
+  it('says when the update has the same headline', async () => {
+    const { analyser, late } = lateAnalyser();
+    const { session, key } = await openedResult(analyser);
+    const same = session.getResult(key)?.assessment;
+    if (!same) {
+      throw new Error('missing result');
+    }
+    late[0]?.({ ...backendUpdate, assessment: same });
+    await settle();
+    expect(session.getResult(key)?.pendingUpdate?.differsFromDisplayed).toBe(
+      false,
+    );
+  });
+
+  it('opens the update only on request, as a new result, keeping the phone one', async () => {
+    const { analyser, late } = lateAnalyser();
+    const { session, key } = await openedResult(analyser);
+    const phone = session.getResult(key);
+    late[0]?.(backendUpdate);
+    await settle();
+    const updatedKey = session.openUpdate(key);
+    expect(updatedKey).not.toBeNull();
+    expect(updatedKey).not.toBe(key);
+    const updated = updatedKey ? session.getResult(updatedKey) : undefined;
+    expect(updated).toMatchObject({
+      executor: 'backend',
+      assessment: graded.assessment,
+      updateOf: key,
+      origin: 'new',
+      savedId: null,
+    });
+    expect(session.getResult(key)?.assessment).toBe(phone?.assessment);
+    expect(session.getResult(key)?.pendingUpdate).toBeNull();
+    expect(session.openUpdate(key)).toBeNull();
+  });
+
+  it('saves what is displayed: the saved phone result keeps its link', async () => {
+    const { analyser, late } = lateAnalyser();
+    const { session, key } = await openedResult(analyser);
+    session.markSaved(key, 'saved-phone');
+    late[0]?.(backendUpdate);
+    await settle();
+    const updatedKey = session.openUpdate(key);
+    expect(session.getResult(key)?.savedId).toBe('saved-phone');
+    expect(
+      updatedKey ? session.getResult(updatedKey)?.savedId : 'x',
+    ).toBeNull();
+  });
+
+  it('drops the offer when a newer scan supersedes this one', async () => {
+    const { analyser, late } = lateAnalyser();
+    const { session, key } = await openedResult(analyser);
+    void session.lookup('8901030000002');
+    late[0]?.(backendUpdate);
+    await settle();
+    expect(session.getResult(key)?.pendingUpdate).toBeNull();
+  });
+
+  it('drops offers and in-flight updates when the app leaves the foreground', async () => {
+    const { analyser, late } = lateAnalyser();
+    const { session, key } = await openedResult(analyser);
+    late[0]?.(backendUpdate);
+    await settle();
+    expect(session.getResult(key)?.pendingUpdate).not.toBeNull();
+    session.dropPendingUpdates();
+    expect(session.getResult(key)?.pendingUpdate).toBeNull();
+
+    const second = lateAnalyser();
+    const opened = await openedResult(second.analyser);
+    opened.session.dropPendingUpdates();
+    second.late[0]?.(backendUpdate);
+    await settle();
+    expect(opened.session.getResult(opened.key)?.pendingUpdate).toBeNull();
+  });
+
+  it('ignores a null or failed late update', async () => {
+    const { analyser, late } = lateAnalyser();
+    const { session, key } = await openedResult(analyser);
+    late[0]?.(null);
+    await settle();
+    expect(session.getResult(key)?.pendingUpdate).toBeNull();
+
+    const rejecting: ProductAnalyser = {
+      async analyse(snapshot, signal) {
+        const local = await methodNotInstalledAnalyser.analyse(
+          snapshot,
+          signal,
+        );
+        return { ...local, lateUpdate: Promise.reject(new Error('502')) };
+      },
+    };
+    const other = await openedResult(rejecting);
+    await settle();
+    expect(other.session.getResult(other.key)?.pendingUpdate).toBeNull();
+  });
+
+  it('drops a label analysis offer once its signal is aborted', async () => {
+    const { analyser, late } = lateAnalyser();
+    const session = new ScanSession(manualCatalogue().catalogue, analyser);
+    const controller = new AbortController();
+    const key = await session.analyseSnapshot(withNutrition, controller.signal);
+    controller.abort();
+    late[0]?.(backendUpdate);
+    await settle();
+    expect(key && session.getResult(key)?.pendingUpdate).toBeNull();
+  });
+});
+
+describe('fallback reason (HYB-01)', () => {
+  it('keeps why the phone answered on the stored result', async () => {
+    const reason = {
+      code: 'backend_offline',
+      stage: 'method' as const,
+      message: 'The analysis server could not be reached.',
+      action: 'none' as const,
+    };
+    const analyser: ProductAnalyser = {
+      async analyse(input, signal) {
+        return {
+          ...(await methodNotInstalledAnalyser.analyse(input, signal)),
+          fallbackIssue: reason,
+        };
+      },
+    };
+    const { catalogue, pending } = manualCatalogue();
+    const session = new ScanSession(catalogue, analyser);
+    const running = session.lookup('8901030000001');
+    pending[0]?.resolve({ state: 'found', snapshot: withNutrition });
+    const state = await running;
+    const key = state.status === 'opened' ? state.resultKey : '';
+    expect(session.getResult(key)?.fallbackIssue).toEqual(reason);
+
+    const plain = new ScanSession(catalogue, methodNotInstalledAnalyser);
+    const labelKey = await plain.analyseSnapshot(
+      withNutrition,
+      new AbortController().signal,
+    );
+    expect(labelKey && plain.getResult(labelKey)?.fallbackIssue).toBeNull();
   });
 });
 

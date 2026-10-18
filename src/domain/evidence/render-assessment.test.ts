@@ -125,6 +125,40 @@ describe('reviewed evidence rendering', () => {
       ]);
     },
   );
+  it('refuses repeated references on either side', () => {
+    const replay = renderScientificAssessment(
+      calculateNutriScore(input),
+      'snapshot-1',
+    );
+    const first = replay.scientific.reasons[0];
+    if (!first) throw new Error('Expected real calculation evidence');
+    const [citation] = first.citationIds;
+    // Local [x, x] against server [x, y]: equal length, every local id present.
+    const repeatedReplay = {
+      ...replay,
+      scientific: {
+        ...replay.scientific,
+        reasons: [{ ...first, citationIds: [citation, citation] }],
+      },
+    } as typeof replay;
+    const server: ScientificReason = {
+      ...first,
+      citationIds: [citation, 'other-source'],
+    };
+    expect(renderBackendReasons([server], repeatedReplay).reasons).toEqual([]);
+    // Server [x, x] against local [x].
+    const single = { ...first, citationIds: [citation] as [string] };
+    const singleReplay = {
+      ...replay,
+      scientific: { ...replay.scientific, reasons: [single] },
+    } as typeof replay;
+    expect(
+      renderBackendReasons(
+        [{ ...single, citationIds: [citation, citation] }],
+        singleReplay,
+      ).reasons,
+    ).toEqual([]);
+  });
   it('accepts reordered references and uses the local text and reference order', () => {
     const replay = renderScientificAssessment(
       calculateNutriScore(input),
