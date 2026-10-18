@@ -21,8 +21,8 @@
     },
     {
       "bundleId": "nutriscore-canonical-vectors",
-      "sha256": "ec3988f45332a7c641f6bf8bd86695d9b380a20fb5c90525010ff74ba255a3a3",
-      "sizeBytes": 64959,
+      "sha256": "394ad353ce9ef4c191bb80db0d964c9325a86dd3d3b0950fd6db98fdcc4a6c9a",
+      "sizeBytes": 65070,
       "schemaVersion": 1,
       "minAppContract": "0.2.0-draft",
       "signature": "pinned-local-contract",

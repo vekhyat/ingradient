@@ -32,3 +32,23 @@ When an official method update or upstream taxonomy refresh is approved:
    - Update `bundleSha256` in any references (e.g. in `resources/vectors/nutriscore-vectors.json`).
 4. **Validate**:
    - Run `python tools/resources/verify_resources.py` and ensure all checks PASS.
+
+## Shared exact-match engineering fixtures
+
+`resources/vectors/match-vectors.json` contains project-authored, source-derived
+regressions for the exact-identity profile. Expectations cite pinned OFF English
+entry lines; these are not official OFF test vectors or human research gold.
+The source taxonomy attribution and ODbL/DbCL labels remain in the fixture and
+manifest; project-authored scaffolding licence is pending team agreement.
+
+Rebuild or check without invoking either runtime matcher:
+
+```bash
+python tools/resources/build_match_vectors.py
+python tools/resources/build_match_vectors.py --check
+```
+
+Both actual runtimes must compare state, canonicalId and sorted candidateIds
+for the same edition. Keep matching counts separate from the 15 nutrition
+calculation vectors. Exact matching does not promote fuzzy candidates or parse
+wrapper/advisory prose; those paths need their own integration checks.

@@ -18,6 +18,8 @@ import sys
 import json
 import hashlib
 
+from build_match_vectors import document as expected_match_vectors
+
 # Ensure UTF-8 output on Windows
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     try:
@@ -197,6 +199,19 @@ def main() -> int:
 
     # Validate vectors against local contract schema
     errors += validate_vectors_against_contract(repo_root)
+
+    # Expectations come from the reviewed source-derived builder, never either
+    # application matcher. This also verifies its pinned taxonomy source bytes.
+    try:
+        path = os.path.join(resources_dir, "vectors", "match-vectors.json")
+        with open(path, "r", encoding="utf-8") as fixture:
+            matches = json.load(fixture)
+        if matches != expected_match_vectors():
+            raise ValueError("shared match fixture differs from reviewed source expectations")
+        print(f"[PASS] All {len(matches['vectors'])} source-derived exact match fixtures verified.")
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        print(f"[ERROR] Match fixtures: {error}", file=sys.stderr)
+        errors += 1
 
     if errors > 0:
         print(f"\n[FAIL] Verification completed with {errors} error(s).", file=sys.stderr)

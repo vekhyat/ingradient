@@ -24,7 +24,7 @@ async def read_bounded_body(request: Request, limit: int) -> bytes:
         raise MalformedBody
     if len(lengths) == 1:
         declared = lengths[0].strip()
-        if not declared.isdigit() or len(declared) > 16:
+        if not declared.isascii() or not declared.isdigit() or len(declared) > 16:
             raise MalformedBody
         if int(declared) > limit:
             raise PayloadTooLarge

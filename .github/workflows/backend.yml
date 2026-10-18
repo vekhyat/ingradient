@@ -1,0 +1,71 @@
+name: Backend checks
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'contracts/**'
+      - 'resources/**'
+      - 'tools/parity/**'
+      - 'src/domain/scientific/**'
+      - 'src/domain/matching/**'
+      - 'src/domain/evidence/**'
+      - 'src/domain/nutrition/decimal.ts'
+      - 'package-lock.json'
+      - '.github/workflows/backend.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14.3'
+      - name: Install locked backend tools
+        run: |
+          python -m pip install uv==0.13.1
+          uv sync --project backend --frozen
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked calculator compiler
+        run: npm ci --ignore-scripts
+      - name: Lint, format, types and tests
+        working-directory: backend
+        run: |
+          uv run --frozen ruff check
+          uv run --frozen ruff format --check
+          uv run --frozen pyright
+          uv run --frozen pytest
+      - name: Export Python canonical outputs
+        run: backend/.venv/bin/python tools/parity/run_python.py > python-canonical.jsonl
+      - name: Compare actual Python and TypeScript calculations
+        run: |
+          backend/.venv/bin/python tools/parity/run_python.py --calculation-only > python-calculation.jsonl
+          node tools/parity/run_typescript.mjs --calculation-only > typescript-calculation.jsonl
+          backend/.venv/bin/python tools/parity/compare.py --calculation-only python-calculation.jsonl typescript-calculation.jsonl
+      - name: Compare complete actual scientific assessments
+        run: |
+          node src/domain/evidence/codegen/export-assessments.mjs > typescript-canonical.jsonl
+          backend/.venv/bin/python tools/parity/compare.py python-canonical.jsonl typescript-canonical.jsonl
+      - name: Compare actual exact ingredient identities with shared expectations
+        run: |
+          backend/.venv/bin/python tools/parity/run_python_matching.py > python-matching.jsonl
+          node src/domain/matching/codegen/export-matches.mjs > typescript-matching.jsonl
+          backend/.venv/bin/python tools/parity/compare_matching.py python-matching.jsonl typescript-matching.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-canonical
+          path: |
+            python-canonical.jsonl
+            typescript-canonical.jsonl
+            python-calculation.jsonl
+            typescript-calculation.jsonl
+            python-matching.jsonl
+            typescript-matching.jsonl
+          retention-days: 7
+# Nutrition calculation, complete scientific assessment and exact matching
+# are separate checks. No output field is removed from the full comparison.

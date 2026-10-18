@@ -1,0 +1,19 @@
+# Select this path when creating the Blueprint. Repo root is intentionally kept
+# so backend/, contracts/ and resources/ are in the same deployment artifact.
+services:
+  - type: web
+    name: ingradient-dev
+    runtime: python
+    plan: free
+    region: singapore
+    autoDeployTrigger: 'off'
+    buildCommand: python -m pip install uv==0.13.1 && uv sync --project backend --frozen --no-dev
+    startCommand: backend/.venv/bin/python -m uvicorn deploy.app:app --app-dir backend --no-access-log --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.14.3
+      - key: INGRADIENT_ENV
+        value: development
+      - key: INGRADIENT_LOG_LEVEL
+        value: INFO

@@ -111,7 +111,7 @@ raw_vectors = json.loads(r'''
         {
           "id": "reason-sugars",
           "templateId": "nutriscore.sugars",
-          "text": "Total sugars of 4.0 g contribute 1 adverse point(s) under the European reference algorithm.",
+          "text": "Total sugars of 4 g contribute 1 adverse point(s) under the European reference algorithm.",
           "citationIds": [
             "sc-food-2022"
           ],
@@ -147,7 +147,7 @@ raw_vectors = json.loads(r'''
         {
           "id": "reason-protein",
           "templateId": "nutriscore.protein",
-          "text": "Protein content of 6.0 g contributes 2 favourable point(s).",
+          "text": "Protein content of 6 g contributes 2 favourable point(s).",
           "citationIds": [
             "sc-food-2022"
           ],
@@ -171,7 +171,7 @@ raw_vectors = json.loads(r'''
         {
           "id": "reason-fvl",
           "templateId": "nutriscore.fvl",
-          "text": "Fruits, vegetables and legumes content of 65.0% contributes 2 favourable point(s).",
+          "text": "Fruits, vegetables and legumes content of 65% contributes 2 favourable point(s).",
           "citationIds": [
             "sc-food-2022"
           ],
@@ -631,8 +631,8 @@ raw_vectors = json.loads(r'''
       "reasons": [
         {
           "id": "reason-protein-blocked",
-          "templateId": "nutriscore.protein",
-          "text": "Protein content of 8.0 g contributes 3 favourable point(s).",
+          "templateId": "nutriscore.protein_not_counted",
+          "text": "Protein earns 3 favourable point(s), but these points are not subtracted under the conditional protein rule.",
           "citationIds": [
             "sc-food-2022"
           ],
@@ -823,17 +823,16 @@ raw_vectors = json.loads(r'''
       "inputSnapshotId": "snap-cheese-exception",
       "reasons": [
         {
-          "id": "reason-cheese-rule",
-          "templateId": "nutriscore.cheese_rule",
-          "text": "Cheese route: favourable points (including protein) are subtracted without the 11-point adverse limit.",
+          "id": "reason-cheese-protein",
+          "templateId": "nutriscore.protein",
+          "text": "Protein content of 24.1 g contributes 7 favourable point(s).",
           "citationIds": [
             "sc-food-2022"
           ],
           "inputFields": [
-            "category",
             "protein"
           ],
-          "step": "cheese-scoring"
+          "step": "protein-points"
         }
       ],
       "trace": [
@@ -1215,15 +1214,15 @@ raw_vectors = json.loads(r'''
         {
           "id": "reason-fats-ratio",
           "templateId": "nutriscore.saturates_ratio",
-          "text": "Saturated fatty acids ratio to total lipids (14.0%) contributes 1 adverse point(s) out of 10.",
+          "text": "Saturated fatty acids ratio to total lipids (14%) contributes 1 adverse point(s) out of 10.",
           "citationIds": [
             "sc-food-2022"
           ],
           "inputFields": [
             "saturates",
-            "totalFat"
+            "fat"
           ],
-          "step": "saturates-ratio-points"
+          "step": "saturates_ratio-points"
         }
       ],
       "trace": [
@@ -1399,8 +1398,8 @@ raw_vectors = json.loads(r'''
       "reasons": [
         {
           "id": "reason-fats-protein-block",
-          "templateId": "nutriscore.protein",
-          "text": "Protein content of 25.0 g contributes 7 favourable point(s).",
+          "templateId": "nutriscore.protein_not_counted",
+          "text": "Protein earns 7 favourable point(s), but these points are not subtracted under the conditional protein rule.",
           "citationIds": [
             "sc-food-2022"
           ],
@@ -1539,15 +1538,16 @@ raw_vectors = json.loads(r'''
       "reasons": [
         {
           "id": "reason-water",
-          "templateId": "nutriscore.energy",
-          "text": "Water is classified as Grade A automatically under the European reference algorithm.",
+          "templateId": "nutriscore.water_classification",
+          "text": "Supported plain water is classified as Grade A automatically under the European reference algorithm.",
           "citationIds": [
             "sc-beverage-2023"
           ],
           "inputFields": [
-            "category"
+            "category",
+            "plainWater"
           ],
-          "step": "water-rule"
+          "step": "water_classification-points"
         }
       ],
       "trace": [
@@ -1664,7 +1664,7 @@ raw_vectors = json.loads(r'''
         {
           "id": "reason-bev-fvl",
           "templateId": "nutriscore.fvl",
-          "text": "Fruits, vegetables and legumes content of 85.0% contributes 6 favourable point(s).",
+          "text": "Fruits, vegetables and legumes content of 85% contributes 6 favourable point(s).",
           "citationIds": [
             "sc-beverage-2023"
           ],
@@ -1881,14 +1881,14 @@ raw_vectors = json.loads(r'''
         {
           "id": "reason-sweetener",
           "templateId": "nutriscore.sweetener",
-          "text": "Presence of authorized non-nutritive sweetener adds 4 adverse points in the beverage calculation route.",
+          "text": "Presence of an included non-nutritive sweetener adds 4 adverse points in the beverage calculation route.",
           "citationIds": [
             "sc-beverage-2023"
           ],
           "inputFields": [
-            "hasNonNutritiveSweetener"
+            "nonNutritiveSweetener"
           ],
-          "step": "sweetener-points"
+          "step": "sweeteners-points"
         }
       ],
       "trace": [
