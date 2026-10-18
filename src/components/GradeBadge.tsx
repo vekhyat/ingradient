@@ -18,6 +18,8 @@ export interface GradeBadgeProps {
   motion: RevealMotion;
   /** Set false when the parent row already speaks "Product grade C". */
   speak?: boolean;
+  /** Called once the letter shows its final frame. */
+  onRevealEnd?: () => void;
 }
 
 export interface GradeBadgeHandle {
@@ -42,10 +44,13 @@ const MIN = {
  * variant: a parent with no supported letter does not mount this.
  */
 export const GradeBadge = forwardRef<GradeBadgeHandle, GradeBadgeProps>(
-  function GradeBadge({ letter, size, motion, speak = true }, ref) {
+  function GradeBadge(
+    { letter, size, motion, speak = true, onRevealEnd },
+    ref,
+  ) {
     const colors = useColors();
     const reducedMotion = useReducedMotion();
-    const { style, skip } = useGradeReveal(motion, reducedMotion);
+    const { style, skip } = useGradeReveal(motion, reducedMotion, onRevealEnd);
     useImperativeHandle(ref, () => ({ skip }), [skip]);
 
     // Grow with the OS text size so the letter never clips at 200%.

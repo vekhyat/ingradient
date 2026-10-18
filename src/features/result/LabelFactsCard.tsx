@@ -26,7 +26,8 @@ function Section({
 /**
  * The ingredients-first answer (D131): what the pack itself says, in plain
  * words. Additive names come from the pinned taxonomy; statements are quoted,
- * not interpreted, and nothing is called safe or unsafe.
+ * not interpreted, and nothing is called safe or unsafe. The pack's Contains
+ * and May contain lines sit at the top of Result, so they are not repeated.
  */
 export function LabelFactsCard({ facts }: { facts: LabelFacts }) {
   const first = facts.topLevel.slice(0, 3);
@@ -40,24 +41,6 @@ export function LabelFactsCard({ facts }: { facts: LabelFacts }) {
         <Section title={enGB.facts.listedFirst}>
           <AppText variant="subhead">{first.join(', ')}</AppText>
         </Section>
-      ) : null}
-
-      {facts.contains.length > 0 ? (
-        <>
-          <Divider />
-          <Section title={enGB.facts.contains}>
-            <AppText variant="subhead">{facts.contains.join(', ')}</AppText>
-          </Section>
-        </>
-      ) : null}
-
-      {facts.mayContain.length > 0 ? (
-        <>
-          <Divider />
-          <Section title={enGB.facts.mayContain}>
-            <AppText variant="subhead">{facts.mayContain.join(', ')}</AppText>
-          </Section>
-        </>
       ) : null}
 
       <Divider />
@@ -104,10 +87,11 @@ export function LabelFactsCard({ facts }: { facts: LabelFacts }) {
         </>
       ) : null}
 
-      <AppText variant="bodySm" color="ink3" style={{ paddingTop: space.s2 }}>
-        {enGB.facts.note}
-        {facts.additives.length > 0 ? ` ${facts.additiveNameCredit}.` : ''}
-      </AppText>
+      {facts.additives.length > 0 ? (
+        <AppText variant="bodySm" color="ink3" style={{ paddingTop: space.s2 }}>
+          {`${facts.additiveNameCredit}.`}
+        </AppText>
+      ) : null}
     </Card>
   );
 }

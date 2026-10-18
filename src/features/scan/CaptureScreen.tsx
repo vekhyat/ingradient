@@ -292,18 +292,24 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
     ? enGB.status.reading.pending
     : outcomeMessage(labelState.lastOutcome, missing);
   const readyForReview = session ? isReadyForReview(session) : false;
+  // Scan tab with no label yet: the camera fills the screen and the page
+  // only scrolls if a status card pushes it past its minimum height.
+  const idle = !labelOnly && !anyPanel;
+  const showFooter = !idle || analysing || analysisFailed || message !== null;
 
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.bg }}
       onLayout={(event) => setAreaHeight(event.nativeEvent.layout.height)}
+      alwaysBounceVertical={false}
       contentContainerStyle={{
-        paddingBottom: labelOnly || anyPanel ? space.s5 : 0,
+        flexGrow: 1,
+        paddingBottom: idle ? 0 : space.s5,
       }}
     >
       <View
         style={{
-          paddingTop: 0,
+          flexGrow: idle ? 1 : 0,
           backgroundColor: colors.camera,
         }}
       >
@@ -326,15 +332,16 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
           showPanels={labelOnly || anyPanel}
           rounded={labelOnly || anyPanel}
           contentInsets={{ top: labelOnly ? 0 : insets.top, bottom: 0 }}
+          fill={idle}
           minHeight={Math.max(
             420,
-            // Scan tab: all the space above the docked nav bar, under the
-            // status bar. With a label in progress, leave room for its actions.
+            // Idle Scan tab: grows to the space above the docked nav bar.
+            // With a label in progress, leave room for its actions.
             labelOnly
               ? window.height - insets.top - 64 - 220
               : anyPanel
                 ? areaHeight - 300
-                : areaHeight,
+                : 0,
           )}
           preview={
             cameraActive ? (
@@ -382,95 +389,99 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
         />
       </View>
 
-      <View style={{ padding: space.s4, gap: space.s4 }}>
-        {analysing || analysisFailed ? (
-          <OperationStatus
-            stage="analysis"
-            state={analysing ? 'pending' : 'failed'}
-            message={
-              analysing
-                ? enGB.status.analysis.server
-                : enGB.status.analysis.failed
-            }
-            onRetry={() => void seeResults()}
-            onCancel={() => {
-              analysis.current?.abort();
-              analysis.current = null;
-              setAnalysing(false);
-            }}
-          />
-        ) : null}
-        {!anyPanel && !labelOnly ? (
-          <>
-            {message ? (
-              <Card>
-                <AppText accessibilityLiveRegion="polite">{message}</AppText>
-              </Card>
-            ) : null}
-          </>
-        ) : (
-          <>
-            {labelState.reading ? (
-              <Card>
-                <AppText accessibilityLiveRegion="polite">
-                  {enGB.status.reading.pending}
-                </AppText>
-              </Card>
-            ) : session && nutritionStillOptional(session) ? (
-              <Card>
-                <AppText accessibilityLiveRegion="polite">
-                  {enGB.capture.ingredientsRead}
-                </AppText>
-              </Card>
-            ) : message ? (
-              <Card>
-                <AppText accessibilityLiveRegion="polite">{message}</AppText>
-              </Card>
-            ) : null}
-            {session &&
-            !readyForReview &&
-            session.nutrition.state !== 'missing' &&
-            session.ingredients.state === 'missing' ? (
-              <Button
-                label={enGB.capture.markAbsent(enGB.capture.panels.ingredients)}
-                variant="outline"
-                onPress={() => label.markAbsent('ingredients')}
-              />
-            ) : null}
-            <Button
-              label={enGB.capture.seeResults}
-              variant="primary"
-              busy={analysing}
-              disabledReason={
-                readyForReview && !capturing && !labelState.reading
-                  ? undefined
-                  : enGB.capture.needOther(missing[0] ?? '')
+      {showFooter ? (
+        <View style={{ padding: space.s4, gap: space.s4 }}>
+          {analysing || analysisFailed ? (
+            <OperationStatus
+              stage="analysis"
+              state={analysing ? 'pending' : 'failed'}
+              message={
+                analysing
+                  ? enGB.status.analysis.server
+                  : enGB.status.analysis.failed
               }
-              onPress={() => void seeResults()}
+              onRetry={() => void seeResults()}
+              onCancel={() => {
+                analysis.current?.abort();
+                analysis.current = null;
+                setAnalysing(false);
+              }}
             />
-            {readyForReview ? (
+          ) : null}
+          {!anyPanel && !labelOnly ? (
+            <>
+              {message ? (
+                <Card>
+                  <AppText accessibilityLiveRegion="polite">{message}</AppText>
+                </Card>
+              ) : null}
+            </>
+          ) : (
+            <>
+              {labelState.reading ? (
+                <Card>
+                  <AppText accessibilityLiveRegion="polite">
+                    {enGB.status.reading.pending}
+                  </AppText>
+                </Card>
+              ) : session && nutritionStillOptional(session) ? (
+                <Card>
+                  <AppText accessibilityLiveRegion="polite">
+                    {enGB.capture.ingredientsRead}
+                  </AppText>
+                </Card>
+              ) : message ? (
+                <Card>
+                  <AppText accessibilityLiveRegion="polite">{message}</AppText>
+                </Card>
+              ) : null}
+              {session &&
+              !readyForReview &&
+              session.nutrition.state !== 'missing' &&
+              session.ingredients.state === 'missing' ? (
+                <Button
+                  label={enGB.capture.markAbsent(
+                    enGB.capture.panels.ingredients,
+                  )}
+                  variant="outline"
+                  onPress={() => label.markAbsent('ingredients')}
+                />
+              ) : null}
               <Button
-                label={enGB.review.title}
-                variant="text"
+                label={enGB.capture.seeResults}
+                variant="primary"
+                busy={analysing}
                 disabledReason={
-                  analysing ? enGB.status.analysis.server : undefined
+                  readyForReview && !capturing && !labelState.reading
+                    ? undefined
+                    : enGB.capture.needOther(missing[0] ?? '')
                 }
-                onPress={() => router.push('/review')}
+                onPress={() => void seeResults()}
               />
-            ) : null}
-            {!labelOnly && anyPanel ? (
-              <Button
-                label={enGB.scan.startOver}
-                variant="text"
-                disabledReason={
-                  analysing ? enGB.status.analysis.server : undefined
-                }
-                onPress={() => label.discard()}
-              />
-            ) : null}
-          </>
-        )}
-      </View>
+              {readyForReview ? (
+                <Button
+                  label={enGB.review.title}
+                  variant="text"
+                  disabledReason={
+                    analysing ? enGB.status.analysis.server : undefined
+                  }
+                  onPress={() => router.push('/review')}
+                />
+              ) : null}
+              {!labelOnly && anyPanel ? (
+                <Button
+                  label={enGB.scan.startOver}
+                  variant="text"
+                  disabledReason={
+                    analysing ? enGB.status.analysis.server : undefined
+                  }
+                  onPress={() => label.discard()}
+                />
+              ) : null}
+            </>
+          )}
+        </View>
+      ) : null}
 
       <Sheet
         visible={manualOpen}

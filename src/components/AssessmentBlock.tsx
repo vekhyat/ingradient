@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, PixelRatio, View } from 'react-native';
 
 import { enGB } from '../copy/en-GB';
@@ -73,7 +73,9 @@ export function AssessmentBlock({
     }
   }, [updateOffer]);
 
-  const animating = motion !== 'still' && science.status === 'supported';
+  // Skip shows only while the badge is still animating.
+  const [revealing, setRevealing] = useState(motion !== 'still');
+  const animating = revealing && science.status === 'supported';
 
   return (
     <Card style={{ gap: space.s4 }}>
@@ -105,6 +107,7 @@ export function AssessmentBlock({
             size="lg"
             motion={motion}
             speak={false}
+            onRevealEnd={() => setRevealing(false)}
           />
         </View>
       ) : (
@@ -161,7 +164,9 @@ export function AssessmentBlock({
       ) : null}
 
       <Divider />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.s2 }}>
+      {/* No flexWrap: a wrapping row measured Skip onto a second line and
+          left empty space under the method link. */}
+      <View style={{ flexDirection: 'row', gap: space.s2 }}>
         <Touchable
           accessibilityRole="button"
           radius={radius.sm}
@@ -170,13 +175,13 @@ export function AssessmentBlock({
             flexDirection: 'row',
             alignItems: 'center',
             gap: space.s2,
-            flexGrow: 1,
+            flex: 1,
           }}
         >
           <Icon name="info" color={colors.ink2} />
           <AppText variant="bodySm" color="ink2" style={{ flex: 1 }}>
             {science.status === 'supported'
-              ? `${enGB.assessment.methodLabel} · ${enGB.result.method}`
+              ? enGB.assessment.methodLabel
               : enGB.you.method}
           </AppText>
           <Icon name="chevron_right" color={colors.ink2} />

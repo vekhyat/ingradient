@@ -33,6 +33,8 @@ export interface CaptureViewfinderProps {
   showPanels: boolean;
   /** Camera height; the screen gives it most of the window. */
   minHeight?: number;
+  /** Grow to fill the parent (idle Scan tab) instead of a fixed height. */
+  fill?: boolean;
   /** Extra space inside the camera for the status bar and a floating nav bar. */
   contentInsets?: { top: number; bottom: number };
   /** Round the bottom corners (pushed capture screen) or run edge to edge (Scan tab). */
@@ -191,6 +193,7 @@ export function CaptureViewfinder({
   preview,
   showPanels,
   minHeight = 460,
+  fill = false,
   contentInsets = { top: 0, bottom: 0 },
   rounded = true,
   onCapture,
@@ -251,7 +254,7 @@ export function CaptureViewfinder({
           : enGB.capture.hint;
   const statusHint =
     !locked && !capturing && cameraState !== 'starting' && scanningBarcodes
-      ? `${enGB.scan.tapToFocus} · ${enGB.scan.barcodeAuto}`
+      ? enGB.scan.barcodeAuto
       : undefined;
 
   return (
@@ -263,6 +266,7 @@ export function CaptureViewfinder({
         borderBottomRightRadius: rounded ? radius.lg : 0,
         overflow: 'hidden',
         minHeight,
+        flexGrow: fill ? 1 : 0,
       }}
     >
       {permission === 'granted' && cameraState !== 'unavailable' ? (

@@ -288,24 +288,11 @@ export default function ResultScreen() {
         <ResultDisclosure title={enGB.ingredients.title}>
           {facts ? <LabelFactsCard facts={facts} /> : null}
           <Card style={{ gap: space.s1 }}>
-            <View
-              style={{
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                justifyContent: 'space-between',
-                alignItems: 'baseline',
-                gap: space.s2,
-              }}
-            >
-              <AppText variant="heading" heading>
-                {enGB.ingredients.title}
+            {view.ingredients.length > 0 ? (
+              <AppText variant="bodySm" color="ink2">
+                {enGB.ingredients.countInOrder(view.ingredients.length)}
               </AppText>
-              {view.ingredients.length > 0 ? (
-                <AppText variant="bodySm" color="ink2">
-                  {enGB.ingredients.countInOrder(view.ingredients.length)}
-                </AppText>
-              ) : null}
-            </View>
+            ) : null}
             <IngredientList
               items={view.ingredients}
               state={view.ingredients.length > 0 ? 'ready' : 'missing'}

@@ -48,19 +48,23 @@ export function ProductIdentity({
   const largeText = PixelRatio.getFontScale() >= 1.5;
 
   if (density === 'summary') {
+    // One quiet line: size and source. The ODbL credit names the source
+    // for barcode records, so it stands in for the source line there.
+    const line = [
+      product.sizeText,
+      product.dataCredit === 'off' ? null : sourceLine(product),
+      showOffCredit ? enGB.identity.offCredit : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
     return (
       <View style={{ gap: space.s1 }}>
         <AppText variant="heading" heading>
           {name}
         </AppText>
         <AppText variant="bodySm" color="ink2">
-          {meta}
+          {line}
         </AppText>
-        {showOffCredit ? (
-          <AppText variant="bodySm" color="ink3">
-            {enGB.identity.offCredit}
-          </AppText>
-        ) : null}
       </View>
     );
   }

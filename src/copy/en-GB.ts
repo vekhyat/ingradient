@@ -29,27 +29,25 @@ export const enGB = {
   field: {
     clear: 'Clear',
     barcodePlaceholder: '8 901234 567890',
-    barcodeHelper: 'The digits under the barcode, without spaces.',
+    barcodeHelper: 'The digits under the barcode.',
     printedAs: (printed: string) => `Printed as: ${printed}`,
     barcodeErrors: {
       empty: 'Enter the digits under the barcode.',
       invalid_chars: 'Use digits only.',
       invalid_length: 'Barcodes have 8, 12, 13 or 14 digits.',
-      invalid_checksum:
-        'These digits do not make a valid barcode. Check the last digit.',
-      too_long: 'That is too many digits for a barcode.',
+      invalid_checksum: 'Not a valid barcode. Check the last digit.',
+      too_long: 'Too many digits for a barcode.',
     },
     transcriptionErrors: {
       empty: 'Type what the label says, or use "Can\'t read".',
       unit_required: 'Add the unit printed on the label, such as g.',
-      basis_required:
-        'Say whether this is per 100 g, per 100 ml or per serving.',
+      basis_required: 'Per 100 g, per 100 ml or per serving?',
     },
   },
 
   sheet: {
     discardTitle: 'Discard changes?',
-    discardBody: 'Your edits to this field will be lost.',
+    discardBody: 'Your edits will be lost.',
     keepReviewing: 'Keep reviewing',
     discard: 'Discard',
   },
@@ -73,13 +71,12 @@ export const enGB = {
   identity: {
     nameMissing: 'Name not on this record',
     labelOnlyName: 'Product from your label photo',
-    fromOff: 'From the barcode, Open Food Facts',
-    fromLabel: 'From your label photo',
-    fromMixed: 'From Open Food Facts and your label photo',
-    offCredit:
-      'Product facts: Open Food Facts contributors, Open Database Licence (ODbL).',
+    fromOff: 'Open Food Facts',
+    fromLabel: 'Your label photo',
+    fromMixed: 'Open Food Facts + your label photo',
+    offCredit: '© Open Food Facts contributors, ODbL',
     offPhotoCredit: (creator: string | null) =>
-      `Photo: ${creator ?? 'Open Food Facts contributor'}, CC BY-SA. Packaging design may belong to the brand.`,
+      `Photo: ${creator ?? 'Open Food Facts contributor'}, CC BY-SA.`,
     inspectSource: 'Where this came from',
     barcode: (code: string) => `Barcode ${code}`,
   },
@@ -89,15 +86,15 @@ export const enGB = {
     methodLabel: 'Nutrition grade · European reference',
     noGrade: 'No product grade',
     nutritionGrade: 'Nutrition grade',
-    insufficientTitle: 'Not enough information for a grade',
+    insufficientTitle: 'Not enough data for a grade',
     methodUnavailableTitle: 'No grade yet',
     unsupportedTitle: 'Not graded',
     personalUnavailable: 'Personal assessment unavailable',
     checkingRequirements: 'Checking your requirements',
-    updateAvailable: 'Updated analysis available',
-    updateSame: "Same grade, reasons from the server's resources",
+    updateAvailable: 'Update available',
+    updateSame: 'Same grade, updated reasons',
     updateOpen: 'Open update',
-    skip: 'Skip animation',
+    skip: 'Skip',
     collapsedName: (text: string, expanded: boolean) =>
       `${text}, ${expanded ? 'expanded' : 'collapsed'}`,
   },
@@ -106,7 +103,7 @@ export const enGB = {
     title: 'Why this grade',
     openSource: (title: string) => `Source: ${title}`,
     inputs: (text: string) => `Uses: ${text}`,
-    unavailable: 'No cited reason is available for this result.',
+    unavailable: 'No cited reason available.',
   },
 
   source: {
@@ -116,99 +113,89 @@ export const enGB = {
     claim: 'What it supports',
     limitation: 'Limits',
     openOriginal: 'Open the original',
-    metadataOnly:
-      'The original document is not stored on this phone. These details still identify it.',
-    retired:
-      'This source was used for an older result. New results use a newer reviewed edition.',
+    metadataOnly: 'The original is not stored on this phone.',
+    retired: 'Older edition. New results use a newer one.',
     error: 'The source details could not be loaded.',
-    offline: 'You are offline. The original will open when you reconnect.',
-    badLink: 'This link cannot be opened safely.',
+    offline: 'You are offline. Try again when connected.',
+    badLink: 'This link cannot be opened.',
   },
 
   ingredients: {
     title: 'Ingredients',
     countInOrder: (count: number) =>
-      `${pluralise(count, 'ingredient', 'ingredients')}, in pack order`,
+      `${pluralise(count, 'ingredient', 'ingredients')} in pack order`,
     all: (count: number) => `All ${count} ingredients`,
-    missing: 'No ingredient list on this record. A label photo can add it.',
+    missing: 'No ingredient list. Photograph the label to add it.',
     loading: 'Reading ingredients…',
     error: 'The ingredient list could not be read.',
-    unresolved: 'Not matched to a known ingredient yet',
-    ambiguous: 'Could match more than one ingredient',
+    unresolved: 'Not matched yet',
+    ambiguous: 'More than one match',
     matched: 'Matched',
     within: (parent: string) => `Part of ${parent}`,
   },
 
   facts: {
-    title: 'From the ingredient list',
+    title: 'What the pack says',
     listedFirst: 'Listed first',
     additives: (count: number) =>
-      count === 1 ? '1 additive code listed' : `${count} additive codes listed`,
-    noAdditives: 'No additive codes listed',
-    unknownAdditive: 'Name not in the app’s additive list',
-    contains: 'The pack says it contains',
-    mayContain: 'The pack says it may contain',
-    declared: 'Amounts printed on the pack',
-    note: 'These are what the pack says. Checking them against your own allergies arrives in a later version.',
-    none: 'No ingredient list yet. Photograph it to see what is in this product.',
+      count === 1 ? '1 additive' : `${count} additives`,
+    noAdditives: 'No additives listed',
+    unknownAdditive: 'Unknown additive',
+    contains: 'Contains',
+    mayContain: 'May contain',
+    declared: 'Amounts on the pack',
+    none: 'No ingredient list yet. Photograph it to add one.',
   },
 
   addNutrition: {
     title: 'Add the nutrition table?',
-    body: 'A nutrition grade needs the nutrition table. Photograph it to add one; everything above stays.',
-    action: 'Photograph nutrition table',
+    body: 'A grade needs the nutrition table.',
+    action: 'Add nutrition table',
   },
 
   nutrition: {
     title: 'Nutrition',
     kcal: (value: number) => `${value} kcal`,
     unknown: 'Unknown',
-    none: 'No nutrition table on this record. A label photo can add it.',
+    none: 'No nutrition table. Photograph it to add one.',
   },
 
   status: {
     lookup: {
-      pending: 'Looking up this barcode',
-      invalid_code: 'That is not a valid barcode. Check the digits.',
-      absent:
-        'This product is not in Open Food Facts yet. Photograph the label instead.',
-      offline:
-        'You are offline. Barcode lookup needs a connection. Label photos work offline.',
-      timeout: 'The lookup took too long. Try again.',
+      pending: 'Looking up barcode',
+      invalid_code: 'Not a valid barcode. Check the digits.',
+      absent: 'Product not found. Photograph the label instead.',
+      offline: 'You are offline. Photograph the label instead.',
+      timeout: 'Lookup took too long. Try again.',
       throttled: (seconds: number | null) =>
         seconds
-          ? `Too many lookups in a short time. Try again in ${seconds} seconds.`
-          : 'Too many lookups in a short time. Try again shortly.',
-      upstream_unavailable:
-        'Open Food Facts is not responding right now. Try again later.',
-      malformed:
-        'Open Food Facts sent data the app could not read. Try again or photograph the label.',
+          ? `Too many lookups. Try again in ${seconds} s.`
+          : 'Too many lookups. Try again shortly.',
+      upstream_unavailable: 'Open Food Facts is not responding. Try later.',
+      malformed: 'Could not read the product data. Try again.',
       cancelled: 'Lookup cancelled.',
-      incomplete:
-        'Found this product, but its record is missing the facts needed for a grade. Photograph the label to add them.',
+      incomplete: 'Product found, but data is missing. Photograph the label.',
     },
     capture: {
-      pending: 'Taking the photo',
-      failed: 'The photo could not be taken. Try again.',
+      pending: 'Taking photo',
+      failed: 'Photo failed. Try again.',
     },
     reading: {
       pending: 'Reading the label',
-      noText:
-        'No text was found in this photo. Try again with the label filling the frame.',
-      unsupportedLanguage:
-        'This label is not in English. This version reads English labels only.',
-      engineError: 'The text reader on this phone failed. Try again.',
+      noText: 'No text found. Fill the frame with the label.',
+      unsupportedLanguage: 'Only English labels are supported for now.',
+      engineError: 'Could not read the text. Try again.',
     },
     matching: { pending: 'Matching ingredients' },
     analysis: {
       server: 'Analysing',
       phone: 'Analysing on this phone',
-      failed: 'The analysis did not finish. Your facts are still here.',
+      failed: 'Analysis failed. Try again.',
     },
     saving: {
       pending: 'Saving on this phone',
       done: 'Saved on this phone',
-      failed: 'Could not save on this phone. The result is still here.',
+      failed: 'Could not save. Try again.',
     },
     photographLabel: 'Photograph label',
   },
@@ -222,36 +209,33 @@ export const enGB = {
     findProduct: 'Find a product',
     pointAtBarcode: 'Point at the barcode',
     pointAtEither: 'Photograph the ingredients',
-    barcodeAuto: 'Barcodes are read automatically',
+    barcodeAuto: 'or point at a barcode',
     barcodeDetected: 'Barcode detected',
     noBarcodeTitle: 'Photograph the ingredients',
-    noBarcodeBody:
-      'Fill the frame with the ingredient list and tap the shutter. Include the nutrition table if it fits. A barcode in view is read by itself.',
+    noBarcodeBody: 'Fill the frame with the ingredient list.',
     startOver: 'Start over',
     photographLabel: 'Photograph the label',
     typeBarcode: 'Type the barcode',
     manualTitle: 'Type the barcode',
     lookUp: 'Look up',
     cameraStarting: 'Starting the camera',
-    tapToFocus: 'Tap to focus',
     focusCamera: 'Focus camera',
-    focusHint: 'Double tap to focus on the centre of the label.',
-    cameraInterrupted: 'The camera stopped. Return to the app to restart it.',
-    cameraUnavailable: 'No camera is available. You can still type a barcode.',
+    focusHint: 'Double tap to focus.',
+    cameraInterrupted: 'Camera paused.',
+    cameraUnavailable: 'No camera. You can type a barcode.',
     permissionTitle: 'Camera access',
     permissionBody:
-      'Ingradient needs the camera to read barcodes and labels. Photos stay on this phone.',
+      'Needed to scan barcodes and labels. Photos stay on this phone.',
     permissionAllow: 'Allow camera',
     permissionBlocked:
-      'Camera access is off for Ingradient. Turn it on in Settings, or type a barcode.',
+      'Camera is off. Turn it on in Settings, or type a barcode.',
     openSettings: 'Open Settings',
   },
 
   capture: {
     title: 'Photograph the label',
-    hint: 'Fill the frame with the text. Hold steady; move closer for small print.',
-    ingredientsRead:
-      'Ingredients read. Want a nutrition grade too? Photograph the nutrition table, or see results now.',
+    hint: 'Fill the frame with the text',
+    ingredientsRead: 'Ingredients read. Add the nutrition table for a grade.',
     seeResults: 'See results',
     shutter: 'Take photo',
     panels: {
@@ -260,44 +244,40 @@ export const enGB = {
     },
     panelState: {
       read: 'Read',
-      uncertain: 'Read, needs a check',
-      missing: 'Still needed',
-      user_marked_absent: 'Not on this pack',
+      uncertain: 'Check',
+      missing: 'Needed',
+      user_marked_absent: 'Not on pack',
     },
     needOther: (panel: string) => `Now photograph the ${panel.toLowerCase()}.`,
-    neither:
-      'Neither the ingredients nor a nutrition table was found. Try another photo.',
+    neither: 'No ingredients or nutrition table found. Try again.',
     markAbsent: (panel: string) => `This pack has no ${panel.toLowerCase()}`,
     retake: (panel: string) => `Retake ${panel.toLowerCase()}`,
     continue: 'Continue',
     discardTitle: 'Discard this label?',
-    discardBody:
-      'The photos and text read so far will be removed from this phone.',
+    discardBody: 'The photos and text will be deleted.',
   },
 
   review: {
     title: 'Check the text',
-    intro:
-      'This is what the app read. Fix anything that does not match the pack, then see results.',
+    intro: 'Fix anything that does not match the pack.',
     analyse: 'See results',
     discard: 'Discard',
     edit: (what: string) => `Edit ${what}`,
     correctionTitle: (what: string) => `Correct ${what}`,
     apply: 'Apply',
     cantRead: "Can't read",
-    cantReadDone: 'Marked as unreadable',
-    retake: 'Retake this part',
-    noIngredients: 'No ingredients were read.',
-    noNutrients: 'No nutrition values were read.',
+    cantReadDone: 'Unreadable',
+    retake: 'Retake',
+    noIngredients: 'No ingredients read.',
+    noNutrients: 'No nutrition values read.',
     valueLabel: 'Value',
     ingredientLabel: 'Ingredient as printed',
   },
 
   result: {
     title: 'Result',
-    save: 'Save on this phone',
+    save: 'Save',
     saved: 'Saved on this phone',
-    method: 'How this was assessed',
     analysedOnServer: 'Analysed on the server',
     analysedOnPhone: 'Analysed on this phone',
     savedOn: (date: string) => `Saved ${date}`,
@@ -308,25 +288,23 @@ export const enGB = {
   method: {
     title: 'Method',
     noMethod:
-      'The grading method is not installed in this build yet, so no letter is shown. Product facts, ingredients and nutrition are still shown with their sources.',
+      'The grading method is not in this build yet, so no letter is shown.',
     notOfficial:
-      'This is the app’s assessment using a published European method. It is not an official Indian grade and is not endorsed by FSSAI or Santé publique France.',
+      'Uses a published European method. Not an official Indian grade; not endorsed by FSSAI or Santé publique France.',
     edition: (edition: string) => `Edition: ${edition}`,
     gaps: 'What is missing',
   },
 
   history: {
     title: 'History',
-    empty: 'Nothing saved yet. Results you save on this phone appear here.',
+    empty: 'Nothing saved yet.',
     loading: 'Opening saved results',
-    error:
-      'Saved results could not be read from this phone. They have not been deleted.',
+    error: 'Could not open saved results. Nothing was deleted.',
     deleteAction: (name: string) => `Delete ${name}`,
     deleteTitle: (name: string) => `Delete ${name}?`,
-    deleteBody:
-      'This removes the saved result from this phone. It cannot be undone.',
+    deleteBody: 'This cannot be undone.',
     deleteConfirm: 'Delete',
-    deleteFailed: 'Could not delete. The saved result is still on this phone.',
+    deleteFailed: 'Could not delete. Try again.',
     productKind: 'Product alone',
     savedAt: (date: string) => `Saved ${date}`,
     noGrade: 'No grade',
@@ -334,26 +312,24 @@ export const enGB = {
 
   you: {
     title: 'You',
-    localTitle: 'What stays on this phone',
-    localBody:
-      'Saved results, label photos while you check them, and any corrections you make stay on this phone. Saved results are encrypted.',
-    requestsTitle: 'What leaves this phone',
+    localTitle: 'Stays on this phone',
+    localBody: 'Saved results, label photos and your corrections. Encrypted.',
+    requestsTitle: 'Leaves this phone',
     requestsBody:
-      'A barcode lookup sends the barcode to Open Food Facts. Opening a source sends you to that website. Label photos are never uploaded.',
+      'Barcodes go to Open Food Facts. Sources open their own website. Label photos are never uploaded.',
     savedCount: (count: number) =>
-      `${pluralise(count, 'saved result', 'saved results')} on this phone`,
+      pluralise(count, 'saved result', 'saved results'),
     erase: 'Erase saved results',
     erasing: 'Erasing',
     eraseTitle: 'Erase all saved results?',
     eraseBody:
-      'This deletes every saved result on this phone. Copies in old phone backups made by the system are outside the app’s reach.',
+      'Deletes every saved result. Earlier system backups are not affected.',
     eraseConfirm: 'Erase',
-    eraseFailed:
-      'Not everything could be erased. Some saved results are still on this phone. Try again.',
-    erased: 'Saved results erased from this phone.',
+    eraseFailed: 'Some results could not be erased. Try again.',
+    erased: 'Saved results erased.',
     privacy: 'Privacy notice',
     method: 'How grades work',
-    profileLater: 'Allergy and preference settings arrive in a later version.',
+    profileLater: 'Allergy settings coming soon.',
   },
 
   /**
