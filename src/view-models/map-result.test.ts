@@ -215,6 +215,32 @@ describe('U-AUTO-A gate', () => {
   });
 });
 
+describe('gaps', () => {
+  it('shows a sentence shared by several fields once', () => {
+    const missing = getLocalScenario('missing_nutrients').assessment.scientific;
+    if (missing.state === 'graded') throw new Error('expected a refusal');
+    const [first] = missing.issues;
+    if (!first) throw new Error('expected an issue');
+    const repeated = {
+      ...missing,
+      issues: [
+        first,
+        ...['fibre', 'protein', 'sodium'].map((field) => ({
+          ...first,
+          field,
+          message: 'This observation cannot support the calculation.',
+        })),
+      ],
+    } as typeof missing;
+    const view = toScientificView(repeated);
+    if (view.status !== 'insufficient_data') throw new Error(view.status);
+    expect(view.gaps).toEqual([
+      first.message,
+      'This observation cannot support the calculation.',
+    ]);
+  });
+});
+
 describe('lookup failures', () => {
   it('keeps absent, offline and throttled distinct', () => {
     expect(toLookupFailure({ state: 'absent', issues: [] })).toEqual({

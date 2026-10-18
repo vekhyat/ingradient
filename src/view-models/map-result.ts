@@ -223,6 +223,11 @@ export function toPanelPresence(snapshot: ProductSnapshot): PanelPresence[] {
   }));
 }
 
+/** Issue sentences for display. Several fields can share one sentence; show it once. */
+export function issueGaps(issues: readonly { message: string }[]): string[] {
+  return [...new Set(issues.map((issue) => issue.message))];
+}
+
 /** One mapper from the domain contract to the UI status (BE-06). */
 export function toScientificView(
   assessment: ScientificAssessment,
@@ -236,7 +241,7 @@ export function toScientificView(
       reasonIds: assessment.reasons.map((reason) => reason.id),
     };
   }
-  const gaps = assessment.issues.map((issue) => issue.message);
+  const gaps = issueGaps(assessment.issues);
   switch (assessment.state) {
     case 'insufficient_data':
       return { status: 'insufficient_data', gaps };

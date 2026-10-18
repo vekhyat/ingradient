@@ -5,6 +5,7 @@ import type {
   ProductSnapshot,
 } from '../../domain/contracts/generated/local';
 import {
+  issueGaps,
   opensResultAutomatically,
   toLookupFailure,
   toScientificView,
@@ -212,9 +213,7 @@ export class ScanSession {
           operationId,
           barcode,
           base: outcome.snapshot,
-          gaps: analysed.assessment.scientific.issues.map(
-            (issue) => issue.message,
-          ),
+          gaps: issueGaps(analysed.assessment.scientific.issues),
         },
       });
       return this.state.lookup;
