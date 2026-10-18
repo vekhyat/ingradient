@@ -1,11 +1,15 @@
 import { forwardRef, useImperativeHandle } from 'react';
 import { PixelRatio, Text } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 
 import { enGB } from '../copy/en-GB';
+import { duration } from '../motion/durations';
 import { useReducedMotion } from '../motion/reduced-motion';
 import type { RevealMotion } from '../motion/reveal';
-import { useGradeReveal } from '../motion/useGradeReveal';
+import { useRevealProgress } from '../motion/useGradeReveal';
 import { gradeColor } from '../theme/resolve-theme';
 import { useColors } from '../theme/ThemeProvider';
 import { size as sizes, type } from '../theme/tokens';
@@ -18,8 +22,10 @@ export interface GradeBadgeProps {
   motion: RevealMotion;
   /** Set false when the parent row already speaks "Product grade C". */
   speak?: boolean;
-  /** Called once the letter shows its final frame. */
-  onRevealEnd?: () => void;
+  /** A slight inked-stamp tilt; used for the headline grade on Result. */
+  tilt?: boolean;
+  /** Wait before landing, so a route can finish sliding in first. */
+  delay?: number;
 }
 
 export interface GradeBadgeHandle {
@@ -27,9 +33,9 @@ export interface GradeBadgeHandle {
 }
 
 const GLYPH = {
-  lg: type.gradeLetter,
-  md: { ...type.gradeLetter, fontSize: 20, lineHeight: 24 },
-  sm: { ...type.gradeLetter, fontSize: 14, lineHeight: 18 },
+  lg: { ...type.gradeLetter, fontSize: 34, lineHeight: 38 },
+  md: { ...type.gradeLetter, fontSize: 24, lineHeight: 28 },
+  sm: { ...type.gradeLetter, fontSize: 16, lineHeight: 20 },
 } as const;
 
 const MIN = {
@@ -38,20 +44,42 @@ const MIN = {
   sm: sizes.badgeSm,
 } as const;
 
+const TILT = -6;
+
 /**
- * Component 07. A supported A–E letter on a fixed fill. The letter is always
- * painted, so colour is never the only signal. There is no "no letter"
- * variant: a parent with no supported letter does not mount this.
+ * Component 07. A supported A–E letter as a square ink-bordered stamp on a
+ * fixed fill. The letter is always printed, so colour is never the only
+ * signal. The reveal stamps it down: it drops in large and turned, lands a
+ * little small, then settles. There is no "no letter" variant: a parent
+ * with no supported letter does not mount this.
  */
 export const GradeBadge = forwardRef<GradeBadgeHandle, GradeBadgeProps>(
   function GradeBadge(
-    { letter, size, motion, speak = true, onRevealEnd },
+    { letter, size, motion, speak = true, tilt = false, delay = 0 },
     ref,
   ) {
     const colors = useColors();
     const reducedMotion = useReducedMotion();
-    const { style, skip } = useGradeReveal(motion, reducedMotion, onRevealEnd);
+    const { progress, skip } = useRevealProgress(motion, reducedMotion, {
+      first: duration.stampFirst,
+      repeat: duration.stampRepeat,
+      delay,
+    });
     useImperativeHandle(ref, () => ({ skip }), [skip]);
+
+    const rest = tilt ? TILT : 0;
+    const style = useAnimatedStyle(() => {
+      const p = progress.get();
+      return {
+        opacity: interpolate(p, [0, 0.35], [0, 1], 'clamp'),
+        transform: [
+          { scale: interpolate(p, [0, 0.6, 1], [2.2, 0.92, 1], 'clamp') },
+          {
+            rotate: `${interpolate(p, [0, 0.6, 1], [rest - 8, rest, rest], 'clamp')}deg`,
+          },
+        ],
+      };
+    });
 
     // Grow with the OS text size so the letter never clips at 200%.
     const glyph = GLYPH[size];
@@ -71,7 +99,6 @@ export const GradeBadge = forwardRef<GradeBadgeHandle, GradeBadgeProps>(
           {
             width: scaled,
             height: scaled,
-            borderRadius: scaled / 2,
             backgroundColor: gradeColor(colors, letter),
             borderWidth: sizes.badgeRing,
             borderColor: colors.badgeRing,

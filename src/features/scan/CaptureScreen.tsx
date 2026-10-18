@@ -13,7 +13,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { isValidGtin } from '../../adapters/catalogue/gtin';
 import { AppText } from '../../components/AppText';
 import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
 import { CaptureViewfinder } from '../../components/CaptureViewfinder';
 import { OperationStatus } from '../../components/OperationStatus';
 import { Sheet } from '../../components/Sheet';
@@ -295,7 +294,16 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
   // Scan tab with no label yet: the camera fills the screen and the page
   // only scrolls if a status card pushes it past its minimum height.
   const idle = !labelOnly && !anyPanel;
-  const showFooter = !idle || analysing || analysisFailed || message !== null;
+  const cameraState = mountError
+    ? 'unavailable'
+    : !foreground
+      ? 'interrupted'
+      : ready
+        ? 'ready'
+        : 'starting';
+  const reading = capturing || labelState.reading;
+  const canShoot =
+    permissionState === 'granted' && cameraState !== 'unavailable';
 
   return (
     <ScrollView
@@ -304,7 +312,7 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
       alwaysBounceVertical={false}
       contentContainerStyle={{
         flexGrow: 1,
-        paddingBottom: idle ? 0 : space.s5,
+        paddingBottom: idle ? 0 : space.s3,
       }}
     >
       <View
@@ -316,21 +324,13 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
         <CaptureViewfinder
           scanningBarcodes={scanningBarcodes}
           permission={permissionState}
-          cameraState={
-            mountError
-              ? 'unavailable'
-              : !foreground
-                ? 'interrupted'
-                : ready
-                  ? 'ready'
-                  : 'starting'
-          }
+          cameraState={cameraState}
           torch={torch ? 'on' : 'off'}
           panels={panels}
           locked={locked}
           capturing={capturing || labelState.reading || analysing}
           showPanels={labelOnly || anyPanel}
-          rounded={labelOnly || anyPanel}
+          rounded={false}
           contentInsets={{ top: labelOnly ? 0 : insets.top, bottom: 0 }}
           fill={idle}
           minHeight={Math.max(
@@ -375,7 +375,6 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
               />
             ) : null
           }
-          onCapture={() => void takePhoto()}
           onFocusPoint={(point) =>
             setFocusPoint((previous) => ({
               ...point,
@@ -383,105 +382,135 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
             }))
           }
           onTorch={() => setTorch((on) => !on)}
-          onManualBarcode={() => setManualOpen(true)}
           onAllow={() => void requestPermission()}
           onSettings={() => void Linking.openSettings()}
         />
       </View>
 
-      {showFooter ? (
-        <View style={{ padding: space.s4, gap: space.s4 }}>
-          {analysing || analysisFailed ? (
-            <OperationStatus
-              stage="analysis"
-              state={analysing ? 'pending' : 'failed'}
-              message={
-                analysing
-                  ? enGB.status.analysis.server
-                  : enGB.status.analysis.failed
-              }
-              onRetry={() => void seeResults()}
-              onCancel={() => {
-                analysis.current?.abort();
-                analysis.current = null;
-                setAnalysing(false);
-              }}
-            />
-          ) : null}
-          {!anyPanel && !labelOnly ? (
-            <>
-              {message ? (
-                <Card>
-                  <AppText accessibilityLiveRegion="polite">{message}</AppText>
-                </Card>
-              ) : null}
-            </>
-          ) : (
-            <>
-              {labelState.reading ? (
-                <Card>
-                  <AppText accessibilityLiveRegion="polite">
-                    {enGB.status.reading.pending}
-                  </AppText>
-                </Card>
-              ) : session && nutritionStillOptional(session) ? (
-                <Card>
-                  <AppText accessibilityLiveRegion="polite">
-                    {enGB.capture.ingredientsRead}
-                  </AppText>
-                </Card>
-              ) : message ? (
-                <Card>
-                  <AppText accessibilityLiveRegion="polite">{message}</AppText>
-                </Card>
-              ) : null}
-              {session &&
-              !readyForReview &&
-              session.nutrition.state !== 'missing' &&
-              session.ingredients.state === 'missing' ? (
-                <Button
-                  label={enGB.capture.markAbsent(
-                    enGB.capture.panels.ingredients,
-                  )}
-                  variant="outline"
-                  onPress={() => label.markAbsent('ingredients')}
-                />
-              ) : null}
+      {/* The paper dock: the shutter as the screen's one ink button, as in
+          the S1 prototype, with Type the barcode under it. */}
+      <View
+        style={{
+          paddingHorizontal: space.s5 - space.s1,
+          paddingVertical: space.s4,
+          gap: space.s3,
+        }}
+      >
+        {analysing || analysisFailed ? (
+          <OperationStatus
+            stage="analysis"
+            state={analysing ? 'pending' : 'failed'}
+            message={
+              analysing
+                ? enGB.status.analysis.server
+                : enGB.status.analysis.failed
+            }
+            onRetry={() => void seeResults()}
+            onCancel={() => {
+              analysis.current?.abort();
+              analysis.current = null;
+              setAnalysing(false);
+            }}
+          />
+        ) : null}
+        {canShoot ? (
+          <Button
+            label={
+              reading
+                ? enGB.status.reading.pending
+                : idle
+                  ? enGB.scan.photograph
+                  : enGB.capture.shutter
+            }
+            accessibilityLabel={enGB.capture.shutter}
+            variant={readyForReview ? 'outline' : 'primary'}
+            busy={reading || analysing}
+            disabledReason={
+              locked
+                ? enGB.scan.barcodeDetected
+                : cameraState === 'starting'
+                  ? enGB.scan.cameraStarting
+                  : cameraState === 'interrupted'
+                    ? enGB.scan.cameraInterrupted
+                    : undefined
+            }
+            onPress={() => void takePhoto()}
+          />
+        ) : null}
+        {idle ? (
+          <>
+            {message ? (
+              <AppText color="ink2" accessibilityLiveRegion="polite">
+                {message}
+              </AppText>
+            ) : null}
+            <View style={{ alignItems: 'center' }}>
               <Button
-                label={enGB.capture.seeResults}
-                variant="primary"
-                busy={analysing}
-                disabledReason={
-                  readyForReview && !capturing && !labelState.reading
-                    ? undefined
-                    : enGB.capture.needOther(missing[0] ?? '')
-                }
-                onPress={() => void seeResults()}
+                label={enGB.scan.typeBarcode}
+                variant="text"
+                onPress={() => setManualOpen(true)}
               />
-              {readyForReview ? (
-                <Button
-                  label={enGB.review.title}
-                  variant="text"
-                  disabledReason={
-                    analysing ? enGB.status.analysis.server : undefined
-                  }
-                  onPress={() => router.push('/review')}
-                />
-              ) : null}
-              {!labelOnly && anyPanel ? (
-                <Button
-                  label={enGB.scan.startOver}
-                  variant="text"
-                  disabledReason={
-                    analysing ? enGB.status.analysis.server : undefined
-                  }
-                  onPress={() => label.discard()}
-                />
-              ) : null}
-            </>
-          )}
-        </View>
-      ) : null}
+            </View>
+          </>
+        ) : (
+          <>
+            {labelState.reading ? (
+              <AppText color="ink2" accessibilityLiveRegion="polite">
+                {enGB.status.reading.pending}
+              </AppText>
+            ) : session && nutritionStillOptional(session) ? (
+              <AppText color="ink2" accessibilityLiveRegion="polite">
+                {enGB.capture.ingredientsRead}
+              </AppText>
+            ) : message ? (
+              <AppText color="ink2" accessibilityLiveRegion="polite">
+                {message}
+              </AppText>
+            ) : null}
+            {session &&
+            !readyForReview &&
+            session.nutrition.state !== 'missing' &&
+            session.ingredients.state === 'missing' ? (
+              <Button
+                label={enGB.capture.markAbsent(enGB.capture.panels.ingredients)}
+                variant="outline"
+                onPress={() => label.markAbsent('ingredients')}
+              />
+            ) : null}
+            <Button
+              label={enGB.capture.seeResults}
+              variant={readyForReview ? 'primary' : 'outline'}
+              busy={analysing}
+              disabledReason={
+                readyForReview && !capturing && !labelState.reading
+                  ? undefined
+                  : enGB.capture.needOther(missing[0] ?? '')
+              }
+              onPress={() => void seeResults()}
+            />
+            {readyForReview ? (
+              <Button
+                label={enGB.review.title}
+                variant="text"
+                disabledReason={
+                  analysing ? enGB.status.analysis.server : undefined
+                }
+                onPress={() => router.push('/review')}
+              />
+            ) : null}
+            {!labelOnly && anyPanel ? (
+              <Button
+                label={enGB.scan.startOver}
+                variant="text"
+                disabledReason={
+                  analysing ? enGB.status.analysis.server : undefined
+                }
+                onPress={() => label.discard()}
+              />
+            ) : null}
+          </>
+        )}
+      </View>
 
       <Sheet
         visible={manualOpen}

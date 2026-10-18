@@ -194,7 +194,11 @@ describe('actual result route with real phone analysis and session', () => {
     const key = await analyse();
     await show(key);
     expect(screen?.root.findByType(GradeBadge).props.letter).toBe('A');
-    expect(text()).toContain(enGB.grade.name('A'));
+    expect(
+      screen?.root
+        .findAllByType(Touchable)
+        .some((node) => node.props.accessibilityLabel === enGB.grade.name('A')),
+    ).toBe(true);
     expect(text()).toContain(enGB.result.analysedOnPhone);
     expect(
       screen?.root
@@ -250,7 +254,7 @@ describe('actual result route with real phone analysis and session', () => {
     if (!reason || !citation)
       throw new Error('Canonical grade must have a reviewed cited reason');
     expect(text()).not.toContain(citation.title);
-    await press(enGB.reasons.title);
+    await press(enGB.common.show);
     expect(text()).toContain(reason.text);
     await press(enGB.reasons.openSource(citation.title));
     expect(mockRouter.push).toHaveBeenCalledWith({

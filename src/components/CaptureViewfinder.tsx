@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
+  Easing,
+  cancelAnimation,
   useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -39,9 +43,7 @@ export interface CaptureViewfinderProps {
   contentInsets?: { top: number; bottom: number };
   /** Round the bottom corners (pushed capture screen) or run edge to edge (Scan tab). */
   rounded?: boolean;
-  onCapture: () => void;
   onTorch: () => void;
-  onManualBarcode: () => void;
   onAllow: () => void;
   onSettings: () => void;
   onFocusPoint?: (point: { x: number; y: number; request: number }) => void;
@@ -57,7 +59,7 @@ function Corner({
   const colors = useColors();
   const reducedMotion = useReducedMotion();
   const style = useAnimatedStyle(() => ({
-    borderColor: withTiming(locked ? colors.onCamera : colors.primary, {
+    borderColor: withTiming(locked ? colors.accent : colors.onCamera, {
       duration: reducedMotion ? 0 : duration.cameraLock,
     }),
   }));
@@ -68,18 +70,78 @@ function Corner({
       style={[
         {
           position: 'absolute',
-          width: 40,
-          height: 40,
+          width: 34,
+          height: 34,
           [top ? 'top' : 'bottom']: 0,
           [left ? 'left' : 'right']: 0,
-          borderTopWidth: top ? 4 : 0,
-          borderBottomWidth: top ? 0 : 4,
-          borderLeftWidth: left ? 4 : 0,
-          borderRightWidth: left ? 0 : 4,
-          borderTopLeftRadius: top && left ? radius.md : 0,
-          borderTopRightRadius: top && !left ? radius.md : 0,
-          borderBottomLeftRadius: !top && left ? radius.md : 0,
-          borderBottomRightRadius: !top && !left ? radius.md : 0,
+          borderTopWidth: top ? 3 : 0,
+          borderBottomWidth: top ? 0 : 3,
+          borderLeftWidth: left ? 3 : 0,
+          borderRightWidth: left ? 0 : 3,
+          // Square corners, like crop marks on a print proof.
+        },
+        style,
+      ]}
+    />
+  );
+}
+
+const LINE_GAP = 30;
+const LINE_INSET = 18;
+
+/**
+ * Reading a label: a turmeric highlighter stroke runs along one line of the
+ * frame, then the next, as if the text were being marked while it is read.
+ * It shows that work is happening; it does not claim which words were read.
+ * Reduced motion shows nothing; the status text still says "Reading the
+ * label".
+ */
+function HighlighterSweep({
+  width,
+  height,
+}: {
+  width: number;
+  height: number;
+}) {
+  const colors = useColors();
+  const reducedMotion = useReducedMotion();
+  const lines = Math.max(1, Math.floor((height - LINE_INSET * 2) / LINE_GAP));
+  const position = useSharedValue(0);
+  useEffect(() => {
+    if (reducedMotion || height <= 0) return;
+    position.set(0);
+    position.set(
+      withRepeat(
+        withTiming(lines, {
+          duration: duration.scanStroke * lines,
+          easing: Easing.linear,
+        }),
+        -1,
+        false,
+      ),
+    );
+    return () => cancelAnimation(position);
+  }, [height, lines, reducedMotion, position]);
+  const style = useAnimatedStyle(() => {
+    const t = position.get();
+    const line = Math.min(Math.floor(t), lines - 1);
+    const fraction = t - Math.floor(t);
+    return {
+      top: LINE_INSET + line * LINE_GAP,
+      width: Math.max(0, width - space.s4 * 2) * fraction,
+    };
+  });
+  if (reducedMotion || width <= 0) return null;
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        {
+          position: 'absolute',
+          left: space.s4,
+          height: 12,
+          backgroundColor: colors.accent,
+          opacity: 0.7,
         },
         style,
       ]}
@@ -154,7 +216,7 @@ function PanelChips({ panels }: { panels: readonly PanelPresence[] }) {
               alignItems: 'center',
               gap: space.s1,
               backgroundColor: colors.camera,
-              borderRadius: radius.full,
+              borderRadius: radius.sm,
               paddingHorizontal: space.s3,
               paddingVertical: space.s1,
             }}
@@ -163,7 +225,7 @@ function PanelChips({ panels }: { panels: readonly PanelPresence[] }) {
               name={done ? 'check_circle' : 'radio_button_unchecked'}
               filled={done}
               size={18}
-              color={done ? colors.primary : colors.onCamera}
+              color={done ? colors.accent : colors.onCamera}
             />
             <AppText variant="label" color="onCamera">
               {`${enGB.capture.panels[panel.panel]} · ${enGB.capture.panelState[panel.state]}`}
@@ -177,7 +239,8 @@ function PanelChips({ panels }: { panels: readonly PanelPresence[] }) {
 
 /**
  * Component 15, unified capture (D116). One camera, no Barcode/Label switch:
- * it watches for a barcode while the shutter photographs a label. Controls
+ * it watches for a barcode while the dock's shutter button photographs a
+ * label. The shutter and Type the barcode sit in the screen's paper dock. Controls
  * sit on fixed camera colours so text stays readable over any camera image.
  * Permission problems and an unavailable camera are explicit states with a
  * way forward (Allow, Settings, or type the barcode).
@@ -196,15 +259,14 @@ export function CaptureViewfinder({
   fill = false,
   contentInsets = { top: 0, bottom: 0 },
   rounded = true,
-  onCapture,
   onTorch,
-  onManualBarcode,
   onAllow,
   onSettings,
   onFocusPoint,
 }: CaptureViewfinderProps) {
   const colors = useColors();
   const [bounds, setBounds] = useState({ width: 0, height: 0 });
+  const [frame, setFrame] = useState({ width: 0, height: 0 });
   const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(
     null,
   );
@@ -328,25 +390,7 @@ export function CaptureViewfinder({
             gap: space.s2,
           }}
         >
-          <Touchable
-            accessibilityRole="button"
-            radius={radius.full}
-            layerColor={colors.onCamera}
-            onPress={onManualBarcode}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: space.s2,
-              paddingHorizontal: space.s4,
-              borderRadius: radius.full,
-              backgroundColor: 'rgba(0,0,0,0.55)',
-            }}
-          >
-            <Icon name="keyboard" color={colors.onCamera} />
-            <AppText variant="button" color="onCamera">
-              {enGB.scan.typeBarcode}
-            </AppText>
-          </Touchable>
+          <View />
           {torch !== 'unsupported' && permission === 'granted' ? (
             <Touchable
               accessibilityRole="switch"
@@ -406,6 +450,7 @@ export function CaptureViewfinder({
           <>
             <View
               pointerEvents="none"
+              onLayout={(event) => setFrame(event.nativeEvent.layout)}
               style={{
                 flex: 1,
                 minHeight: 200,
@@ -419,33 +464,12 @@ export function CaptureViewfinder({
               <Corner position="tr" locked={locked} />
               <Corner position="bl" locked={locked} />
               <Corner position="br" locked={locked} />
+              {capturing && !locked ? (
+                <HighlighterSweep width={frame.width} height={frame.height} />
+              ) : null}
             </View>
             {showPanels ? <PanelChips panels={panels} /> : null}
             <CameraPill text={statusText} hint={statusHint} />
-            <Touchable
-              accessibilityRole="button"
-              accessibilityLabel={enGB.capture.shutter}
-              accessibilityState={{ busy: capturing, disabled: capturing }}
-              disabled={capturing || locked || cameraState !== 'ready'}
-              radius={radius.full}
-              layerColor={colors.onPrimary}
-              onPress={onCapture}
-              style={{
-                alignSelf: 'center',
-                width: 72,
-                height: 72,
-                borderRadius: radius.full,
-                // Theme colour (D132): the shutter follows the app palette.
-                backgroundColor: colors.primary,
-                borderWidth: 4,
-                borderColor: colors.onCamera,
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: capturing || locked ? 0.5 : 1,
-              }}
-            >
-              <Icon name="photo_camera" color={colors.onPrimary} />
-            </Touchable>
           </>
         )}
       </View>

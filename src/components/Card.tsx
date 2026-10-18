@@ -2,11 +2,11 @@ import type { ReactNode } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useColors } from '../theme/ThemeProvider';
-import { radius, space } from '../theme/tokens';
+import { space } from '../theme/tokens';
 
 /**
- * One flat grouping level: no shadow, no card inside a card
- * (DESIGN-LANGUAGE §1).
+ * One flat grouping level: a grey band like a shaded row on a printed
+ * panel. Square corners, no shadow, no card inside a card.
  */
 export function Card({
   children,
@@ -23,8 +23,8 @@ export function Card({
       style={[
         {
           backgroundColor: colors.card,
-          borderRadius: radius.md,
-          padding: padded ? space.s4 : 0,
+          borderRadius: 0,
+          padding: padded ? space.s5 - space.s1 : 0,
         },
         style,
       ]}

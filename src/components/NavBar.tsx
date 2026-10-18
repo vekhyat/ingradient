@@ -6,7 +6,6 @@ import { haptics } from '../motion/haptics';
 import { useColors } from '../theme/ThemeProvider';
 import { size, space } from '../theme/tokens';
 import { AppText } from './AppText';
-import { Icon } from './Icon';
 import { Touchable } from './Touchable';
 
 export type RootTab = 'scan' | 'history' | 'you';
@@ -18,34 +17,29 @@ export interface NavBarProps {
   floating?: boolean;
 }
 
-const TABS: readonly { key: RootTab; icon: string; label: string }[] = [
-  { key: 'scan', icon: 'barcode_scanner', label: enGB.nav.scan },
-  { key: 'history', icon: 'history', label: enGB.nav.history },
-  { key: 'you', icon: 'person', label: enGB.nav.you },
+const TABS: readonly { key: RootTab; label: string }[] = [
+  { key: 'scan', label: enGB.nav.scan },
+  { key: 'history', label: enGB.nav.history },
+  { key: 'you', label: enGB.nav.you },
 ];
 
-const INDICATOR_WIDTH = 56;
-const INDICATOR_HEIGHT = size.navIndicatorHeight;
-
 /**
- * Component 06 (D136). Three labelled roots on a docked bar with no top
- * border: the surface colour change is the edge, so the Scan camera meets it
- * cleanly. Labels are always visible and wrap at large text sizes; the
- * selected tab has a filled icon on a rounded tinted pill.
+ * Component 06. Three labelled roots as printed small capitals on paper, no
+ * icons and no pill. The selected tab is ink with a turmeric bar under it;
+ * the others are quieter ink. Labels wrap at large text sizes.
  */
 export function NavBar({ current, onSelect, floating = true }: NavBarProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
 
-  const bar = (
+  return (
     <View
       accessibilityRole="tablist"
       style={{
         flexDirection: 'row',
         minHeight: size.navBar + (floating ? insets.bottom : 0),
-        paddingBottom: floating ? insets.bottom : 0,
-        paddingTop: space.s2,
-        backgroundColor: colors.card,
+        paddingBottom: (floating ? insets.bottom : 0) + space.s2,
+        backgroundColor: colors.bg,
       }}
     >
       {TABS.map((tab) => {
@@ -56,7 +50,6 @@ export function NavBar({ current, onSelect, floating = true }: NavBarProps) {
             accessibilityRole="tab"
             accessibilityLabel={tab.label}
             accessibilityState={{ selected }}
-            radius={28}
             onPress={() => {
               if (!selected) {
                 haptics.play('selection');
@@ -67,39 +60,27 @@ export function NavBar({ current, onSelect, floating = true }: NavBarProps) {
               flex: 1,
               alignItems: 'center',
               justifyContent: 'center',
-              paddingVertical: space.s1,
-              gap: 2,
+              paddingVertical: space.s3,
+              gap: space.s2,
             }}
           >
-            <View
-              style={{
-                width: INDICATOR_WIDTH,
-                height: INDICATOR_HEIGHT,
-                borderRadius: INDICATOR_HEIGHT / 2,
-                overflow: 'hidden',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: selected ? colors.primarySoft : 'transparent',
-              }}
-            >
-              <Icon
-                name={tab.icon}
-                filled={selected}
-                color={selected ? colors.onPrimarySoft : colors.ink2}
-              />
-            </View>
             <AppText
               variant="label"
-              color={selected ? 'ink' : 'ink2'}
+              color={selected ? 'ink' : 'ink3'}
               style={{ textAlign: 'center' }}
             >
               {tab.label}
             </AppText>
+            <View
+              style={{
+                width: 48,
+                height: 3,
+                backgroundColor: selected ? colors.accent : 'transparent',
+              }}
+            />
           </Touchable>
         );
       })}
     </View>
   );
-
-  return bar;
 }

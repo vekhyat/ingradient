@@ -37,7 +37,7 @@ export function ScreenFrame({
         ref={scrollRef}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          padding: space.s4,
+          padding: space.s5 - space.s1,
           gap: space.s5,
           paddingBottom: dock ? space.s4 : insets.bottom + space.s5,
         }}
@@ -47,11 +47,9 @@ export function ScreenFrame({
       {dock ? (
         <View
           style={{
-            paddingHorizontal: space.s4,
-            paddingTop: space.s3,
-            paddingBottom: insets.bottom + space.s3,
-            borderTopWidth: 1,
-            borderTopColor: colors.hair,
+            paddingHorizontal: space.s5 - space.s1,
+            paddingTop: space.s4,
+            paddingBottom: insets.bottom + space.s4,
             backgroundColor: colors.bg,
             flexDirection: 'row',
             flexWrap: 'wrap',

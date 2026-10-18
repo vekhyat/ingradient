@@ -23,6 +23,8 @@ export const enGB = {
     retry: 'Try again',
     cancel: 'Cancel',
     open: 'Open',
+    show: 'Show',
+    hide: 'Hide',
     unavailable: 'Unavailable',
   },
 
@@ -56,6 +58,14 @@ export const enGB = {
     name: (letter: string) => `Product grade ${letter}`,
   },
 
+  forYou: {
+    title: 'For you',
+    gradeName: (letter: string) => `Grade ${letter} for you`,
+    sameAsProduct: 'Same as the product',
+    productAlone:
+      'Based on the product alone. Allergy settings are coming soon.',
+  },
+
   provenance: {
     check: 'Check',
     corrected: 'You corrected this transcription',
@@ -69,8 +79,8 @@ export const enGB = {
   },
 
   identity: {
-    nameMissing: 'Name not on this record',
-    labelOnlyName: 'Product from your label photo',
+    nameMissing: 'Unnamed product',
+    labelOnlyName: 'Scanned product',
     fromOff: 'Open Food Facts',
     fromLabel: 'Your label photo',
     fromMixed: 'Open Food Facts + your label photo',
@@ -94,7 +104,6 @@ export const enGB = {
     updateAvailable: 'Update available',
     updateSame: 'Same grade, updated reasons',
     updateOpen: 'Open update',
-    skip: 'Skip',
     collapsedName: (text: string, expanded: boolean) =>
       `${text}, ${expanded ? 'expanded' : 'collapsed'}`,
   },
@@ -125,6 +134,7 @@ export const enGB = {
     countInOrder: (count: number) =>
       `${pluralise(count, 'ingredient', 'ingredients')} in pack order`,
     all: (count: number) => `All ${count} ingredients`,
+    heading: (count: number) => `Ingredients · ${count}`,
     missing: 'No ingredient list. Photograph the label to add it.',
     loading: 'Reading ingredients…',
     error: 'The ingredient list could not be read.',
@@ -208,7 +218,8 @@ export const enGB = {
     torchOff: 'Torch off',
     findProduct: 'Find a product',
     pointAtBarcode: 'Point at the barcode',
-    pointAtEither: 'Photograph the ingredients',
+    pointAtEither: 'Fit the ingredients inside the corners',
+    photograph: 'Photograph the ingredients',
     barcodeAuto: 'or point at a barcode',
     barcodeDetected: 'Barcode detected',
     noBarcodeTitle: 'Photograph the ingredients',

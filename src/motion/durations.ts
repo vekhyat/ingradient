@@ -13,7 +13,12 @@ export const duration = {
   sheetOut: 200,
   gradeFirst: 600,
   gradeRepeat: 300,
+  /** Grade stamp on Result: drops in, lands, settles. */
+  stampFirst: 600,
+  stampRepeat: 400,
   cameraLock: 200,
+  /** One highlighter stroke along a line of the frame while a label is read. */
+  scanStroke: 520,
 } as const;
 
 /** cubic-bezier values from INTERACTIONS.md. */

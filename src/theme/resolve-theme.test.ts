@@ -112,23 +112,22 @@ describe('fixed colours', () => {
   });
 
   it('gives every badge a 3:1 edge against the page', () => {
-    // Light: the fill itself is the edge (the white ring melts into white).
+    // Light: the fill itself is the edge.
     const light = STATIC_ROLES.light;
     for (const fill of [FIXED.light.gradeA, FIXED.light.gradeE]) {
       expect(contrastRatio(fill, light.bg)).toBeGreaterThanOrEqual(
         NON_TEXT_MIN,
       );
     }
-    // Dark: dark fills such as grade A (2.87:1) need the grey ring, which is
-    // why DESIGN-LANGUAGE keeps the ring in dark mode.
-    const dark = STATIC_ROLES.dark;
-    expect(contrastRatio(FIXED.dark.gradeA, dark.bg)).toBeLessThan(
-      NON_TEXT_MIN,
-    );
-    for (const surface of [dark.bg, dark.card, dark.card2]) {
-      expect(
-        contrastRatio(FIXED.dark.badgeRing, surface),
-      ).toBeGreaterThanOrEqual(NON_TEXT_MIN);
+    // Every stamp also carries an ink border, which must hold on every
+    // surface in both schemes.
+    for (const scheme of ['light', 'dark'] as const) {
+      const roles = STATIC_ROLES[scheme];
+      for (const surface of [roles.bg, roles.card, roles.card2]) {
+        expect(
+          contrastRatio(FIXED[scheme].badgeRing, surface),
+        ).toBeGreaterThanOrEqual(NON_TEXT_MIN);
+      }
     }
   });
 });

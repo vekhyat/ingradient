@@ -330,7 +330,6 @@ export function Playground() {
               personal={view.personal}
               summary={view.summary}
               personalPending={false}
-              motion="still"
               updateOffer={null}
               onOpenUpdate={() => undefined}
               onOpenMethod={() => undefined}
@@ -349,7 +348,6 @@ export function Playground() {
           personal={{ status: 'not_in_slice' }}
           summary={null}
           personalPending={false}
-          motion="still"
           updateOffer={{
             introducesHardFinding: false,
             differsFromDisplayed: false,
@@ -461,9 +459,7 @@ export function Playground() {
           cameraState="ready"
           torch="off"
           panels={[]}
-          onCapture={() => undefined}
           onTorch={() => undefined}
-          onManualBarcode={() => undefined}
           onAllow={() => undefined}
           onSettings={() => undefined}
         />
@@ -477,9 +473,7 @@ export function Playground() {
             { panel: 'ingredients', state: 'read', imageId: 'a' },
             { panel: 'nutrition', state: 'missing', imageId: null },
           ]}
-          onCapture={() => undefined}
           onTorch={() => undefined}
-          onManualBarcode={() => undefined}
           onAllow={() => undefined}
           onSettings={() => undefined}
         />
@@ -490,9 +484,7 @@ export function Playground() {
           cameraState="starting"
           torch="unsupported"
           panels={[]}
-          onCapture={() => undefined}
           onTorch={() => undefined}
-          onManualBarcode={() => undefined}
           onAllow={() => undefined}
           onSettings={() => undefined}
         />

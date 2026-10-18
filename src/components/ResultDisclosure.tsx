@@ -30,7 +30,7 @@ export function ResultDisclosure({
           paddingVertical: space.s3,
         }}
       >
-        <AppText variant="subhead" style={{ flex: 1 }}>
+        <AppText variant="label" style={{ flex: 1 }}>
           {title}
         </AppText>
         <Icon

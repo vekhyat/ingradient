@@ -4,7 +4,7 @@ import { enGB } from '../copy/en-GB';
 import { space } from '../theme/tokens';
 import { AppText } from './AppText';
 import { Button } from './Button';
-import { Card } from './Card';
+import { Divider } from './Card';
 
 export interface LocalDataControlsProps {
   slice: 'S1' | 'S2' | 'S3' | 'S4';
@@ -30,8 +30,8 @@ export function LocalDataControls({
   onOpenMethod,
 }: LocalDataControlsProps) {
   return (
-    <View style={{ gap: space.s4 }}>
-      <Card style={{ gap: space.s2 }}>
+    <View style={{ gap: space.s5 }}>
+      <View style={{ gap: space.s2 }}>
         <AppText variant="heading" heading>
           {enGB.you.localTitle}
         </AppText>
@@ -59,9 +59,11 @@ export function LocalDataControls({
           }
           onPress={onErase}
         />
-      </Card>
+      </View>
 
-      <Card style={{ gap: space.s2 }}>
+      <Divider />
+
+      <View style={{ gap: space.s2 }}>
         <AppText variant="heading" heading>
           {enGB.you.requestsTitle}
         </AppText>
@@ -72,7 +74,7 @@ export function LocalDataControls({
           onPress={onOpenPrivacy}
         />
         <Button label={enGB.you.method} variant="text" onPress={onOpenMethod} />
-      </Card>
+      </View>
 
       {slice === 'S1' || slice === 'S2' ? (
         <AppText variant="bodySm" color="ink3">

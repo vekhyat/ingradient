@@ -1,26 +1,33 @@
 import { useCallback, useEffect, useRef } from 'react';
 import {
   cancelAnimation,
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 
-import { duration, easing } from './durations';
+import { easing } from './durations';
 import type { RevealMotion } from './reveal';
 
+export interface RevealProgress {
+  /** 0 → 1 over the reveal; 1 at once for 'still' or reduced motion. */
+  progress: SharedValue<number>;
+  /** Jumps to the final frame mid-animation. */
+  skip: () => void;
+}
+
 /**
- * Animated style for a grade badge: scale 0.92→1 and fade 0→1.
- * 'still' renders the final frame at once. `skip()` jumps to the final frame
- * mid-animation. If reduced motion turns on while running, the animation is
- * cancelled onto its final frame. `onEnd` runs once the final frame is shown,
- * whether the animation finished, was skipped or never ran.
+ * Shared progress for a grade reveal. 'still' renders the final frame at
+ * once. If reduced motion turns on while running, the animation is
+ * cancelled onto its final frame. `onEnd` runs once the final frame is
+ * shown, whether the animation finished, was skipped or never ran.
  */
-export function useGradeReveal(
+export function useRevealProgress(
   motion: RevealMotion,
   reducedMotion: boolean,
+  timing: { first: number; repeat: number; delay?: number },
   onEnd?: () => void,
-) {
+): RevealProgress {
   const animate = motion !== 'still' && !reducedMotion;
   const progress = useSharedValue(animate ? 0 : 1);
   const endRef = useRef(onEnd);
@@ -28,11 +35,16 @@ export function useGradeReveal(
     endRef.current = onEnd;
   }, [onEnd]);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const end = useCallback(() => {
+  const clear = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
-    endRef.current?.();
   }, []);
+  const end = useCallback(() => {
+    clear();
+    endRef.current?.();
+  }, [clear]);
+  const ms = motion === 'first' ? timing.first : timing.repeat;
+  const delay = timing.delay ?? 0;
 
   useEffect(() => {
     if (!animate) {
@@ -41,15 +53,20 @@ export function useGradeReveal(
       end();
       return;
     }
-    const ms = motion === 'first' ? duration.gradeFirst : duration.gradeRepeat;
-    progress.set(withTiming(1, { duration: ms, easing: easing.reveal }));
-    // A JS timer of the same length, so no worklet callback is needed.
-    timer.current = setTimeout(end, ms);
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = null;
+    progress.set(0);
+    const run = () => {
+      progress.set(withTiming(1, { duration: ms, easing: easing.reveal }));
+      // A JS timer of the same length, so no worklet callback is needed.
+      timer.current = setTimeout(end, ms);
     };
-  }, [animate, motion, progress, end]);
+    // A delay lets a route finish sliding in, so the reveal is seen.
+    if (delay > 0) {
+      timer.current = setTimeout(run, delay);
+    } else {
+      run();
+    }
+    return clear;
+  }, [animate, ms, delay, progress, end, clear]);
 
   const skip = useCallback(() => {
     cancelAnimation(progress);
@@ -57,11 +74,5 @@ export function useGradeReveal(
     end();
   }, [progress, end]);
 
-  const style = useAnimatedStyle(() => ({
-    // v18 prototype values: never fully hidden, grows from 78%.
-    opacity: 0.2 + 0.8 * progress.get(),
-    transform: [{ scale: 0.78 + 0.22 * progress.get() }],
-  }));
-
-  return { style, skip };
+  return { progress, skip };
 }

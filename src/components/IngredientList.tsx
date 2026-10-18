@@ -91,14 +91,14 @@ export function IngredientList({
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                paddingVertical: space.s2,
+                paddingVertical: space.s3,
                 paddingLeft: item.depth * space.s4,
                 gap: space.s2,
                 backgroundColor: focused ? colors.primarySoft : undefined,
               }}
             >
               <View style={{ flex: 1, gap: 2 }}>
-                <AppText variant="subhead">{item.printedText}</AppText>
+                <AppText>{item.printedText}</AppText>
                 {item.match === 'ambiguous' ||
                 item.kind.kind === 'corrected' ? (
                   <AppText variant="bodySm" color="ink2">

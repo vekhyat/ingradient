@@ -1,15 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, PixelRatio, View } from 'react-native';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { AccessibilityInfo, View } from 'react-native';
 
 import { enGB } from '../copy/en-GB';
-import type { RevealMotion } from '../motion/reveal';
 import { useColors } from '../theme/ThemeProvider';
 import { radius, space } from '../theme/tokens';
 import type { PersonalView, ScientificView } from '../view-models/types';
 import { AppText } from './AppText';
-import { Card, Divider } from './Card';
-import { GradeBadge, type GradeBadgeHandle } from './GradeBadge';
-import { Icon } from './Icon';
+import { Button } from './Button';
+import { GradeBadge } from './GradeBadge';
 import { Touchable } from './Touchable';
 
 export interface AssessmentBlockProps {
@@ -18,7 +16,6 @@ export interface AssessmentBlockProps {
   personal: PersonalView;
   summary: string | null;
   personalPending: boolean;
-  motion: RevealMotion;
   /** D70. Null when no eligible late backend result exists. */
   updateOffer: null | {
     introducesHardFinding: boolean;
@@ -26,6 +23,8 @@ export interface AssessmentBlockProps {
   };
   onOpenUpdate: () => void;
   onOpenMethod: () => void;
+  /** The cited scientific reasons, shown inside the Product grade drop-down. */
+  evidence?: ReactNode;
 }
 
 function gapTitle(science: Exclude<ScientificView, { status: 'supported' }>) {
@@ -44,25 +43,26 @@ function gapLines(science: Exclude<ScientificView, { status: 'supported' }>) {
 }
 
 /**
- * Component 11, S1 branches. One answer first: the product grade with a
- * sourced sentence, or the named reason there is no letter. In S1 the
- * headline is about the product alone; no For you line and no profile
- * prompt. A later backend result is offered, never applied by itself.
+ * Component 11. For you leads (ADR 002); the product's own scientific grade
+ * sits under it in a Product grade band that opens on demand, with its cited
+ * reasons. Scientific evidence stays inside that band, apart from personal
+ * reasons. When the app cannot assess the user's needs, For you says so in
+ * words and shows no letter. Without a profile (S1) For you is the product
+ * alone. A later backend result is offered, never applied by itself.
  */
 export function AssessmentBlock({
   science,
   personal,
   summary,
   personalPending,
-  motion,
   updateOffer,
   onOpenUpdate,
   onOpenMethod,
+  evidence,
 }: AssessmentBlockProps) {
   const colors = useColors();
-  const badge = useRef<GradeBadgeHandle>(null);
   const announcedOffer = useRef(false);
-  const stacked = PixelRatio.getFontScale() >= 1.5;
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (updateOffer && !announcedOffer.current) {
@@ -73,132 +73,145 @@ export function AssessmentBlock({
     }
   }, [updateOffer]);
 
-  // Skip shows only while the badge is still animating.
-  const [revealing, setRevealing] = useState(motion !== 'still');
-  const animating = revealing && science.status === 'supported';
+  const supported = science.status === 'supported';
+  const cannotAssess = personal.status === 'unavailable';
 
   return (
-    <Card style={{ gap: space.s4 }}>
-      {science.status === 'supported' ? (
+    <View style={{ gap: space.s5 }}>
+      <View style={{ gap: space.s2 }}>
         <View
           style={{
-            flexDirection: stacked ? 'column-reverse' : 'row',
-            gap: space.s3,
-            alignItems: stacked ? 'flex-start' : 'center',
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+            gap: space.s2,
           }}
         >
-          <View
-            accessible
-            accessibilityLabel={[
-              enGB.grade.name(science.letter),
-              summary ?? '',
-            ].join('. ')}
-            style={{ flex: stacked ? undefined : 1, gap: space.s1 }}
-          >
-            <AppText variant="heading" heading>
-              {enGB.grade.name(science.letter)}
-            </AppText>
-            {summary ? <AppText color="ink2">{summary}</AppText> : null}
-          </View>
-          <GradeBadge
-            ref={badge}
-            letter={science.letter}
-            role="scientific"
-            size="lg"
-            motion={motion}
-            speak={false}
-            onRevealEnd={() => setRevealing(false)}
-          />
-        </View>
-      ) : (
-        <View style={{ gap: space.s2 }}>
-          <AppText variant="label" color="ink2">
-            {enGB.assessment.nutritionGrade.toUpperCase()}
+          <AppText variant="label" color="ink3" heading>
+            {enGB.forYou.title}
           </AppText>
-          <AppText variant="heading" heading>
-            {gapTitle(science)}
-          </AppText>
-          {gapLines(science).map((line, index) => (
-            <AppText key={`${index}-${line}`} color="ink2">
-              {line}
+          {supported && !cannotAssess ? (
+            <AppText variant="bodySm" color="ink3">
+              {enGB.forYou.sameAsProduct}
             </AppText>
-          ))}
+          ) : null}
         </View>
-      )}
 
-      {personal.status === 'unavailable' ? (
-        <AppText color="ink2">{`${enGB.assessment.personalUnavailable}: ${personal.cause}`}</AppText>
-      ) : null}
-      {personalPending ? (
-        <AppText color="ink2">{enGB.assessment.checkingRequirements}</AppText>
-      ) : null}
+        {cannotAssess ? (
+          <>
+            <AppText variant="title">
+              {enGB.assessment.personalUnavailable}
+            </AppText>
+            <AppText color="ink2">{personal.cause}</AppText>
+          </>
+        ) : supported ? (
+          <AppText color="ink2">{enGB.forYou.productAlone}</AppText>
+        ) : (
+          <>
+            <AppText variant="title">{gapTitle(science)}</AppText>
+            {gapLines(science).map((line, index) => (
+              <AppText key={`${index}-${line}`} color="ink2">
+                {line}
+              </AppText>
+            ))}
+            <Button
+              label={enGB.you.method}
+              variant="text"
+              onPress={onOpenMethod}
+            />
+          </>
+        )}
+        {personalPending ? (
+          <AppText color="ink2">{enGB.assessment.checkingRequirements}</AppText>
+        ) : null}
+      </View>
 
       {updateOffer ? (
         <View
           style={{
-            backgroundColor: colors.primarySoft,
-            borderRadius: radius.sm,
-            padding: space.s3,
+            backgroundColor: colors.card,
+            borderLeftWidth: 4,
+            borderLeftColor: colors.accent,
+            padding: space.s4,
             gap: space.s2,
           }}
         >
-          <AppText variant="subhead" color="onPrimarySoft">
-            {enGB.assessment.updateAvailable}
-          </AppText>
+          <AppText variant="subhead">{enGB.assessment.updateAvailable}</AppText>
           {!updateOffer.differsFromDisplayed ? (
-            <AppText variant="bodySm" color="onPrimarySoft">
+            <AppText variant="bodySm" color="ink2">
               {enGB.assessment.updateSame}
             </AppText>
           ) : null}
-          <Touchable
-            accessibilityRole="button"
-            radius={radius.sm}
+          <Button
+            label={enGB.assessment.updateOpen}
+            variant="text"
             onPress={onOpenUpdate}
-            style={{ justifyContent: 'center', alignSelf: 'flex-start' }}
-          >
-            <AppText variant="button" color="onPrimarySoft">
-              {enGB.assessment.updateOpen}
-            </AppText>
-          </Touchable>
+          />
         </View>
       ) : null}
 
-      <Divider />
-      {/* No flexWrap: a wrapping row measured Skip onto a second line and
-          left empty space under the method link. */}
-      <View style={{ flexDirection: 'row', gap: space.s2 }}>
-        <Touchable
-          accessibilityRole="button"
-          radius={radius.sm}
-          onPress={onOpenMethod}
+      {supported ? (
+        <View
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: space.s2,
-            flex: 1,
+            backgroundColor: colors.card,
+            marginHorizontal: -(space.s5 - space.s1),
+            paddingHorizontal: space.s5 - space.s1,
           }}
         >
-          <Icon name="info" color={colors.ink2} />
-          <AppText variant="bodySm" color="ink2" style={{ flex: 1 }}>
-            {science.status === 'supported'
-              ? enGB.assessment.methodLabel
-              : enGB.you.method}
-          </AppText>
-          <Icon name="chevron_right" color={colors.ink2} />
-        </Touchable>
-        {animating ? (
           <Touchable
             accessibilityRole="button"
+            accessibilityLabel={enGB.grade.name(science.letter)}
+            accessibilityState={{ expanded: open }}
             radius={radius.sm}
-            onPress={() => badge.current?.skip()}
-            style={{ justifyContent: 'center' }}
+            onPress={() => setOpen((value) => !value)}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: space.s3,
+              minHeight: 56,
+            }}
           >
-            <AppText variant="bodySm" color="primary">
-              {enGB.assessment.skip}
+            <AppText variant="label" color="ink3">
+              {enGB.assessment.productGrade}
+            </AppText>
+            <AppText
+              variant="button"
+              style={{ textDecorationLine: 'underline' }}
+            >
+              {open ? enGB.common.hide : enGB.common.show}
             </AppText>
           </Touchable>
-        ) : null}
-      </View>
-    </Card>
+          {open ? (
+            <View style={{ gap: space.s4, paddingBottom: space.s5 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: space.s4,
+                }}
+              >
+                <GradeBadge
+                  letter={science.letter}
+                  role="scientific"
+                  size="lg"
+                  motion="still"
+                />
+                <AppText color="ink2" style={{ flex: 1 }}>
+                  {summary ?? enGB.grade.name(science.letter)}
+                </AppText>
+              </View>
+              {evidence}
+              <Button
+                label={enGB.you.method}
+                variant="text"
+                onPress={onOpenMethod}
+              />
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+    </View>
   );
 }

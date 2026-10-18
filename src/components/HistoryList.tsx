@@ -78,15 +78,17 @@ export function HistoryList({
     );
   }
   if (state === 'empty' || rows.length === 0) {
-    return (
-      <Card>
-        <AppText color="ink2">{enGB.history.empty}</AppText>
-      </Card>
-    );
+    return <AppText color="ink2">{enGB.history.empty}</AppText>;
   }
 
   return (
-    <Card padded={false}>
+    <View
+      style={{
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: colors.hair,
+      }}
+    >
       {rows.map((row, index) => (
         <View key={row.snapshotId}>
           {index > 0 ? <Divider /> : null}
@@ -99,14 +101,14 @@ export function HistoryList({
                 row.label,
                 enGB.history.savedAt(formatSavedDate(row.capturedAt)),
               ].join('. ')}
-              radius={radius.md}
+              radius={radius.sm}
               onPress={() => onOpen(row.snapshotId)}
               style={{
                 flex: 1,
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: space.s3,
-                padding: space.s4,
+                gap: space.s4,
+                paddingVertical: space.s3,
               }}
             >
               {row.letter ? (
@@ -122,8 +124,7 @@ export function HistoryList({
                   style={{
                     width: size.badgeMd,
                     height: size.badgeMd,
-                    borderRadius: radius.full,
-                    borderWidth: 1,
+                    borderWidth: 2,
                     borderColor: colors.hair2,
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -134,8 +135,8 @@ export function HistoryList({
               )}
               <View style={{ flex: 1, gap: 2 }}>
                 <AppText variant="subhead">{row.name}</AppText>
-                <AppText variant="bodySm" color="ink2">
-                  {`${row.label} · ${enGB.history.savedAt(formatSavedDate(row.capturedAt))}`}
+                <AppText variant="code" color="ink3">
+                  {`${row.label} · ${enGB.history.savedAt(formatSavedDate(row.capturedAt))}`.toUpperCase()}
                 </AppText>
               </View>
             </Touchable>
@@ -147,7 +148,7 @@ export function HistoryList({
               style={{
                 width: size.targetMin,
                 height: size.targetMin,
-                marginRight: space.s2,
+                marginRight: -space.s3,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
@@ -157,6 +158,6 @@ export function HistoryList({
           </View>
         </View>
       ))}
-    </Card>
+    </View>
   );
 }

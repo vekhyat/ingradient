@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useColors } from '../theme/ThemeProvider';
 import { radius, size, space } from '../theme/tokens';
@@ -22,8 +22,10 @@ export interface ButtonProps {
 }
 
 /**
- * Component 01. One labelled action. Busy ignores repeat presses; disabled
- * always says why. No danger colour and no press scale.
+ * Component 01. One labelled action, printed rather than pill-shaped: a
+ * solid ink block, an outlined box, or underlined text. Busy shows a
+ * turmeric bar along the bottom and ignores repeat presses; disabled always
+ * says why. No danger colour and no press scale.
  */
 export function Button({
   label,
@@ -50,7 +52,8 @@ export function Button({
       ? colors.onPrimary
       : variant === 'tonal'
         ? colors.onPrimarySoft
-        : colors.primary;
+        : colors.ink;
+  const text = variant === 'text';
 
   return (
     <View style={{ gap: space.s1 }}>
@@ -60,7 +63,7 @@ export function Button({
         accessibilityState={{ busy, disabled }}
         accessibilityHint={disabledReason}
         disabled={disabled}
-        radius={radius.full}
+        radius={radius.sm}
         layerColor={ink}
         onPress={() => {
           if (busy || pressedWhileBusy.current) {
@@ -76,11 +79,13 @@ export function Button({
         style={{
           minHeight:
             variant === 'primary' ? size.targetPrimary : size.targetMin,
-          borderRadius: radius.full,
+          borderRadius: radius.sm,
           backgroundColor: fill,
           borderWidth: variant === 'outline' ? 1 : 0,
           borderColor: colors.hair2,
-          paddingHorizontal: variant === 'text' ? space.s3 : space.s5,
+          paddingHorizontal: text ? space.s1 : space.s5,
+          alignSelf: text ? 'flex-start' : undefined,
+          overflow: 'hidden',
           paddingVertical: space.s3,
           flexDirection: 'row',
           alignItems: 'center',
@@ -92,16 +97,27 @@ export function Button({
         {icon ? <Icon name={icon} color={ink} /> : null}
         <AppText
           variant="button"
-          style={{ color: ink, flexShrink: 1, textAlign: 'center' }}
+          style={{
+            color: ink,
+            flexShrink: 1,
+            textAlign: 'center',
+            textDecorationLine: text ? 'underline' : 'none',
+          }}
         >
           {label}
         </AppText>
         {busy ? (
-          <ActivityIndicator
-            color={ink}
-            size="small"
+          <View
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants"
+            style={{
+              position: 'absolute',
+              left: space.s5,
+              right: space.s5,
+              bottom: space.s3 - 2,
+              height: 3,
+              backgroundColor: colors.accent,
+            }}
           />
         ) : null}
       </Touchable>

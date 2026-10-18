@@ -26,6 +26,30 @@ function sourceLine(product: LocalProductView): string {
   }
 }
 
+/** The product's name, or a generic one when the record has none. */
+export function productTitle(product: LocalProductView): string {
+  return (
+    product.name ??
+    (product.dataCredit === 'label_photo'
+      ? enGB.identity.labelOnlyName
+      : enGB.identity.nameMissing)
+  );
+}
+
+/**
+ * One quiet line: size and source. The ODbL credit names the source for
+ * barcode records, so it stands in for the source line there.
+ */
+export function productSummaryLine(product: LocalProductView): string {
+  return [
+    product.sizeText,
+    product.dataCredit === 'off' ? null : sourceLine(product),
+    product.dataCredit !== 'label_photo' ? enGB.identity.offCredit : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 /**
  * Component 09. Which pack this is and where the words came from, before any
  * grade. Open Food Facts results always show the ODbL credit on screen.
@@ -36,11 +60,7 @@ export function ProductIdentity({
   onInspectSource,
 }: ProductIdentityProps) {
   const colors = useColors();
-  const name =
-    product.name ??
-    (product.dataCredit === 'label_photo'
-      ? enGB.identity.labelOnlyName
-      : enGB.identity.nameMissing);
+  const name = productTitle(product);
   const meta = [product.sizeText, sourceLine(product)]
     .filter(Boolean)
     .join(' · ');
@@ -48,22 +68,13 @@ export function ProductIdentity({
   const largeText = PixelRatio.getFontScale() >= 1.5;
 
   if (density === 'summary') {
-    // One quiet line: size and source. The ODbL credit names the source
-    // for barcode records, so it stands in for the source line there.
-    const line = [
-      product.sizeText,
-      product.dataCredit === 'off' ? null : sourceLine(product),
-      showOffCredit ? enGB.identity.offCredit : null,
-    ]
-      .filter(Boolean)
-      .join(' · ');
     return (
       <View style={{ gap: space.s1 }}>
         <AppText variant="heading" heading>
           {name}
         </AppText>
         <AppText variant="bodySm" color="ink2">
-          {line}
+          {productSummaryLine(product)}
         </AppText>
       </View>
     );

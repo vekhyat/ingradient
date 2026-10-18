@@ -1,25 +1,27 @@
-import { Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
+import { IBMPlexMono_500Medium } from '@expo-google-fonts/ibm-plex-mono';
 import { MaterialSymbolsRounded_400Regular } from '@expo-google-fonts/material-symbols-rounded/400Regular';
 import { MaterialSymbolsRounded_400Regular_Filled } from '@expo-google-fonts/material-symbols-rounded/400Regular_Filled';
 import {
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-  PlusJakartaSans_800ExtraBold,
-} from '@expo-google-fonts/plus-jakarta-sans';
+  WorkSans_400Regular,
+  WorkSans_500Medium,
+  WorkSans_700Bold,
+  WorkSans_900Black,
+} from '@expo-google-fonts/work-sans';
 import { useFonts } from 'expo-font';
 
 /**
- * Fonts are bundled into the app (D45), not downloaded at runtime, so text
- * looks the same offline. Devanagari text uses the phone's own Noto fallback:
- * React Native cannot chain a second custom font per glyph.
+ * Fonts are bundled into the app, not downloaded at runtime, so text looks
+ * the same offline. Work Sans for words, IBM Plex Mono for figures and
+ * codes (the S1 nutrition-panel prototype). Devanagari text uses the phone's
+ * own Noto fallback: React Native cannot chain a second custom font per glyph.
  */
 export function useAppFonts(): { loaded: boolean; error: Error | null } {
   const [loaded, error] = useFonts({
-    PlusJakartaSans_600SemiBold,
-    PlusJakartaSans_700Bold,
-    PlusJakartaSans_800ExtraBold,
-    Inter_400Regular,
-    Inter_700Bold,
+    WorkSans_400Regular,
+    WorkSans_500Medium,
+    WorkSans_700Bold,
+    WorkSans_900Black,
+    IBMPlexMono_500Medium,
     MaterialSymbolsRounded_400Regular,
     MaterialSymbolsRounded_400Regular_Filled,
   });
