@@ -1,0 +1,10 @@
+DROP TRIGGER original_receipt ON learning.original_submission;
+DROP FUNCTION learning.original_receipt();
+DROP TRIGGER artifact_immutable ON learning.artifact;
+DROP FUNCTION learning.immutable_artifact_generation();
+DROP TRIGGER curated_immutable ON learning.curated_example;
+DROP TRIGGER original_immutable ON learning.original_submission;
+DROP FUNCTION learning.immutable_payload();
+DROP TRIGGER registry_immutable ON learning.record_registry;
+DROP FUNCTION learning.immutable_record();
+DROP FUNCTION learning.source_matches(jsonb,jsonb);

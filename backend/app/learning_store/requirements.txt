@@ -1,0 +1,2 @@
+# Optional isolated BE-13 writer/test driver; no deploy wiring.
+psycopg[binary]==3.3.3
