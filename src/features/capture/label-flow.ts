@@ -152,6 +152,10 @@ export class LabelFlow {
     }
     this.set({
       session: result.session,
+      corrections:
+        result.outcome.kind === 'filled'
+          ? withoutCorrections(this.state.corrections, result.outcome.panels)
+          : this.state.corrections,
       retake: result.outcome.kind === 'filled' ? null : this.state.retake,
     });
     return this.finishRead(token, result.outcome);
@@ -173,7 +177,10 @@ export class LabelFlow {
     for (const orphan of result.orphanedUris) {
       this.deps.deletePhoto(orphan);
     }
-    this.set({ session: result.session });
+    this.set({
+      session: result.session,
+      corrections: withoutCorrections(this.state.corrections, [panel]),
+    });
   }
 
   correctIngredient(id: string, correction: IngredientCorrection): void {
@@ -221,6 +228,21 @@ export class LabelFlow {
   isDirty(): boolean {
     return hasUnsavedLabelWork(this.state);
   }
+}
+
+/**
+ * Corrections belong to the reading they were made on. Ingredient ids are
+ * parser positions (m1, m2, ...), so a correction left over from a replaced
+ * panel would silently rewrite whatever the new photo has at that position.
+ */
+function withoutCorrections(
+  corrections: Corrections,
+  panels: readonly PanelName[],
+): Corrections {
+  return {
+    ingredients: panels.includes('ingredients') ? {} : corrections.ingredients,
+    nutrients: panels.includes('nutrition') ? {} : corrections.nutrients,
+  };
 }
 
 /**

@@ -170,6 +170,32 @@ describe('ingredients', () => {
       ['c', 3, 0],
     ]);
     expect(rows[0]?.kind).toEqual({ kind: 'read', origin: 'ocr' });
+
+    const rejected = toIngredientOccurrences({
+      ...snapshot,
+      panels: [
+        {
+          panel: 'ingredients',
+          state: 'uncertain',
+          imageId: null,
+          regionId: null,
+          issues: [
+            {
+              code: 'ingredient_unreadable',
+              stage: 'extraction',
+              field: 'ingredients.b',
+              message: 'You marked "sugar" as unreadable.',
+              action: 'retake',
+            },
+          ],
+        },
+      ],
+    });
+    expect(rejected.map((row) => row.kind.kind)).toEqual([
+      'read',
+      'uncertain',
+      'read',
+    ]);
   });
 });
 

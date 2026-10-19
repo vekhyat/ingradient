@@ -127,7 +127,9 @@ export function PanelReview({
                   detail={
                     item.kind.kind === 'corrected'
                       ? enGB.provenance.corrected
-                      : undefined
+                      : item.kind.kind === 'uncertain'
+                        ? enGB.review.cantReadDone
+                        : undefined
                   }
                   onEdit={() => onEditIngredient(item.occurrenceId)}
                 />

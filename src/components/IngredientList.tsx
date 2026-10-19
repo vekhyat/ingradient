@@ -84,7 +84,9 @@ export function IngredientList({
               accessibilityLabel={`${item.printedText}. ${matchLine(item)}${
                 item.kind.kind === 'corrected'
                   ? `. ${enGB.provenance.corrected}`
-                  : ''
+                  : item.kind.kind === 'uncertain'
+                    ? `. ${enGB.review.cantReadDone}`
+                    : ''
               }`}
               radius={radius.sm}
               onPress={() => onOpen(item.occurrenceId)}
@@ -100,12 +102,16 @@ export function IngredientList({
               <View style={{ flex: 1, gap: 2 }}>
                 <AppText>{item.printedText}</AppText>
                 {item.match === 'ambiguous' ||
-                item.kind.kind === 'corrected' ? (
+                item.kind.kind === 'corrected' ||
+                item.kind.kind === 'uncertain' ? (
                   <AppText variant="bodySm" color="ink2">
                     {[
                       item.match === 'ambiguous' ? matchLine(item) : null,
                       item.kind.kind === 'corrected'
                         ? enGB.provenance.corrected
+                        : null,
+                      item.kind.kind === 'uncertain'
+                        ? enGB.review.cantReadDone
                         : null,
                     ]
                       .filter(Boolean)

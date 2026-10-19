@@ -126,15 +126,27 @@ export function toIngredientOccurrences(
 ): IngredientOccurrence[] {
   const sources = sourceKindById(snapshot);
   const depthById = new Map<string, number>();
+  const unreadable = new Map<string, string>();
+  for (const panel of snapshot.panels) {
+    for (const issue of panel.issues) {
+      if (issue.code === 'ingredient_unreadable' && issue.field) {
+        unreadable.set(issue.field, issue.message);
+      }
+    }
+  }
   return snapshot.ingredients.map((mention: IngredientMention, index) => {
     const parentDepth =
       mention.parentId === null ? -1 : (depthById.get(mention.parentId) ?? -1);
     const depth = parentDepth + 1;
     depthById.set(mention.id, depth);
     const origin = originOf(mention.sourceIds, sources);
-    const kind: FactKind = hasCorrection(mention.sourceIds, sources)
-      ? { kind: 'corrected', origin: 'user_correction', previous: origin }
-      : { kind: 'read', origin };
+    const rejected = unreadable.get(`ingredients.${mention.id}`);
+    const kind: FactKind =
+      rejected !== undefined
+        ? { kind: 'uncertain', origin, cause: rejected }
+        : hasCorrection(mention.sourceIds, sources)
+          ? { kind: 'corrected', origin: 'user_correction', previous: origin }
+          : { kind: 'read', origin };
     return {
       occurrenceId: mention.id,
       packOrder: index + 1,

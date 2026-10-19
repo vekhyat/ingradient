@@ -3,7 +3,9 @@ import type {
   Issue,
   NutrientObservation,
   PanelRegion,
+  PresenceFact,
   ProductSnapshot,
+  ScoringFacts,
   SourceRef,
 } from '../../domain/contracts/generated/local';
 import {
@@ -140,8 +142,24 @@ export function buildLabelSnapshot({
     correctionRefs.set(title, id);
     return id;
   };
+  const unreadableIssues: Issue[] = [];
   ingredients = ingredients.map((mention) => {
     const fix = corrections.ingredients[mention.id];
+    if (fix?.kind === 'unreadable') {
+      // The printed text stays as evidence of what was rejected; the issue
+      // and the dropped identity say it cannot be relied on.
+      unreadableIssues.push(unreadableIngredientIssue(mention));
+      return {
+        ...mention,
+        canonicalId: null,
+        state: 'unresolved',
+        candidateIds: [],
+        sourceIds: [
+          correctionSource('You marked this as unreadable'),
+          ...mention.sourceIds,
+        ],
+      };
+    }
     if (!fix || fix.kind !== 'text' || fix.text.trim().length === 0) {
       return mention;
     }
@@ -155,6 +173,17 @@ export function buildLabelSnapshot({
       sourceIds: [fixId, ...mention.sourceIds],
     };
   });
+
+  if (unreadableIssues.length > 0) {
+    const panel =
+      ingredientsPanel ??
+      panelRegion('ingredients', 'uncertain', null, undefined, []);
+    ingredientsPanel = {
+      ...panel,
+      state: 'uncertain',
+      issues: [...panel.issues, ...unreadableIssues],
+    };
+  }
 
   // Nutrition.
   let observations: NutrientObservation[] = base ? [...base.observations] : [];
@@ -246,6 +275,15 @@ export function buildLabelSnapshot({
     nutritionPanel ?? panelRegion('nutrition', 'missing', null, undefined, []),
   );
 
+  const scoringFacts = base?.scoringFacts
+    ? keptScoringFacts(
+        base.scoringFacts,
+        new Set(sourceRefs.map((ref) => ref.id)),
+        session.ingredients.state === 'user_marked_absent' ||
+          session.ingredients.text !== null,
+      )
+    : undefined;
+
   return {
     id: base ? `${base.id}+label:${session.id}` : `label:${session.id}`,
     barcode: base?.barcode ?? session.barcode,
@@ -257,7 +295,66 @@ export function buildLabelSnapshot({
     ingredients,
     panels,
     category: base?.category ?? 'unknown',
+    ...(scoringFacts ? { scoringFacts } : {}),
     taxonomyVersion: DEFAULT_TAXONOMY_VERSION,
     evidenceVersion: base?.evidenceVersion ?? DEFAULT_EVIDENCE_VERSION,
   };
+}
+
+/** Marks one rejected reading; `field` names the mention it applies to. */
+function unreadableIngredientIssue(mention: IngredientMention): Issue {
+  return {
+    code: 'ingredient_unreadable',
+    stage: 'extraction',
+    field: `ingredients.${mention.id}`,
+    message: `You marked "${mention.text}" as unreadable.`,
+    action: 'retake',
+  };
+}
+
+const UNKNOWN_FACT: PresenceFact = { state: 'unknown' };
+
+/**
+ * The earlier record's scoring facts (ADR013) still describe the product
+ * when a label only adds panels: category, cheese, red meat and water come
+ * from its category tags, which the label does not change. A sweetener fact
+ * comes from that record's ingredient list, so it is not kept once the label
+ * replaces the list; a water absence it implied goes with it. Returns
+ * undefined when nothing known remains (omission means unknown).
+ */
+function keptScoringFacts(
+  facts: ScoringFacts,
+  sourceIds: ReadonlySet<string>,
+  ingredientsReplaced: boolean,
+): ScoringFacts | undefined {
+  const sourced = (fact: PresenceFact): PresenceFact =>
+    fact.state === 'unknown' || fact.sourceIds.every((id) => sourceIds.has(id))
+      ? fact
+      : UNKNOWN_FACT;
+  const sweetenerPresent = facts.nonNutritiveSweetener.state === 'present';
+  const kept: ScoringFacts = {
+    categorySourceIds: facts.categorySourceIds.every((id) => sourceIds.has(id))
+      ? [...facts.categorySourceIds]
+      : [],
+    cheese: sourced(facts.cheese),
+    redMeat: sourced(facts.redMeat),
+    plainWater:
+      ingredientsReplaced &&
+      sweetenerPresent &&
+      facts.plainWater.state === 'absent'
+        ? UNKNOWN_FACT
+        : sourced(facts.plainWater),
+    nonNutritiveSweetener: ingredientsReplaced
+      ? UNKNOWN_FACT
+      : sourced(facts.nonNutritiveSweetener),
+  };
+  const anything =
+    kept.categorySourceIds.length > 0 ||
+    [
+      kept.cheese,
+      kept.redMeat,
+      kept.plainWater,
+      kept.nonNutritiveSweetener,
+    ].some((fact) => fact.state !== 'unknown');
+  return anything ? kept : undefined;
 }

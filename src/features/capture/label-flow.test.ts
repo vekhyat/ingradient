@@ -338,3 +338,69 @@ describe('LabelFlow asynchronous capture', () => {
     expect(deletePhoto.mock.calls).toEqual([['unowned']]);
   });
 });
+
+describe('LabelFlow corrections on a retaken panel', () => {
+  const PEANUTS: OcrPage = {
+    blocks: [block('Ingredients: peanuts, sugar, salt.', 0)],
+  };
+  const NEW_TABLE: OcrPage = {
+    blocks: NUTRITION.blocks.map((item) =>
+      item.text === '12 g' ? block('30 g', 164, 190) : item,
+    ),
+  };
+
+  it('does not apply an old ingredient correction to the new photo', async () => {
+    const { flow, recognise } = harness();
+    await flow.addPhoto('combined');
+    const rice = flow
+      .buildSnapshot('2026-10-18T12:00:00Z')
+      ?.ingredients.find((m) => m.text === 'rice');
+    if (!rice) throw new Error('fixture has rice');
+    flow.correctIngredient(rice.id, { kind: 'text', text: 'oats' });
+    flow.setRetake('ingredients');
+    recognise.mockResolvedValueOnce(read(PEANUTS));
+    await flow.addPhoto('retake');
+    const texts = flow
+      .buildSnapshot('2026-10-18T12:00:00Z')
+      ?.ingredients.map((m) => m.text);
+    expect(texts).toEqual(['peanuts', 'sugar', 'salt']);
+    expect(flow.getState().corrections.ingredients).toEqual({});
+  });
+
+  it('reads the new nutrition value instead of the old correction', async () => {
+    const { flow, recognise } = harness();
+    await flow.addPhoto('combined');
+    flow.correctNutrient('sugars', {
+      kind: 'value',
+      value: 15,
+      unit: 'g',
+      basis: 'per_100_g',
+    });
+    flow.correctIngredient('m1', { kind: 'text', text: 'brown rice' });
+    flow.setRetake('nutrition');
+    recognise.mockResolvedValueOnce(read(NEW_TABLE));
+    await flow.addPhoto('retake');
+    const snapshot = flow.buildSnapshot('2026-10-18T12:00:00Z');
+    expect(snapshot?.observations).toContainEqual(
+      expect.objectContaining({ field: 'sugars', kind: 'read', value: 30 }),
+    );
+    // The panel that was not retaken keeps its correction.
+    expect(snapshot?.ingredients[0]?.text).toBe('brown rice');
+  });
+
+  it('drops corrections for a panel marked as not on the pack', async () => {
+    const { flow } = harness();
+    await flow.addPhoto('combined');
+    flow.correctNutrient('sugars', {
+      kind: 'value',
+      value: 15,
+      unit: 'g',
+      basis: 'per_100_g',
+    });
+    flow.markAbsent('nutrition');
+    const snapshot = flow.buildSnapshot('2026-10-18T12:00:00Z');
+    expect(
+      snapshot?.observations.find((o) => o.field === 'sugars'),
+    ).toMatchObject({ kind: 'missing' });
+  });
+});

@@ -68,6 +68,8 @@ export default function IngredientDetailScreen() {
           />
           {item.kind.kind === 'corrected' ? (
             <AppText color="ink2">{enGB.provenance.corrected}</AppText>
+          ) : item.kind.kind === 'uncertain' ? (
+            <AppText color="ink2">{item.kind.cause}</AppText>
           ) : null}
         </Card>
       ) : (

@@ -1,6 +1,11 @@
 import { describe, expect, it } from '@jest/globals';
 
+import type {
+  PresenceFact,
+  ProductSnapshot,
+} from '../../domain/contracts/generated/local';
 import { localValidators } from '../../domain/contracts/generated/validate-local';
+import { replayScientificSnapshot } from '../../domain/pipeline/replay-scientific-snapshot';
 import { splitLabelPanels } from './label-panels';
 import {
   applyPhoto,
@@ -329,6 +334,131 @@ describe('buildLabelSnapshot', () => {
     );
     expect(new Set(snapshot.sourceRefs.map((ref) => ref.id)).size).toBe(
       snapshot.sourceRefs.length,
+    );
+  });
+});
+
+describe('buildLabelSnapshot with an earlier record', () => {
+  const OFF_SOURCE = 'src-0';
+  const known: PresenceFact = { state: 'absent', sourceIds: [OFF_SOURCE] };
+
+  /** An Open Food Facts record with a sourced category and no table. */
+  function offRecord(nonNutritiveSweetener: PresenceFact): ProductSnapshot {
+    const empty = buildLabelSnapshot({
+      session: createLabelSession('b', '8901234567890'),
+      corrections: NO_CORRECTIONS,
+      capturedAt: '2026-10-16T09:00:00.000Z',
+      base: null,
+    });
+    return {
+      ...empty,
+      id: 'off:8901234567890',
+      sourceRefs: [
+        { id: OFF_SOURCE, kind: 'off', title: 'Open Food Facts product' },
+      ],
+      category: 'general',
+      scoringFacts: {
+        categorySourceIds: [OFF_SOURCE],
+        cheese: known,
+        redMeat: known,
+        plainWater: { state: 'unknown' },
+        nonNutritiveSweetener,
+      },
+    };
+  }
+
+  it('keeps the record scoring facts when the label adds the table', () => {
+    const base = offRecord(known);
+    const start = createLabelSession('s1', base.barcode, { ingredients: true });
+    const { session } = applyPhoto(
+      start,
+      { imageId: 'n', uri: 'file:///n.jpg' },
+      splitLabelPanels({ blocks: NUTRITION }),
+      null,
+    );
+    const snapshot = buildLabelSnapshot({
+      session,
+      corrections: NO_CORRECTIONS,
+      capturedAt: '2026-10-16T10:00:00.000Z',
+      base,
+    });
+    expect(localValidators.ProductSnapshot(snapshot)).toBe(true);
+    expect(snapshot.scoringFacts).toEqual(base.scoringFacts);
+    expect(replayScientificSnapshot(snapshot).issues).not.toContainEqual(
+      expect.objectContaining({ code: 'missing_category_provenance' }),
+    );
+  });
+
+  it('drops a sweetener fact taken from an ingredient list the label replaced', () => {
+    const base = offRecord({ state: 'present', sourceIds: [OFF_SOURCE] });
+    const facts = base.scoringFacts;
+    if (!facts) throw new Error('fixture has facts');
+    const { session } = applyPhoto(
+      createLabelSession('s1', base.barcode),
+      { imageId: 'both', uri: 'file:///both.jpg' },
+      splitLabelPanels(COMBINED),
+      null,
+    );
+    const snapshot = buildLabelSnapshot({
+      session,
+      corrections: NO_CORRECTIONS,
+      capturedAt: '2026-10-16T10:00:00.000Z',
+      base: { ...base, scoringFacts: { ...facts, plainWater: known } },
+    });
+    expect(localValidators.ProductSnapshot(snapshot)).toBe(true);
+    expect(snapshot.scoringFacts).toEqual({
+      categorySourceIds: [OFF_SOURCE],
+      cheese: known,
+      redMeat: known,
+      plainWater: { state: 'unknown' },
+      nonNutritiveSweetener: { state: 'unknown' },
+    });
+  });
+});
+
+describe("ingredient Can't read", () => {
+  const session = applyPhoto(
+    createLabelSession('s1', null),
+    { imageId: 'p1', uri: 'file:///p1.jpg' },
+    splitLabelPanels(COMBINED),
+    null,
+  ).session;
+
+  it('marks the rejected reading as uncertain, not as read', () => {
+    const first = buildLabelSnapshot({
+      session,
+      corrections: NO_CORRECTIONS,
+      capturedAt: '2026-10-16T10:00:00.000Z',
+      base: null,
+    });
+    const target = first.ingredients.find((m) => m.text === 'sugar');
+    if (!target) throw new Error('fixture has sugar');
+    const snapshot = buildLabelSnapshot({
+      session,
+      corrections: {
+        ingredients: { [target.id]: { kind: 'unreadable' } },
+        nutrients: {},
+      },
+      capturedAt: '2026-10-16T10:00:00.000Z',
+      base: null,
+    });
+    expect(localValidators.ProductSnapshot(snapshot)).toBe(true);
+    const mention = snapshot.ingredients.find((m) => m.id === target.id);
+    expect(mention).toMatchObject({
+      canonicalId: null,
+      state: 'unresolved',
+      candidateIds: [],
+    });
+    expect(
+      snapshot.sourceRefs.find((ref) => ref.id === mention?.sourceIds[0]),
+    ).toMatchObject({ kind: 'user_correction' });
+    const panel = snapshot.panels.find((p) => p.panel === 'ingredients');
+    expect(panel?.state).toBe('uncertain');
+    expect(panel?.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'ingredient_unreadable',
+        field: `ingredients.${target.id}`,
+      }),
     );
   });
 });
