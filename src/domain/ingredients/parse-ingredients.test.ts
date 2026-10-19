@@ -88,6 +88,33 @@ function assertSpans(input: string): void {
 
 describe('parseIngredients', () => {
   it.each([
+    'E150(q)',
+    'E160a(i)(q)',
+    'E150(q7)',
+    'INS 150 (q)',
+    'E150[q]',
+    '150(q)',
+  ])('keeps unsupported code suffixes attached in %s', (text) => {
+    expect(names(text)).toEqual([text]);
+    expect(codes(text)).toEqual([]);
+    expect(codes(`Colour (${text})`)).toEqual([]);
+    assertSpans(text);
+  });
+
+  it.each([
+    ['E150', 'caramel'],
+    ['E322', 'soy'],
+  ])('keeps word groups as children after %s', (code, child) => {
+    const result = parsed(`${code} (${child})`);
+    expect(result.mentions.map((mention) => mention.name)).toEqual([
+      code,
+      child,
+    ]);
+    expect(result.mentions[1]?.parentId).toBe(result.mentions[0]?.id);
+    expect(codes(`${code} (${child})`)).toEqual([code.slice(1)]);
+  });
+
+  it.each([
     ['< 2%', 'maximum'],
     ['<= 2%', 'maximum'],
     ['\u2264 2%', 'maximum'],

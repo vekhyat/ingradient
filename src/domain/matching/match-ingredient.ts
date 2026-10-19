@@ -40,10 +40,16 @@ export function matchIngredient(
     if (!code[1] && !additiveContext) return unresolved();
     const number = code[2];
     if (number === undefined) return unresolved();
-    candidates = additives[`e${number.replace(/\s+/g, '')}`] ?? [];
+    const additiveKey = `e${number.replace(/\s+/g, '')}`;
+    candidates = Object.hasOwn(additives, additiveKey)
+      ? (additives[additiveKey] ?? [])
+      : [];
   } else {
     candidates = [
-      ...new Set([...(ingredients[key] ?? []), ...(additives[key] ?? [])]),
+      ...new Set([
+        ...(Object.hasOwn(ingredients, key) ? (ingredients[key] ?? []) : []),
+        ...(Object.hasOwn(additives, key) ? (additives[key] ?? []) : []),
+      ]),
     ].sort();
     // Source names such as "1% fat milk" stay valid exact aliases. Only an
     // unmatched code-like spelling is barred from fuzzy code degradation.

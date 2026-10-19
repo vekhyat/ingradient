@@ -228,6 +228,13 @@ function rejected(text: string, hit: RawHit, classContext: boolean): boolean {
     return true;
   }
   const after = text.slice(hit.normEnd);
+  if (
+    /^\s*(?:\(\s*[a-z0-9]{1,2}\s*\)|\[\s*[a-z0-9]{1,2}\s*\]|\{\s*[a-z0-9]{1,2}\s*\})/i.test(
+      after,
+    )
+  ) {
+    return true;
+  }
   if (/^\s*%/.test(after) || UNIT_AFTER.test(after) || /^[.,]\d/.test(after)) {
     return true;
   }

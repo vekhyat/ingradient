@@ -8,6 +8,17 @@ import {
 } from './index';
 
 describe('source-backed exact matching', () => {
+  it.each(['constructor', '__proto__', 'toString', 'hasOwnProperty'])(
+    'treats inherited object property %s as unresolved',
+    (text) => {
+      expect(matchIngredient(text)).toEqual({
+        state: 'unresolved',
+        canonicalId: null,
+        candidateIds: [],
+      });
+    },
+  );
+
   it.each([
     ['E100', 'en:e100'],
     ['E 100', 'en:e100'],
@@ -77,6 +88,20 @@ describe('parsed mention matching', () => {
     sourceIds: ['label-1'],
     taxonomyVersion: MATCH_TAXONOMY_VERSION,
   };
+  it.each(['E150(q)', 'E160a(i)(q)'])(
+    'does not match a truncated identity from %s',
+    (text) => {
+      const result = matchIngredientMentions(parseIngredients(text), context);
+      expect(result.mentions).toHaveLength(1);
+      expect(result.mentions[0]).toMatchObject({
+        text,
+        state: 'unresolved',
+        canonicalId: null,
+        candidateIds: [],
+      });
+    },
+  );
+
   it('keeps original source/nesting and separates may contain', () => {
     const result = matchIngredientMentions(
       parseIngredients('salt, sauce(sugar). May contain: milk'),

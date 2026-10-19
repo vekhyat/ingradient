@@ -195,6 +195,18 @@ def test_nested_ingredients_preserve_order_and_parents(
     assert all(m.sourceIds == ["src-0"] for m in mentions)
 
 
+@pytest.mark.parametrize("text", ["E150(q)", "E160a(i)(q)"])
+def test_malformed_code_suffixes_remain_unresolved(
+    text: str, resources: AnalysisResources
+) -> None:
+    mentions, issues = parse_ingredients(text, "complete", ["src-0"], resources)
+    assert [i.code for i in issues] == ["ingredient_identity_unresolved"]
+    assert len(mentions) == 1
+    assert mentions[0].text == text
+    assert mentions[0].state == "unresolved"
+    assert mentions[0].canonicalId is None
+
+
 @pytest.mark.parametrize(
     "text",
     [

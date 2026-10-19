@@ -418,22 +418,15 @@ function isRomanSuffixGroup(text: string, group: Range): boolean {
   return /^[ivxlcdmIVXLCDM]+$/.test(inner);
 }
 
-/** `(a)` after a 3–4 digit code is an INS letter, not a child ingredient. */
-function isInsLetterSuffixGroup(text: string, group: Range): boolean {
+/** Short code suffixes stay attached even when their identity is unsupported. */
+function isCodeSuffixGroup(text: string, start: number, group: Range): boolean {
   const inner = text.slice(group.start + 1, group.end - 1).trim();
-  if (!/^[a-fA-F]$/.test(inner)) {
+  if (!/^[a-z0-9]{1,2}$/i.test(inner)) {
     return false;
   }
-  let cursor = group.start - 1;
-  while (cursor >= 0 && isSpace(text.charAt(cursor))) {
-    cursor -= 1;
-  }
-  const digitEnd = cursor + 1;
-  while (cursor >= 0 && isDigit(text.charAt(cursor))) {
-    cursor -= 1;
-  }
-  const digits = digitEnd - (cursor + 1);
-  return digits >= 3 && digits <= 4;
+  return /(?:^|[^a-z0-9])(?:(?:e|i\.?\s*n\.?\s*s\.?)[\s.\-]*)?\d{3,4}[a-f]?(?:\s*(?:\(\s*[a-z0-9]+\s*\)|\[\s*[a-z0-9]+\s*\]|\{\s*[a-z0-9]+\s*\}))*\s*$/i.test(
+    text.slice(start, group.start),
+  );
 }
 
 function classColonIntroduces(
@@ -845,7 +838,7 @@ function appendItem(
         percentGroups.push(group);
       } else if (
         !isRomanSuffixGroup(ctx.text, group) &&
-        !isInsLetterSuffixGroup(ctx.text, group)
+        !isCodeSuffixGroup(ctx.text, item.start, group)
       ) {
         childGroups.push(group);
       }
