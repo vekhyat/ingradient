@@ -1,5 +1,6 @@
 import { Redirect, useRouter } from 'expo-router';
 
+import { devToolsEnabled } from '../dev/flags';
 import { Playground } from '../dev/Playground';
 import { ScreenFrame } from '../features/app/ScreenFrame';
 import { Button } from '../components/Button';
@@ -7,13 +8,13 @@ import { getLocalScenario } from '../fixtures/scenarios';
 import { useServices } from '../features/app/services';
 
 /**
- * FE-03 playground route. Production builds redirect away, so fixtures can
- * never appear to a real user.
+ * FE-03 playground route. Builds without dev tools redirect away, so
+ * fixtures can never appear to a real user.
  */
 export default function DevRoute() {
   const router = useRouter();
   const { scan, label } = useServices();
-  if (!__DEV__) {
+  if (!devToolsEnabled) {
     return <Redirect href="/" />;
   }
   return (
@@ -44,11 +45,13 @@ export default function DevRoute() {
           else router.replace('/');
         }}
       />
-      <Button
-        label="OCR development evaluation"
-        variant="outline"
-        onPress={() => router.push('/dev-ocr')}
-      />
+      {__DEV__ ? (
+        <Button
+          label="OCR development evaluation"
+          variant="outline"
+          onPress={() => router.push('/dev-ocr')}
+        />
+      ) : null}
       <Playground />
     </ScreenFrame>
   );

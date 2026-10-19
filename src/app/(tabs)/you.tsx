@@ -8,6 +8,7 @@ import { Button } from '../../components/Button';
 import { LocalDataControls } from '../../components/LocalDataControls';
 import { Sheet } from '../../components/Sheet';
 import { enGB } from '../../copy/en-GB';
+import { devToolsEnabled } from '../../dev/flags';
 import { useServices } from '../../features/app/services';
 import { useColors } from '../../theme/ThemeProvider';
 import { space } from '../../theme/tokens';
@@ -81,7 +82,7 @@ export default function YouTab() {
         onOpenPrivacy={() => router.push('/privacy')}
         onOpenMethod={() => router.push('/about-method')}
       />
-      {__DEV__ ? (
+      {devToolsEnabled ? (
         <Button
           label="Developer playground"
           variant="text"
