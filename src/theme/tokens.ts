@@ -144,11 +144,12 @@ export const size = {
   navBar: 64,
   navIndicatorWidth: 64,
   navIndicatorHeight: 32,
-  /** Grade stamps: Result head, list rows, compact. */
+  /** Grade stamps: Result headline, large, list rows, compact. */
+  badgeXl: 64,
   badgeLg: 56,
   badgeMd: 40,
   badgeSm: 28,
-  /** The heavy black rule under the product head. */
+  /** The heavy black rule that closes the Result grade section. */
   rule: 8,
   badgeRing: 2,
   focusStroke: 2,

@@ -209,6 +209,17 @@ describe('actual result route with real phone analysis and session', () => {
     expect(mockScan.getResult(key)?.savedId).toBeNull();
   });
 
+  it('leads with the scientific product grade and its top reason while the profile changes nothing (ADR 015)', async () => {
+    const key = await analyse();
+    await show(key);
+    const reason = mockScan.getResult(key)?.assessment.scientific.reasons[0];
+    if (!reason) throw new Error('Canonical grade must have a reviewed reason');
+    expect(text()).toContain(enGB.assessment.scientificGrade);
+    expect(text()).toContain(reason.text);
+    expect(text()).toContain(enGB.assessment.scaleHint);
+    expect(text()).not.toMatch(/for you|personalised/i);
+  });
+
   it('renders a named refusal without a grade and offers adding the missing nutrition panel', async () => {
     const input = supportedSnapshot();
     input.observations = [];
@@ -254,8 +265,10 @@ describe('actual result route with real phone analysis and session', () => {
     if (!reason || !citation)
       throw new Error('Canonical grade must have a reviewed cited reason');
     expect(text()).not.toContain(citation.title);
-    await press(enGB.common.show);
+    const count = assessment?.scientific.reasons.length ?? 0;
+    await press(enGB.assessment.seeReasons(count));
     expect(text()).toContain(reason.text);
+    expect(text()).toContain(enGB.assessment.methodLabel.toUpperCase());
     await press(enGB.reasons.openSource(citation.title));
     expect(mockRouter.push).toHaveBeenCalledWith({
       pathname: '/reason/[key]/[reasonId]',

@@ -55,15 +55,7 @@ export const enGB = {
   },
 
   grade: {
-    name: (letter: string) => `Product grade ${letter}`,
-  },
-
-  forYou: {
-    title: 'For you',
-    gradeName: (letter: string) => `Grade ${letter} for you`,
-    sameAsProduct: 'Same as the product',
-    productAlone:
-      'Based on the product alone. Allergy settings are coming soon.',
+    name: (letter: string) => `Scientific product grade ${letter}`,
   },
 
   provenance: {
@@ -92,7 +84,12 @@ export const enGB = {
   },
 
   assessment: {
-    productGrade: 'Product grade',
+    scientificGrade: 'Scientific product grade',
+    scaleHint: 'A is best, E is worst.',
+    seeReasons: (count: number) =>
+      count === 1 ? 'See the reason' : `See all ${count} reasons`,
+    hideReasons: 'Hide the reasons',
+    reasonCount: (count: number) => pluralise(count, 'reason', 'reasons'),
     methodLabel: 'Nutrition grade · European reference',
     noGrade: 'No product grade',
     nutritionGrade: 'Nutrition grade',
@@ -151,6 +148,7 @@ export const enGB = {
       count === 1 ? '1 additive' : `${count} additives`,
     noAdditives: 'No additives listed',
     unknownAdditive: 'Unknown additive',
+    fromLabel: 'From the label',
     contains: 'Contains',
     mayContain: 'May contain',
     declared: 'Amounts on the pack',

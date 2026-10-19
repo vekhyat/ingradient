@@ -333,6 +333,8 @@ export function Playground() {
               updateOffer={null}
               onOpenUpdate={() => undefined}
               onOpenMethod={() => undefined}
+              reasonCount={view.reasons.length}
+              motion="still"
             />
           </View>
         ))}
@@ -354,6 +356,8 @@ export function Playground() {
           }}
           onOpenUpdate={() => undefined}
           onOpenMethod={() => undefined}
+          reasonCount={0}
+          motion="still"
         />
       </Section>
 

@@ -19,6 +19,7 @@ import { ResultHead } from '../../components/ResultHead';
 import { enGB } from '../../copy/en-GB';
 import { DockItem, ScreenFrame } from '../../features/app/ScreenFrame';
 import { useServices } from '../../features/app/services';
+import { DeclaredAllergens } from '../../features/result/DeclaredAllergens';
 import { LabelFactsCard } from '../../features/result/LabelFactsCard';
 import { NutritionTable } from '../../features/result/NutritionTable';
 import { useResult } from '../../features/result/useResult';
@@ -51,11 +52,12 @@ function Reveal({
 }
 
 /**
- * U08 Result: the product head with its For you stamp, For you, then the
- * product grade band that opens to its cited reasons. Ingredients follow;
- * label facts and nutrition expand in place. Missing inputs
- * still produce a named gap, never a guessed letter (D131). The v18 reveal
- * plays once per new result (D58).
+ * U08 Result: the product head, then the scientific product grade as the
+ * headline with its top reason (ADR 015), closed by the heavy rule. The
+ * allergens the pack declares and the ingredients follow; label facts and
+ * nutrition expand in place. Missing inputs still produce a named gap,
+ * never a guessed letter (D131). The v18 reveal plays once per new result
+ * (D58).
  * Saving says "Saved on this phone" only after the encrypted store confirms.
  */
 export default function ResultScreen() {
@@ -165,13 +167,6 @@ export default function ResultScreen() {
       pathname: '/method/[key]',
       params: { key: view.resultKey },
     });
-  // S1 has no profile, so For you is the product alone (ADR 002). When the
-  // app cannot assess the user's needs, there is no letter at all.
-  const forYouLetter =
-    view.science.status === 'supported' &&
-    view.personal.status !== 'unavailable'
-      ? view.science.letter
-      : null;
   let section = 0;
 
   return (
@@ -223,8 +218,6 @@ export default function ResultScreen() {
         <ResultHead
           title={productTitle(view.product)}
           meta={productSummaryLine(view.product)}
-          letter={forYouLetter}
-          motion={motion}
         />
       </Reveal>
 
@@ -247,11 +240,16 @@ export default function ResultScreen() {
           }
           onOpenUpdate={openUpdate}
           onOpenMethod={openMethod}
+          motion={motion}
+          reasonCount={reasons.length}
+          onAddNutrition={
+            needsNutrition && stored.origin === 'new' ? addNutrition : undefined
+          }
           evidence={
             reasons.length > 0 ? (
               <View style={{ gap: space.s1 }}>
-                <AppText variant="label" color="ink3">
-                  {enGB.reasons.title}
+                <AppText variant="code" color="ink3">
+                  {enGB.assessment.methodLabel.toUpperCase()}
                 </AppText>
                 {reasons.map((reason) => (
                   <EvidenceReason
@@ -281,23 +279,10 @@ export default function ResultScreen() {
       </Reveal>
 
       {facts && (facts.contains.length > 0 || facts.mayContain.length > 0) ? (
-        <View style={{ gap: space.s2 }}>
-          {facts.contains.length > 0 ? (
-            <AppText variant="subhead">{`${enGB.facts.contains}: ${facts.contains.join(', ')}`}</AppText>
-          ) : null}
-          {facts.mayContain.length > 0 ? (
-            <AppText variant="subhead">{`${enGB.facts.mayContain}: ${facts.mayContain.join(', ')}`}</AppText>
-          ) : null}
-        </View>
-      ) : null}
-
-      {needsNutrition && stored.origin === 'new' ? (
         <Reveal progress={reveal.progress} index={section++}>
-          <Button
-            label={enGB.addNutrition.action}
-            variant="outline"
-            icon="photo_camera"
-            onPress={addNutrition}
+          <DeclaredAllergens
+            contains={facts.contains}
+            mayContain={facts.mayContain}
           />
         </Reveal>
       ) : null}

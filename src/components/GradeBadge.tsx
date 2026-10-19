@@ -18,9 +18,9 @@ import type { Letter } from '../view-models/types';
 export interface GradeBadgeProps {
   letter: Letter;
   role: 'scientific' | 'personal';
-  size: 'lg' | 'md' | 'sm';
+  size: 'xl' | 'lg' | 'md' | 'sm';
   motion: RevealMotion;
-  /** Set false when the parent row already speaks "Product grade C". */
+  /** Set false when the parent row already speaks "Scientific product grade C". */
   speak?: boolean;
   /** A slight inked-stamp tilt; used for the headline grade on Result. */
   tilt?: boolean;
@@ -33,12 +33,14 @@ export interface GradeBadgeHandle {
 }
 
 const GLYPH = {
+  xl: { ...type.gradeLetter, fontSize: 38, lineHeight: 42 },
   lg: { ...type.gradeLetter, fontSize: 34, lineHeight: 38 },
   md: { ...type.gradeLetter, fontSize: 24, lineHeight: 28 },
   sm: { ...type.gradeLetter, fontSize: 16, lineHeight: 20 },
 } as const;
 
 const MIN = {
+  xl: sizes.badgeXl,
   lg: sizes.badgeLg,
   md: sizes.badgeMd,
   sm: sizes.badgeSm,
