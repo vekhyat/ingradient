@@ -1,4 +1,5 @@
 import type {
+  IngredientMention,
   Issue,
   NutrientObservation,
   PresenceFact,
@@ -156,7 +157,14 @@ export function buildAnalyzeRequest(
   }
 
   const panel = snapshot.panels.find((item) => item.panel === 'ingredients');
-  const text = panel?.text?.trim() ?? '';
+  // The server parses this text itself and its ingredient list becomes the
+  // result's, so a corrected list is sent as corrected, not as photographed.
+  const corrected = snapshot.ingredients.some((mention) =>
+    mention.sourceIds.some((id) => byId.get(id)?.kind === 'user_correction'),
+  );
+  const text = (
+    corrected ? correctedIngredientsText(snapshot, panel) : (panel?.text ?? '')
+  ).trim();
   const hasText =
     text.length > 0 &&
     (panel?.state === 'read' || panel?.state === 'uncertain');
@@ -228,18 +236,71 @@ export function buildAnalyzeRequest(
   return { ok: true, body, request };
 }
 
+/**
+ * The phone's reviewed ingredient list as label text: siblings joined by
+ * commas, sub-ingredients in brackets. A reading the user marked unreadable
+ * is left out and its sub-ingredients take its place.
+ */
+function correctedIngredientsText(
+  snapshot: ProductSnapshot,
+  panel: ProductSnapshot['panels'][number] | undefined,
+): string {
+  const rejected = new Set(
+    (panel?.issues ?? []).flatMap((issue) =>
+      issue.code === 'ingredient_unreadable' &&
+      issue.field?.startsWith('ingredients.')
+        ? [issue.field.slice('ingredients.'.length)]
+        : [],
+    ),
+  );
+  const ids = new Set(snapshot.ingredients.map((mention) => mention.id));
+  const children = new Map<string | null, IngredientMention[]>();
+  for (const mention of snapshot.ingredients) {
+    const parent =
+      mention.parentId !== null && ids.has(mention.parentId)
+        ? mention.parentId
+        : null;
+    children.set(parent, [...(children.get(parent) ?? []), mention]);
+  }
+  const seen = new Set<string>();
+  const render = (parent: string | null): string[] =>
+    (children.get(parent) ?? []).flatMap((mention) => {
+      if (seen.has(mention.id)) {
+        return [];
+      }
+      seen.add(mention.id);
+      const inner = render(mention.id);
+      if (rejected.has(mention.id)) {
+        return inner;
+      }
+      return [
+        inner.length > 0
+          ? `${mention.text} (${inner.join(', ')})`
+          : mention.text,
+      ];
+    });
+  return render(null).join(', ');
+}
+
 function toWireObservation(
   observation: NutrientObservation,
   mapIds: (ids: readonly string[]) => string[],
   nonEmpty: (ids: string[]) => [string, ...string[]] | null,
 ): ProductInputObservation | null {
+  const issues = observation.issues.flatMap(wireIssue);
+  if (
+    (observation.kind === 'read' || observation.kind === 'corrected') &&
+    issues.length !== observation.issues.length
+  ) {
+    return null;
+  }
   switch (observation.kind) {
     case 'missing':
       return {
         field: observation.field,
         kind: 'missing',
         reason: observation.reason,
-        issues: [],
+        issues,
       };
     case 'estimated':
       // Model estimates are not label facts; the server never receives them.
@@ -262,11 +323,11 @@ function toWireObservation(
         value: observation.value,
       };
       if (observation.kind === 'read') {
-        return { ...common, kind: 'read', issues: [] };
+        return { ...common, kind: 'read', issues };
       }
       if (observation.kind === 'uncertain') {
         // The wire requires at least one issue saying why it is uncertain.
-        const [first, ...rest] = observation.issues.flatMap(wireIssue);
+        const [first, ...rest] = issues;
         return first
           ? { ...common, kind: 'uncertain', issues: [first, ...rest] }
           : null;
@@ -276,7 +337,7 @@ function toWireObservation(
         ? {
             ...common,
             kind: 'corrected',
-            issues: [],
+            issues,
             previousSourceIds: previous,
           }
         : null;

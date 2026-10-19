@@ -6,9 +6,15 @@ import { load } from 'js-yaml';
 import { join } from 'path';
 
 import type {
+  Issue,
   NutrientObservation,
   ProductSnapshot,
 } from '../contracts/generated/local';
+import {
+  NO_CORRECTIONS,
+  buildLabelSnapshot,
+  type Corrections,
+} from '../../features/capture/label-snapshot';
 import { getLocalScenario } from '../../fixtures/scenarios';
 import {
   ANALYSIS_FALLBACK_START_MS,
@@ -32,6 +38,69 @@ function build(snapshot: ProductSnapshot) {
 }
 
 describe('buildAnalyzeRequest (HYB-01 case 1)', () => {
+  const extractionIssue: Issue = {
+    code: 'ocr_confidence_low',
+    stage: 'extraction',
+    field: 'energy',
+    message: 'The printed value needs review.',
+    action: 'edit',
+  };
+
+  it.each(['read', 'corrected', 'uncertain', 'missing'] as const)(
+    'preserves extraction issues on %s observations',
+    (kind) => {
+      const [first] = base.observations;
+      if (!first || first.kind !== 'read') {
+        throw new Error('fixture needs a read observation');
+      }
+      const observation: NutrientObservation =
+        kind === 'missing'
+          ? {
+              field: first.field,
+              kind,
+              reason: 'unreadable',
+              issues: [extractionIssue],
+            }
+          : kind === 'corrected'
+            ? {
+                ...first,
+                kind,
+                previousSourceIds: first.sourceIds,
+                issues: [extractionIssue],
+              }
+            : { ...first, kind, issues: [extractionIssue] };
+      const sent = build({ ...base, observations: [observation] }).request
+        .product.observations;
+      expect(sent).toHaveLength(1);
+      expect(sent[0]).toMatchObject({ kind, issues: [extractionIssue] });
+    },
+  );
+
+  it.each(['read', 'corrected'] as const)(
+    'omits %s observations when any issue cannot travel',
+    (kind) => {
+      const [first] = base.observations;
+      if (!first || first.kind !== 'read') {
+        throw new Error('fixture needs a read observation');
+      }
+      for (const stage of ['personal', 'storage'] as const) {
+        for (const issues of [
+          [{ ...extractionIssue, stage }],
+          [extractionIssue, { ...extractionIssue, stage }],
+        ]) {
+          const observation: NutrientObservation =
+            kind === 'corrected'
+              ? { ...first, kind, previousSourceIds: first.sourceIds, issues }
+              : { ...first, kind, issues };
+          expect(
+            build({ ...base, observations: [observation] }).request.product
+              .observations,
+          ).toEqual([]);
+        }
+      }
+    },
+  );
+
   it('builds a schema-valid, product-only body', () => {
     const built = build(base);
     const parsed = JSON.parse(built.body) as Record<string, unknown>;
@@ -266,5 +335,63 @@ describe('frozen contract drift', () => {
     expect(bytesToHex(sha256(new Uint8Array(bytes)))).toBe(
       resources.methodBundleSha256,
     );
+  });
+});
+
+describe('corrected ingredients', () => {
+  const labelSnapshot = (corrections: Corrections) =>
+    buildLabelSnapshot({
+      session: {
+        id: 's1',
+        barcode: null,
+        photos: [],
+        ingredients: {
+          state: 'read',
+          imageId: 'p1',
+          text: 'Ingredients: chocolate (sugar, cocoa), rice, salt.',
+        },
+        nutrition: { state: 'missing', imageId: null, fragments: [] },
+      },
+      corrections,
+      capturedAt: '2026-10-20T10:00:00.000Z',
+      base: null,
+    });
+  const idOf = (snapshot: ProductSnapshot, text: string) => {
+    const id = snapshot.ingredients.find((m) => m.text === text)?.id;
+    if (!id) throw new Error(`fixture has ${text}`);
+    return id;
+  };
+
+  it('sends the photographed text when nothing was corrected', () => {
+    const product = build(labelSnapshot(NO_CORRECTIONS)).request.product;
+    expect(product.ingredientsText).toBe(
+      'Ingredients: chocolate (sugar, cocoa), rice, salt.',
+    );
+    expect(product.ingredientsStatus).toBe('complete');
+  });
+
+  it('sends the reviewed list, without unreadable readings', () => {
+    const plain = labelSnapshot(NO_CORRECTIONS);
+    const snapshot = labelSnapshot({
+      ingredients: {
+        [idOf(plain, 'rice')]: { kind: 'text', text: 'oats' },
+        [idOf(plain, 'salt')]: { kind: 'unreadable' },
+      },
+      nutrients: {},
+    });
+    const product = build(snapshot).request.product;
+    expect(product.ingredientsText).toBe('chocolate (sugar, cocoa), oats');
+    expect(product.ingredientsStatus).toBe('partial');
+  });
+
+  it('keeps sub-ingredients of an unreadable parent', () => {
+    const plain = labelSnapshot(NO_CORRECTIONS);
+    const product = build(
+      labelSnapshot({
+        ingredients: { [idOf(plain, 'chocolate')]: { kind: 'unreadable' } },
+        nutrients: {},
+      }),
+    ).request.product;
+    expect(product.ingredientsText).toBe('sugar, cocoa, rice, salt');
   });
 });

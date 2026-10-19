@@ -75,6 +75,34 @@ def test_current_contract_request_gets_an_honest_gap(
     assert result.product.evidenceVersion == resources.evidence_version
 
 
+@pytest.mark.parametrize("kind", ["read", "corrected"])
+def test_flagged_observations_cannot_support_a_grade(
+    kind: str, resources: AnalysisResources
+) -> None:
+    payload = request_payload(resources, adr013=True)
+    observation = payload["product"]["observations"][0]
+    observation["kind"] = kind
+    observation["issues"] = [
+        dict(
+            code="ocr_confidence_low",
+            stage="extraction",
+            field=observation["field"],
+            message="The printed value needs review.",
+            action="edit",
+        )
+    ]
+    if kind == "corrected":
+        observation["previousSourceIds"] = ["src-0"]
+    result = ReferenceAnalysisService(resources).assess(
+        AnalyzeRequest.model_validate(payload), input_digest="0" * 64
+    )
+    assert result.scientific.state == "insufficient_data"
+    assert any(
+        i.code == "unusable_observation" and i.field == observation["field"]
+        for i in result.scientific.issues
+    )
+
+
 def test_d146_request_when_contract_writer_releases_models(
     resources: AnalysisResources,
 ) -> None:
