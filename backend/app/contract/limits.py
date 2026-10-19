@@ -91,21 +91,34 @@ class AnalysisRateLimiter:
         self._client_refill = per_client_per_minute / _MINUTE_SECONDS
         self._global_refill = global_per_hour / _HOUR_SECONDS
         self._clients: dict[str, _Bucket] = {}
+        self._client_sweep_interval = burst / self._client_refill
+        self._next_client_sweep: float | None = None
         self._global = _Bucket(float(global_per_hour), self._global_refill)
         self._lock = threading.Lock()
 
     def allow(self, key: str) -> RateDecision:
         with self._lock:
             now = self._clock()
+            if self._next_client_sweep is None or now >= self._next_client_sweep:
+                # A bucket refilled to capacity is equivalent to a fresh client.
+                self._clients = {
+                    client_key: bucket
+                    for client_key, bucket in self._clients.items()
+                    if bucket.updated_at is not None
+                    and bucket.tokens
+                    + max(0, now - bucket.updated_at) * bucket.refill_per_second
+                    < bucket.capacity
+                }
+                self._next_client_sweep = now + self._client_sweep_interval
             client = self._clients.get(key)
             if client is None:
                 client = _Bucket(float(self.burst), self._client_refill)
-                self._clients[key] = client
             client.refill(now)
             self._global.refill(now)
             if client.tokens >= 1 and self._global.tokens >= 1:
                 client.tokens -= 1
                 self._global.tokens -= 1
+                self._clients[key] = client
                 return RateDecision(allowed=True, retry_after_seconds=0)
             waits = [
                 bucket.retry_after_seconds()

@@ -136,6 +136,35 @@ def test_invalid_numbers_rejected(value: object) -> None:
         CalculationInput.model_validate(data)
 
 
+@pytest.mark.parametrize("route", ["general", "beverage"])
+@pytest.mark.parametrize("energy", [3800, 3800.000001, 3801, 999999])
+def test_energy_ceiling(
+    route: str, energy: float, resources: AnalysisResources
+) -> None:
+    data = copy.deepcopy(
+        next(
+            v["inputs"]
+            for v in VECTORS
+            if v["inputs"]["category"] == route
+            and v["expectedAssessment"]["state"] == "graded"
+            and any(o["field"] == "energy" for o in v["inputs"]["observations"])
+        )
+    )
+    for observation in data["observations"]:
+        if observation["field"] == "energy":
+            observation["value"] = energy
+    result = calculate(
+        CalculationInput.model_validate(data), resources, snapshot_id="test"
+    )
+    if energy <= 3800:
+        assert result.state == "graded"
+    else:
+        assert result.state == "insufficient_data"
+        assert [(i.code, i.field) for i in result.issues] == [
+            ("invalid_energy", "energy")
+        ]
+
+
 @pytest.mark.parametrize(
     "change",
     ["basis", "unit", "duplicate", "fvl_overflow", "flags_missing", "contradiction"],

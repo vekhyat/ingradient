@@ -62,6 +62,33 @@ def test_global_bucket_is_1800_and_then_waits_two_seconds() -> None:
     assert denied.retry_after_seconds == 2
 
 
+def test_rejected_new_clients_do_not_allocate_buckets() -> None:
+    limiter = AnalysisRateLimiter(clock=lambda: 0.0, global_per_hour=1)
+    assert limiter.allow("admitted").allowed
+    for index in range(10_000):
+        assert not limiter.allow(f"rejected-{index}").allowed
+    assert set(limiter._clients) == {"admitted"}
+
+
+def test_sweep_removes_full_idle_buckets_and_keeps_depleted_clients() -> None:
+    now = {"t": 0.0}
+    limiter = AnalysisRateLimiter(
+        clock=lambda: now["t"], per_client_per_minute=2, burst=2
+    )
+    assert limiter.allow("idle").allowed
+    now["t"] = 30.0
+    assert limiter.allow("active").allowed
+    assert limiter.allow("active").allowed
+    now["t"] = 60.0
+    assert limiter.allow("new").allowed
+    assert set(limiter._clients) == {"active", "new"}
+    assert limiter.allow("active").allowed
+    assert not limiter.allow("active").allowed
+    assert limiter.allow("idle").allowed
+    assert limiter.allow("idle").allowed
+    assert not limiter.allow("idle").allowed
+
+
 def test_a_backwards_clock_does_not_refill() -> None:
     now = {"t": 5.0}
     limiter = AnalysisRateLimiter(clock=lambda: now["t"])

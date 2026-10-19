@@ -232,7 +232,13 @@ def _calculate(
             )
             continue
         value = Decimal(str(o.value))
-        if (name != "energy" and value > 100) or (name == "fat" and value == 0):
+        # 3800 kJ/100 leaves margin above fat's energy density: Regulation (EU)
+        # 1169/2011 Annex XIV and FAO Food and Nutrition Paper 77, chapter 3.
+        if (
+            (name == "energy" and value > 3800)
+            or (name != "energy" and value > 100)
+            or (name == "fat" and value == 0)
+        ):
             missing.append(
                 issue(
                     "invalid_" + name,

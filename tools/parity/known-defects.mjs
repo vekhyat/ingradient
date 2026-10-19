@@ -5,8 +5,6 @@
  * listed finding that no longer reproduces (strict expected failure), so this
  * list cannot go stale. Remove an entry when its fix lands.
  */
-const ENERGY =
-  'defect: backend has no energy ceiling (backend/app/analysis/calculator.py:235) but the phone refuses energy above 3800 kJ/100 (src/domain/scientific/nutri-score.ts:135,655)';
 const SURROGATE =
   'defect: phone sends an unpaired surrogate (src/domain/hybrid/request.ts:159,173; wire validator accepts at :223); backend refuses it under RFC 8785 (backend/app/api/analyses.py:103)';
 const FIELD =
@@ -17,8 +15,6 @@ const UNREACHABLE_KEY =
   'unreachable: JSON.parse keeps the last duplicate key, the backend refuses it; the phone serialises with JSON.stringify, which cannot emit one';
 
 export const KNOWN_DEFECTS = {
-  'adv-energy-above-3800kj:backend': ENERGY,
-  'adv-energy-above-3800kj:state': ENERGY,
   'adv-inject-lone-surrogate:wire': SURROGATE,
   'adv-inject-lone-surrogate:state': SURROGATE,
   'adv-inject-lone-surrogate-gap:wire': SURROGATE,
