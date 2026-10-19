@@ -136,6 +136,13 @@ export function AppServicesProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
+  // Stable, so Capture's focus effect (which cancels analysis on cleanup)
+  // does not re-run when an unrelated service value changes.
+  const warmUpBackend = useCallback(
+    () => analysis.hybrid?.warmUp(),
+    [analysis],
+  );
+
   const openStore = useCallback(() => {
     setStore({ status: 'opening' });
     loadStore();
@@ -191,7 +198,7 @@ export function AppServicesProvider({ children }: { children: ReactNode }) {
         acceptedNotice.set(NOTICE_VERSION);
         setNoticeAccepted(true);
       },
-      warmUpBackend: () => analysis.hybrid?.warmUp(),
+      warmUpBackend,
     }),
     [
       scan,
@@ -201,7 +208,7 @@ export function AppServicesProvider({ children }: { children: ReactNode }) {
       storeRevision,
       noticeAccepted,
       acceptedNotice,
-      analysis,
+      warmUpBackend,
     ],
   );
 

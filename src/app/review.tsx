@@ -1,5 +1,5 @@
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, View } from 'react-native';
 
 import { AppText } from '../components/AppText';
@@ -64,10 +64,20 @@ export default function ReviewScreen() {
     [label, labelState.session, labelState.corrections],
   );
 
-  const back = useCallback(() => {
+  // Leaving review in any way cancels a pending analysis, so its result
+  // cannot open after the session was discarded or replaced.
+  const cancelAnalysis = useCallback(() => {
     controller.current?.abort();
+    controller.current = null;
+    setAnalysing(false);
+  }, []);
+
+  useEffect(() => cancelAnalysis, [cancelAnalysis]);
+
+  const back = useCallback(() => {
+    cancelAnalysis();
     router.back();
-  }, [router]);
+  }, [cancelAnalysis, router]);
 
   useFocusEffect(
     useCallback(() => {
@@ -176,6 +186,7 @@ export default function ReviewScreen() {
   };
 
   const retake = (panel: 'ingredients' | 'nutrition') => {
+    cancelAnalysis();
     label.setRetake(panel);
     router.back();
   };
@@ -200,6 +211,9 @@ export default function ReviewScreen() {
       setFailed(true);
       return;
     }
+    // The signal now guards the result's late server update (D70), which
+    // must outlive this screen, so leaving no longer aborts it.
+    controller.current = null;
     // Photos are not needed once the facts are extracted (D67).
     label.discard();
     router.dismissAll();
@@ -232,10 +246,7 @@ export default function ReviewScreen() {
           analysisPath="phone_local_only"
           state="pending"
           message={enGB.status.analysis.phone}
-          onCancel={() => {
-            controller.current?.abort();
-            setAnalysing(false);
-          }}
+          onCancel={cancelAnalysis}
         />
       ) : null}
       <PanelReview
@@ -356,6 +367,7 @@ export default function ReviewScreen() {
           variant: 'outline',
           onPress: () => {
             setConfirmDiscard(false);
+            cancelAnalysis();
             label.discard();
             router.dismissAll();
           },

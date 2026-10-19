@@ -286,6 +286,23 @@ describe('actual app services notice and foreground lifecycle', () => {
     expect(services().scan.getResult(secondKey)?.executor).toBe('phone');
   });
 
+  it('keeps warmUpBackend stable across unrelated provider updates', async () => {
+    await mount();
+    const first = services().warmUpBackend;
+    await act(async () => {
+      services().bumpStore();
+    });
+    mockReadNotice.mockResolvedValueOnce(NOTICE_VERSION);
+    await act(async () => {
+      await services().acceptNotice();
+    });
+    expect(services().storeRevision).toBe(1);
+    expect(services().noticeAccepted).toBe(true);
+    // Capture's focus effect depends on it; a new identity would re-run the
+    // effect's cleanup and cancel the analysis in progress.
+    expect(services().warmUpBackend).toBe(first);
+  });
+
   it('removes its AppState listener and cancels owned requests when unmounted', async () => {
     mockReadNotice.mockResolvedValueOnce(NOTICE_VERSION);
     await mount();
