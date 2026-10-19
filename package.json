@@ -73,7 +73,7 @@
     "lint": "eslint . --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
+    "check": "bun run typecheck && bun run lint && bun run format:check && bun run test",
     "start:usb": "node --dns-result-order=ipv4first ./node_modules/expo/bin/cli start --dev-client --localhost",
     "test": "jest"
   },

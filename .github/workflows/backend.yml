@@ -10,7 +10,7 @@ on:
       - 'src/domain/matching/**'
       - 'src/domain/evidence/**'
       - 'src/domain/nutrition/decimal.ts'
-      - 'package-lock.json'
+      - 'bun.lock'
       - '.github/workflows/backend.yml'
   workflow_dispatch:
 permissions:
@@ -30,9 +30,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: npm
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
       - name: Install locked calculator compiler
-        run: npm ci --ignore-scripts
+        run: bun install --frozen-lockfile --ignore-scripts
       - name: Lint, format, types and tests
         working-directory: backend
         run: |

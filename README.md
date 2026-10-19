@@ -4,14 +4,14 @@ An Expo development-build scaffold for Android and iOS, written in strict TypeSc
 
 ## Install
 
-Use Node.js 24 LTS and npm. From the repository root (the directory containing `package.json`):
+Use Node.js 24 LTS and Bun 1.4 or later. Bun installs packages; Node still runs Expo, Jest and the Android bundler. From the repository root (the directory containing `package.json`):
 
 ```powershell
-npm ci
-npm run check
+bun install --frozen-lockfile
+bun run check
 ```
 
-`package-lock.json` records the dependency tree so teammates can install the same versions. Do not use `--force` or `--legacy-peer-deps` to hide dependency conflicts.
+`bun.lock` records the dependency tree so teammates can install the same versions. Do not use `npm install`: it would create a second lockfile that drifts from `bun.lock`. Bun skips dependency install scripts unless a package is listed in `trustedDependencies`; the only one today, `unrs-resolver`, does not need its script.
 
 The Expo app lives directly in this directory: `package.json` and configuration at the root, routes/screens in `src/`, and icons in `assets/`.
 
@@ -30,16 +30,16 @@ The Expo app lives directly in this directory: `package.json` and configuration 
 3. Build, install and open the development app:
 
    ```powershell
-   npm run android
+   bun run android
    ```
 
 4. Check that **App foundation** opens. Tap **Check navigation**, then use Android Back. It should return to the foundation screen.
 
-On later sessions, start Metro with `npm start` for Wi-Fi, or use USB:
+On later sessions, start Metro with `bun run start` for Wi-Fi, or use USB:
 
 ```powershell
 adb reverse tcp:8081 tcp:8081
-npm run start:usb
+bun run start:usb
 ```
 
 Reopen the app from the development launcher. `start:usb` uses IPv4-first localhost resolution because this Windows setup otherwise bound Metro to IPv6 while advertising an IPv4 bundle URL. Metro sends updated JavaScript to the installed development app; native dependency or app-configuration changes require rebuilding. Do not change Windows firewall settings just to test USB access.
@@ -49,7 +49,7 @@ Reopen the app from the development launcher. `start:usb` uses IPv4-first localh
 After setting the session variables above:
 
 ```powershell
-npm run prebuild -- --platform android
+bun run prebuild --platform android
 $env:NODE_ENV = 'development'
 Push-Location android
 try {
@@ -57,7 +57,7 @@ try {
 } finally { Pop-Location }
 ```
 
-The ARM64 development APK is `android/app/build/outputs/apk/debug/app-debug.apk`. Use `npm run android` with a connected device to let Expo select its architecture. A successful build is separate from verification on a phone.
+The ARM64 development APK is `android/app/build/outputs/apk/debug/app-debug.apk`. Use `bun run android` with a connected device to let Expo select its architecture. A successful build is separate from verification on a phone.
 
 ## iOS
 
@@ -80,10 +80,10 @@ There is no API client, database, profile, analytics or data-upload code. The sc
 ## Checks
 
 ```powershell
-npm run check
-npx expo install --check
-npx expo-doctor
-npx expo export --platform android --platform ios
+bun run check
+bunx expo install --check
+bunx expo-doctor
+bunx expo export --platform android --platform ios
 ```
 
 `check` runs TypeScript, ESLint and Prettier in sequence. Export checks JavaScript bundling for both native platforms; it does not compile or run an iOS app. There is no scoring, parsing or matching logic yet, so this task does not introduce a logic-test suite. Device checks cover forward navigation, Android Back, large text and screen-reader labels.
