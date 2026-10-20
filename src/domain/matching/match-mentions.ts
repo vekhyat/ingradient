@@ -12,12 +12,20 @@ export function matchIngredientMentions(
   const matches: MatchResult['matches'] = [];
   const mentions = mapped.mentions.map((mention) => {
     const original = parsed.mentions.find((item) => item.id === mention.id);
-    const identity = compatible
-      ? matchIngredient(mention.text, {
-          additiveContext: original?.role === 'additive',
-          fuzzy: true,
-        })
-      : ({ state: 'unresolved', canonicalId: null, candidateIds: [] } as const);
+    const opaque = original?.issues.some(
+      (issue) => issue.code === 'nesting_limit',
+    );
+    const identity =
+      compatible && !opaque
+        ? matchIngredient(mention.text, {
+            additiveContext: original?.role === 'additive',
+            fuzzy: true,
+          })
+        : ({
+            state: 'unresolved',
+            canonicalId: null,
+            candidateIds: [],
+          } as const);
     const method = !compatible
       ? 'incompatible_taxonomy'
       : identity.state === 'ambiguous'

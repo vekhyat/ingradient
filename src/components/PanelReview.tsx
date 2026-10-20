@@ -21,7 +21,7 @@ export interface PanelReviewProps {
   panels: readonly PanelPresence[];
   pending: boolean;
   onEditIngredient: (occurrenceId: string) => void;
-  onEditNutrient: (field: string) => void;
+  onEditNutrient: (field: string, rowId?: string) => void;
   onRetake: (panel: 'ingredients' | 'nutrition') => void;
   onAnalyseAvailable: () => void;
   onDiscard: () => void;
@@ -156,11 +156,11 @@ export function PanelReview({
           <AppText color="ink2">{enGB.review.noNutrients}</AppText>
         ) : (
           nutrients.map((row, index) => (
-            <View key={row.field}>
+            <View key={`${row.field}:${row.rowId ?? index}`}>
               {index > 0 ? <Divider /> : null}
               <EditRow
                 title={row.label}
-                onEdit={() => onEditNutrient(row.field)}
+                onEdit={() => onEditNutrient(row.field, row.rowId)}
               >
                 {row.kind === null ? (
                   <AppText variant="data" color="ink2">
@@ -170,7 +170,7 @@ export function PanelReview({
                   <ProvenanceMark
                     fact={row.kind}
                     text={formatAmount(row)}
-                    onCheck={() => onEditNutrient(row.field)}
+                    onCheck={() => onEditNutrient(row.field, row.rowId)}
                   />
                 ) : (
                   <ProvenanceMark fact={row.kind} text={formatAmount(row)} />

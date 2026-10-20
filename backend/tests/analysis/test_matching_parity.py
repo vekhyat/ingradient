@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 import pytest
 
@@ -22,9 +22,80 @@ FIXTURE = json.loads(
 )
 
 
+class MatchingCase(TypedDict):
+    text: str
+    additiveContext: bool
+
+
 @pytest.fixture(scope="module")
 def resources() -> AnalysisResources:
     return load_resources()
+
+
+def test_review_regressions_match_actual_typescript(
+    resources: AnalysisResources,
+) -> None:
+    """Compare the source loaders and code namespaces, not a shared mock index."""
+    bun = shutil.which("bun")
+    assert bun is not None, "Bun is required for cross-language regression coverage"
+    texts = [
+        "tomato",
+        "lycopene, tomato",
+        "lycopene",
+        "synthetic",
+        "E1200",
+        "INS 1200",
+        "polydextrose",
+        "table salt",
+        "\ufeffTABLE\u00a0SALT\ufeff",
+        "\x1ctable salt\x1c",
+        "E150(d)",
+        "150(a)",
+        "E160(a)",
+        "INS503(ii)",
+        "E503 ( ii )",
+        "E503(x)",
+        "E150a(b)",
+        "E160a(i)(ii)",
+        "100",
+        "503(ii)",
+        "1% fat milk",
+        "atta",
+    ]
+    cases: list[MatchingCase] = [
+        {"text": text, "additiveContext": contextual}
+        for text in texts
+        for contextual in (False, True)
+    ]
+    result = subprocess.run(
+        [
+            bun,
+            "--eval",
+            "import {matchIngredient} from './src/domain/matching/match-ingredient.ts';"
+            "const cases=JSON.parse(await Bun.stdin.text());"
+            "console.log(JSON.stringify(cases.map(c=>"
+            "matchIngredient(c.text,{additiveContext:c.additiveContext}))));",
+        ],
+        cwd=ROOT,
+        input=json.dumps(cases),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    actual = json.loads(result.stdout)
+    for case, typescript in zip(cases, actual, strict=True):
+        python = match_ingredient(
+            case["text"],
+            resources.ingredient_aliases,
+            additive_context=case["additiveContext"],
+        )
+        assert typescript == {
+            "state": python.state,
+            "canonicalId": python.canonical_id,
+            "candidateIds": list(python.candidate_ids),
+        }, case
 
 
 @pytest.mark.parametrize("vector", FIXTURE["vectors"], ids=lambda v: v["id"])

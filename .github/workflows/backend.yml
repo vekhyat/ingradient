@@ -1,23 +1,14 @@
 name: Backend checks
 on:
   pull_request:
-    paths:
-      - 'backend/**'
-      - 'contracts/**'
-      - 'resources/**'
-      - 'tools/parity/**'
-      - 'src/domain/scientific/**'
-      - 'src/domain/matching/**'
-      - 'src/domain/evidence/**'
-      - 'src/domain/nutrition/decimal.ts'
-      - 'bun.lock'
-      - '.github/workflows/backend.yml'
+  push:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   backend:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -26,7 +17,7 @@ jobs:
       - name: Install locked backend tools
         run: |
           python -m pip install uv==0.13.1
-          uv sync --project backend --frozen
+          uv sync --project backend --locked
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -38,10 +29,10 @@ jobs:
       - name: Lint, format, types and tests
         working-directory: backend
         run: |
-          uv run --frozen ruff check
-          uv run --frozen ruff format --check
-          uv run --frozen pyright
-          uv run --frozen pytest
+          uv run --locked ruff check
+          uv run --locked ruff format --check
+          uv run --locked pyright
+          uv run --locked pytest
       - name: Export Python canonical outputs
         run: backend/.venv/bin/python tools/parity/run_python.py > python-canonical.jsonl
       - name: Compare actual Python and TypeScript calculations
@@ -69,5 +60,41 @@ jobs:
             python-matching.jsonl
             typescript-matching.jsonl
           retention-days: 7
+  learning-store:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: learning_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: disposable_ci_password
+        ports:
+          - 5432/tcp
+        options: >-
+          --health-cmd "pg_isready -U postgres -d learning_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14.3'
+      - name: Install locked isolated store dependencies
+        run: |
+          python -m pip install uv==0.13.1
+          uv sync --project backend --locked --group learning-store
+      - name: Name disposable container for the guarded dump/restore test
+        run: docker rename '${{ job.services.postgres.id }}' ingradient-be13-pg18-test
+      - name: Exercise store cases and migration up/down cycles
+        working-directory: backend
+        env:
+          # The fixture also refuses non-loopback hosts, other database names
+          # and PostgreSQL versions other than 18 before touching schemas.
+          BE13_TEST_DSN: postgresql://postgres:disposable_ci_password@127.0.0.1:${{ job.services.postgres.ports[5432] }}/learning_test
+          BE13_TEST_CONTAINER: ingradient-be13-pg18-test
+        run: uv run --locked --group learning-store pytest tests/learning_store/test_isolated.py -v -s
 # Nutrition calculation, complete scientific assessment and exact matching
 # are separate checks. No output field is removed from the full comparison.

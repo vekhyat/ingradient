@@ -1,7 +1,11 @@
+# Keep source and configuration checkouts consistent on Windows and Unix.
+* text=auto eol=lf
+
 # Frozen contract copies are hashed byte for byte; never convert line endings.
-contracts/** -text
-resources/** -text
+contracts/** -text !eol
+resources/** -text !eol
 # Generated contract code is compared byte for byte with the generator (LF).
 src/domain/contracts/generated/** text eol=lf
 # The matching index is regenerated from pinned taxonomy source bytes.
 src/domain/matching/generated/** text eol=lf
+src/domain/ingredients/generated/** text eol=lf

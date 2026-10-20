@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "edition": "off-exact-match-2026-10-17.1",
+  "edition": "off-exact-match-2026-10-20.1",
   "profile": "exact-identity",
   "canonicalConvention": "First English taxonomy name, lowercased with spaces replaced by hyphens; significant code parentheses preserved.",
   "scope": "Project-authored source-derived engineering fixtures. Not official OFF vectors, independent human research gold, food authorisation or health evidence.",
@@ -561,20 +561,22 @@
       "rationale": "Letter suffix is part of the English source code."
     },
     {
-      "id": "letter-parenthesis-refused",
+      "id": "letter-parenthesis-normalized",
       "input": {
         "text": "E150(d)",
         "additiveContext": false
       },
       "expected": {
-        "state": "unresolved",
-        "canonicalId": null,
-        "candidateIds": []
+        "state": "matched",
+        "canonicalId": "en:e150d",
+        "candidateIds": [
+          "en:e150d"
+        ]
       },
       "sourceRefs": [
         "e150d"
       ],
-      "rationale": "Source has E150d, not E150(d); never repair unsupported syntax into a different code."
+      "rationale": "Accepted parenthesized a-f letter normalization preserves the exact E150d source identity; Roman suffix parentheses remain significant."
     },
     {
       "id": "unsupported-roman-refused",

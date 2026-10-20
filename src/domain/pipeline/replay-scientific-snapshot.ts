@@ -215,7 +215,25 @@ export function replayScientificSnapshot(
   }
 
   for (const field of requiredNutrients) {
-    const fieldObs = obsByField.get(field) ?? [];
+    const allFieldObs = obsByField.get(field) ?? [];
+    const requiredBasis =
+      effectiveCategory === 'beverage' ? 'per_100_ml' : 'per_100_g';
+    // A second label column is not a competing reading of the scoring column.
+    // Missing observations have no basis and still require explicit resolution.
+    const matchingObs = allFieldObs.filter(
+      (obs) => obs.kind === 'missing' || obs.basis === requiredBasis,
+    );
+    const fieldObs = matchingObs.length > 0 ? matchingObs : allFieldObs;
+    if (matchingObs.length === 0 && fieldObs.length > 1) {
+      pushIssue(blockingIssues, {
+        code: `unsupported_${field}_basis`,
+        stage: 'completeness',
+        field,
+        message: 'A supported unit and per-100 basis are required.',
+        action: 'read_source',
+      });
+      continue;
+    }
     if (fieldObs.length > 1) {
       pushIssue(blockingIssues, {
         code: `conflicting_${field}`,

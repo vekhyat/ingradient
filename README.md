@@ -1,52 +1,72 @@
-# Ingradient mobile foundation
+﻿# Ingradient
 
-An Expo development-build scaffold for Android and iOS, written in strict TypeScript. These are temporary development screens. Product UI, scanning, food analysis and backend integration belong to later tasks.
+Ingradient is an Expo development app for Android and iOS that reads packaged-food barcodes and English labels. It combines Open Food Facts lookups, on-device OCR, reviewable ingredient and nutrition facts, and scientific assessments with source citations. Missing or unsupported evidence produces an explicit gap rather than an invented grade.
 
-## Install
+## Architecture and data flow
 
-Use Node.js 24 LTS and Bun 1.4 or later. Bun installs packages; Node still runs Expo, Jest and the Android bundler. From the repository root (the directory containing `package.json`):
+- Barcode scans and typed barcodes query Open Food Facts directly. Validated catalogue responses become product snapshots with source references and observations.
+- Label photos are read on the phone with ML Kit. Capture and review keep ingredients and nutrition panels separate, let the user correct text, and record provenance for facts used in analysis. Photos are temporary session files and are never uploaded.
+- The phone pipeline parses ingredients and nutrition, matches exact taxonomy identities, calculates supported Nutri-Score routes, and renders reasons from pinned resources. Contracts and scientific resources live in `contracts/` and `resources/`; their manifests pin the original bytes.
+- With `EXPO_PUBLIC_ANALYSIS_URL` unset, analysis stays on the phone. When configured, the hybrid client sends contract product facts to `POST /v1/analyses` after the versioned onboarding notice is accepted. Photos, saved history and personal settings are excluded. A slow or unavailable server triggers phone analysis; a late answer must pass compatibility and replay checks before it can be offered as an update. Displayed reasons use the phone's templates.
+- Saved results and their source facts live in a local SQLCipher database. Its encryption key and notice acceptance use SecureStore. History supports local deletion and erase controls; session photos are separate from saved-result records.
+
+FastAPI exposes health and analysis endpoints. Its default `app.main:app` serves a named method gap with collection off; the development entrypoint `deploy.app:app` explicitly enables reference analysis and keeps collection off. The checked-in Render blueprint selects that development entrypoint. The optional PostgreSQL learning store is isolated from the default app and has no production database wiring. See [backend/README.md](backend/README.md) for the exact boundary and test setup.
+
+## Install and check
+
+Use Node.js 24 and Bun 1.4.3, matching CI. Bun installs dependencies; Node runs Expo and Jest tooling. From this directory:
 
 ```powershell
 bun install --frozen-lockfile
 bun run check
 ```
 
-`bun.lock` records the dependency tree so teammates can install the same versions. Do not use `npm install`: it would create a second lockfile that drifts from `bun.lock`. Bun skips dependency install scripts unless a package is listed in `trustedDependencies`; the only one today, `unrs-resolver`, does not need its script.
+The root install hook applies the camera focus patch used by the native config plugin. Keep `bun.lock` as the dependency lockfile; avoid creating a competing npm lockfile.
 
-The Expo app lives directly in this directory: `package.json` and configuration at the root, routes/screens in `src/`, and icons in `assets/`.
+`check` runs TypeScript, ESLint, Prettier and Jest. CI runs these checks on Ubuntu and Windows for every change, including tools, modules, native plugins and root configuration. It also exports Android and iOS JavaScript on Ubuntu. Additional checks:
 
-## Android on Windows, connected by USB
+```powershell
+bunx --no-install expo install --check
+bunx --no-install expo export --platform android --platform ios
+bun audit
+```
 
-1. Install Android Studio with its Android SDK and bundled Java runtime. Enable USB debugging on the phone, connect it and accept the computer's debugging prompt.
-2. Point this PowerShell session at the tools (adjust these paths if installed elsewhere):
+JavaScript export does not compile a native app or verify camera, OCR or SQLCipher on a device. Dependency advisories need their own review; passing app checks does not clear them. Run the backend and Python/TypeScript parity checks documented in the [backend README](backend/README.md) when changing shared scientific behavior.
 
-   ```powershell
-   $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
-   $env:JAVA_HOME = 'C:\Program Files\Android\Android Studio\jbr'
-   $env:Path = "$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:Path"
-   adb devices -l
-   ```
+Source and configuration files use LF, enforced by `.gitattributes`, EditorConfig and Prettier. Pinned `contracts/` and `resources/` bytes are exempt from line-ending conversion and formatting. Do not repin them to resolve a formatting failure.
 
-3. Build, install and open the development app:
+## Android on Windows
 
-   ```powershell
-   bun run android
-   ```
+Install Android Studio with its SDK and bundled Java runtime. Enable USB debugging, connect the phone and accept its debugging prompt. Set the paths for your installation:
 
-4. Check that **App foundation** opens. Tap **Check navigation**, then use Android Back. It should return to the foundation screen.
+```powershell
+$env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
+$env:JAVA_HOME = 'C:\Program Files\Android\Android Studio\jbr'
+$env:Path = "$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:Path"
+adb devices -l
+bun run android
+```
 
-On later sessions, start Metro with `bun run start` for Wi-Fi, or use USB:
+This builds and installs a development client with native camera, ML Kit and SQLCipher dependencies. Use a development build rather than Expo Go. Accept the draft onboarding notice, then check barcode lookup, label capture, OCR review, results and local history on the device.
+
+For later sessions, `bun run start` starts Metro for Wi-Fi. USB development uses:
 
 ```powershell
 adb reverse tcp:8081 tcp:8081
 bun run start:usb
 ```
 
-Reopen the app from the development launcher. `start:usb` uses IPv4-first localhost resolution because this Windows setup otherwise bound Metro to IPv6 while advertising an IPv4 bundle URL. Metro sends updated JavaScript to the installed development app; native dependency or app-configuration changes require rebuilding. Do not change Windows firewall settings just to test USB access.
+To use a local backend on that phone, also reverse port 8000 and set the public analysis URL before starting Metro:
 
-## Build without a connected phone
+```powershell
+adb reverse tcp:8000 tcp:8000
+$env:EXPO_PUBLIC_ANALYSIS_URL = 'http://127.0.0.1:8000'
+bun run start:usb
+```
 
-After setting the session variables above:
+For an Android emulator use `http://10.0.2.2:8000` instead. The backend's default entrypoint returns a named method gap; configuring its URL alone does not activate the reference scoring service. Clear the variable to restore phone-only analysis. Public Expo variables are bundled configuration, so never put credentials in them.
+
+Native dependency or app-configuration changes require rebuilding the client. For an ARM64 debug APK without a connected phone:
 
 ```powershell
 bun run prebuild --platform android
@@ -57,45 +77,19 @@ try {
 } finally { Pop-Location }
 ```
 
-The ARM64 development APK is `android/app/build/outputs/apk/debug/app-debug.apk`. Use `bun run android` with a connected device to let Expo select its architecture. A successful build is separate from verification on a phone.
+The APK is `android/app/build/outputs/apk/debug/app-debug.apk`. Generated `android/`, `ios/`, `.expo/` and `dist/` stay out of Git. Change native behavior through `app.json`, `plugins/` or `modules/`.
 
-## iOS
+## iOS and deployment
 
-Windows cannot build iOS locally. `eas.json` contains an internal development-build profile for a future EAS build. No EAS project, credentials, device registration or cloud build is created by this scaffold. The final application identifiers must be accepted before registration or publication.
+iOS native builds need macOS/Xcode or a separately configured EAS build. `eas.json` defines an internal development profile. The current `com.example.ingradient.dev` identifiers and development scheme are placeholders; the repository does not provision signing credentials or publish the app. Backend process and release requirements are in the [backend README](backend/README.md).
 
 ## Source map
 
-| Path                                                    | Responsibility                                                       |
-| ------------------------------------------------------- | -------------------------------------------------------------------- |
-| `src/app/`                                              | File-based routes and their common stack layout                      |
-| `src/screens/`                                          | Two temporary screens and their shared scrolling wrapper             |
-| `src/copy/en-GB.ts`                                     | English text, separate from rendering; additional locales come later |
-| `app.json`, `eas.json`                                  | Native app configuration and the development cloud-build profile     |
-| `tsconfig.json`, `eslint.config.js`, `.prettierrc.json` | Type safety, code checks and formatting                              |
-
-There is no API client, database, profile, analytics or data-upload code. The scaffold does not request camera permissions. Expo's development tools have their own development network traffic.
-
-`com.example.ingradient.dev` and `ingradient-dev` are replaceable development identifiers. The launcher icon is the template placeholder. Screens use temporary styles; these are not the product theme. Native headers own the top safe area, and the screen wrapper protects the remaining edges. Text wraps, scales with the device setting and scrolls. Navigation animations are disabled until the motion work is specified.
-
-## Checks
-
-```powershell
-bun run check
-bunx expo install --check
-bunx expo-doctor
-bunx expo export --platform android --platform ios
-```
-
-`check` runs TypeScript, ESLint and Prettier in sequence. Export checks JavaScript bundling for both native platforms; it does not compile or run an iOS app. There is no scoring, parsing or matching logic yet, so this task does not introduce a logic-test suite. Device checks cover forward navigation, Android Back, large text and screen-reader labels.
-
-Dependency review remains open: on 15 October 2026, `npm audit` reported 28 dependency-tree findings (18 high, 10 moderate). Its proposed fixes include incompatible Expo/React Native changes. No force fix or untested override has been applied; passing Expo Doctor does not clear these audit findings.
-
-Generated `android/`, `ios/`, `.expo/` and `dist/` directories stay out of Git. Change native configuration in `app.json` or an Expo config plugin rather than editing generated native files. Environment files and signing material stay ignored too.
-
-## Official references
-
-1. [Development builds](https://docs.expo.dev/develop/development-builds/introduction/)
-2. [Expo Router installation](https://docs.expo.dev/router/installation/)
-3. [TypeScript configuration](https://docs.expo.dev/guides/typescript/)
-4. [ESLint and Prettier](https://docs.expo.dev/guides/using-eslint/)
-5. [Continuous Native Generation](https://docs.expo.dev/workflow/continuous-native-generation/)
+- `src/app/`: Expo Router routes for scanning, review, results, history, onboarding and disclosures.
+- `src/features/` and `src/components/`: application flows and UI.
+- `src/adapters/`: catalogue and hybrid network boundaries, native OCR and encrypted storage.
+- `src/domain/`: contracts, parsing, matching, scientific calculation and evidence rendering.
+- `modules/dynamic-colour/` and `plugins/`: native theme integration and build configuration.
+- `backend/`: FastAPI boundary, Python scientific implementation and isolated learning-store tooling.
+- `tools/resources/` and `tools/parity/`: resource integrity, generation and cross-runtime comparisons.
+- `.github/workflows/`: app, backend, parity and disposable PostgreSQL checks.

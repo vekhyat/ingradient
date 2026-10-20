@@ -67,7 +67,8 @@ def test_rejected_new_clients_do_not_allocate_buckets() -> None:
     assert limiter.allow("admitted").allowed
     for index in range(10_000):
         assert not limiter.allow(f"rejected-{index}").allowed
-    assert set(limiter._clients) == {"admitted"}
+    # Inspect allocation itself: public allow() cannot prove no bucket was stored.
+    assert set(limiter._clients) == {"admitted"}  # pyright: ignore[reportPrivateUsage]
 
 
 def test_sweep_removes_full_idle_buckets_and_keeps_depleted_clients() -> None:
@@ -81,7 +82,7 @@ def test_sweep_removes_full_idle_buckets_and_keeps_depleted_clients() -> None:
     assert limiter.allow("active").allowed
     now["t"] = 60.0
     assert limiter.allow("new").allowed
-    assert set(limiter._clients) == {"active", "new"}
+    assert set(limiter._clients) == {"active", "new"}  # pyright: ignore[reportPrivateUsage]
     assert limiter.allow("active").allowed
     assert not limiter.allow("active").allowed
     assert limiter.allow("idle").allowed

@@ -6,11 +6,13 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
 import { AppState, Platform } from 'react-native';
+import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { createCatalogueAdapter } from '../../adapters/catalogue';
 import { buildOffUserAgent } from '../../adapters/catalogue/user-agent';
@@ -26,6 +28,7 @@ import {
   type SnapshotStore,
 } from '../../adapters/storage/snapshot-store';
 import {
+  closeEncryptedDatabase,
   destroyEncryptedDatabase,
   openEncryptedDatabase,
   sqlRecordTable,
@@ -112,29 +115,78 @@ export function AppServicesProvider({ children }: { children: ReactNode }) {
   const [storeRevision, setStoreRevision] = useState(0);
   const [noticeAccepted, setNoticeAccepted] = useState<boolean | null>(null);
 
-  const loadStore = useCallback(() => {
-    openEncryptedDatabase()
-      .then((db) =>
-        setStore({
-          status: 'ready',
-          store: createSnapshotStore(sqlRecordTable(db)),
-        }),
-      )
-      .catch((error: unknown) => {
-        const code = error instanceof StorageError ? error.code : 'unavailable';
-        if (__DEV__) {
-          // Storage errors carry no product or personal data.
-          console.warn(
-            `Saved-results store failed: ${code}: ${(error as Error).message}`,
-          );
+  const storeState = useRef<StoreStatus>(store);
+  const database = useRef<SQLiteDatabase | null>(null);
+  const storeQueue = useRef<Promise<unknown>>(Promise.resolve());
+  const storeGeneration = useRef(0);
+  const mounted = useRef(false);
+
+  const forgetSavedLinks = useCallback(() => {
+    scan.forgetAllSaved();
+  }, [scan]);
+
+  const loadStore = useCallback(
+    (reset = false): Promise<void> => {
+      // Recovery is available only after opening has failed. In particular a
+      // press during startup must never erase a healthy database or its key.
+      if (reset && storeState.current.status !== 'error') {
+        return Promise.reject(
+          new StorageError(
+            'unavailable',
+            'Saved results are not ready for recovery.',
+          ),
+        );
+      }
+      const generation = ++storeGeneration.current;
+      storeState.current = { status: 'opening' };
+      setStore(storeState.current);
+      const opening = storeQueue.current.then(async () => {
+        try {
+          if (database.current) {
+            await closeEncryptedDatabase(database.current);
+            database.current = null;
+          }
+          if (reset) {
+            await destroyEncryptedDatabase();
+            forgetSavedLinks();
+          }
+          const db = await openEncryptedDatabase();
+          if (!mounted.current || generation !== storeGeneration.current) {
+            await closeEncryptedDatabase(db);
+            return;
+          }
+          database.current = db;
+          const saved = createSnapshotStore(sqlRecordTable(db));
+          storeState.current = {
+            status: 'ready',
+            store: {
+              ...saved,
+              eraseAll: async () => {
+                await saved.eraseAll();
+                forgetSavedLinks();
+              },
+            },
+          };
+          setStore(storeState.current);
+        } catch (error) {
+          const code =
+            error instanceof StorageError ? error.code : 'unavailable';
+          const message =
+            error instanceof Error
+              ? error.message
+              : 'Could not open saved results.';
+          if (mounted.current && generation === storeGeneration.current) {
+            storeState.current = { status: 'error', code, message };
+            setStore(storeState.current);
+          }
+          throw error;
         }
-        setStore({
-          status: 'error',
-          code,
-          message: (error as Error).message,
-        });
       });
-  }, []);
+      storeQueue.current = opening.catch(() => undefined);
+      return opening;
+    },
+    [forgetSavedLinks],
+  );
 
   // Stable, so Capture's focus effect (which cancels analysis on cleanup)
   // does not re-run when an unrelated service value changes.
@@ -144,14 +196,14 @@ export function AppServicesProvider({ children }: { children: ReactNode }) {
   );
 
   const openStore = useCallback(() => {
-    setStore({ status: 'opening' });
-    loadStore();
+    void loadStore().catch(() => undefined);
   }, [loadStore]);
 
   useEffect(() => {
     // Session photos never survive an app restart (STO-01 case 3).
+    mounted.current = true;
     clearSessionPhotos();
-    loadStore();
+    void loadStore().catch(() => undefined);
     SecureStore.getItemAsync(NOTICE_KEY)
       .then((value) => {
         const accepted = value === NOTICE_VERSION;
@@ -159,12 +211,24 @@ export function AppServicesProvider({ children }: { children: ReactNode }) {
         setNoticeAccepted(accepted);
       })
       .catch(() => setNoticeAccepted(false));
+    return () => {
+      mounted.current = false;
+      storeGeneration.current += 1;
+      storeQueue.current = storeQueue.current
+        .then(async () => {
+          if (database.current) {
+            await closeEncryptedDatabase(database.current);
+            database.current = null;
+          }
+        })
+        .catch(() => undefined);
+    };
   }, [loadStore, acceptedNotice]);
 
   useEffect(() => {
     // D70 / HYB-01 case 5: no update offer survives leaving the app.
     const subscription = AppState.addEventListener('change', (next) => {
-      if (next === 'background') {
+      if (next !== 'active') {
         analysis.hybrid?.cancelAll();
         scan.dropPendingUpdates();
       }
@@ -182,10 +246,7 @@ export function AppServicesProvider({ children }: { children: ReactNode }) {
       label,
       store,
       reopenStore: openStore,
-      resetStore: async () => {
-        await destroyEncryptedDatabase();
-        openStore();
-      },
+      resetStore: () => loadStore(true),
       storeRevision,
       bumpStore: () => setStoreRevision((n) => n + 1),
       noticeAccepted,
@@ -205,6 +266,7 @@ export function AppServicesProvider({ children }: { children: ReactNode }) {
       label,
       store,
       openStore,
+      loadStore,
       storeRevision,
       noticeAccepted,
       acceptedNotice,

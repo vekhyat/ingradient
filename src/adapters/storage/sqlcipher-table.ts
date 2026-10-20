@@ -39,16 +39,36 @@ async function randomKeyHex(): Promise<string> {
   );
 }
 
-function databaseFileExists(): boolean {
-  try {
-    const directory = String(defaultDatabaseDirectory ?? '');
-    const file = directory
-      ? new File(directory, DATABASE_NAME)
-      : new File(Paths.document, 'SQLite', DATABASE_NAME);
-    return file.exists;
-  } catch {
-    return false;
-  }
+function databaseFiles(): File[] {
+  const directory = String(defaultDatabaseDirectory ?? '');
+  // SQLite exposes an absolute filesystem path on Android; File requires a URI.
+  const directoryUri = directory.startsWith('/')
+    ? `file://${directory}`
+    : directory;
+  return ['', '-wal', '-shm', '-journal'].map((suffix) =>
+    directoryUri
+      ? new File(directoryUri, DATABASE_NAME + suffix)
+      : new File(Paths.document, 'SQLite', DATABASE_NAME + suffix),
+  );
+}
+
+// Opening, closing and destructive recovery must never overlap. Keep handles
+// until close succeeds, including handles from failed initialization attempts.
+const handles = new Set<SQLiteDatabase>();
+let pending: Promise<unknown> = Promise.resolve();
+function serialize<T>(operation: () => Promise<T>): Promise<T> {
+  const result = pending.then(operation);
+  pending = result.catch(() => undefined);
+  return result;
+}
+
+async function closeHandle(db: SQLiteDatabase): Promise<void> {
+  await db.closeAsync();
+  handles.delete(db);
+}
+
+export function closeEncryptedDatabase(db: SQLiteDatabase): Promise<void> {
+  return serialize(() => closeHandle(db));
 }
 
 const SCHEMA = `
@@ -64,15 +84,16 @@ CREATE TABLE IF NOT EXISTS saved_results (
  * Opens the SQLCipher database with the keystore key. A wrong or missing key
  * surfaces as `key_lost`; nothing is deleted automatically.
  */
-export async function openEncryptedDatabase(): Promise<SQLiteDatabase> {
+async function openDatabase(): Promise<SQLiteDatabase> {
   const { key } = await resolveDatabaseKey(
     secureStoreVault,
-    databaseFileExists(),
+    databaseFiles().some((file) => file.exists),
     randomKeyHex,
   );
   let db: SQLiteDatabase;
   try {
     db = await openDatabaseAsync(DATABASE_NAME);
+    handles.add(db);
   } catch (error) {
     throw new StorageError(
       'unavailable',
@@ -84,17 +105,29 @@ export async function openEncryptedDatabase(): Promise<SQLiteDatabase> {
     await db.execAsync(`PRAGMA key = "x'${key}'";`);
     await db.getFirstAsync('SELECT count(*) AS n FROM sqlite_master;');
   } catch {
-    await db.closeAsync().catch(() => undefined);
+    await closeHandle(db).catch(() => undefined);
     throw new StorageError(
       'key_lost',
       'Saved results could not be decrypted with this phone’s key.',
     );
   }
-  // Deleted rows are overwritten, not left as readable free pages (NAT-01 finding 4).
-  await db.execAsync('PRAGMA secure_delete = ON;');
-  await db.execAsync('PRAGMA journal_mode = WAL;');
-  await db.execAsync(SCHEMA);
+  try {
+    // Deleted rows are overwritten, not left as readable free pages (NAT-01 finding 4).
+    await db.execAsync('PRAGMA secure_delete = ON;');
+    await db.execAsync('PRAGMA journal_mode = WAL;');
+    await db.execAsync(SCHEMA);
+  } catch (error) {
+    await closeHandle(db).catch(() => undefined);
+    throw new StorageError(
+      'unavailable',
+      `Could not initialize saved results: ${(error as Error).message}`,
+    );
+  }
   return db;
+}
+
+export function openEncryptedDatabase(): Promise<SQLiteDatabase> {
+  return serialize(openDatabase);
 }
 
 /**
@@ -103,18 +136,38 @@ export async function openEncryptedDatabase(): Promise<SQLiteDatabase> {
  * still there afterwards is reported, and the key is kept so a retry still
  * matches the file.
  */
-export async function destroyEncryptedDatabase(): Promise<void> {
-  let reason = '';
-  await deleteDatabaseAsync(DATABASE_NAME).catch((error: unknown) => {
-    reason = (error as Error).message;
+export function destroyEncryptedDatabase(): Promise<void> {
+  return serialize(async () => {
+    try {
+      for (const db of handles) await closeHandle(db);
+    } catch (error) {
+      throw new StorageError(
+        'write_failed',
+        `Saved results could not be closed: ${(error as Error).message}`,
+      );
+    }
+    let reason = '';
+    await deleteDatabaseAsync(DATABASE_NAME).catch((error: unknown) => {
+      reason = (error as Error).message;
+    });
+    // Expo's native delete removes the main file but does not promise to remove
+    // WAL/SHM or rollback journals. Never remove the key until every known file
+    // is verified absent; an unreadable path is a failure, not proof of erasure.
+    try {
+      const files = databaseFiles();
+      for (const file of files.slice(1)) {
+        if (file.exists) file.delete();
+      }
+      if (files.some((file) => file.exists))
+        throw new Error(reason || 'a database file remains');
+    } catch (error) {
+      throw new StorageError(
+        'write_failed',
+        `Saved results could not be erased: ${(error as Error).message}`,
+      );
+    }
+    await secureStoreVault.remove();
   });
-  if (databaseFileExists()) {
-    throw new StorageError(
-      'write_failed',
-      `Saved results could not be erased: ${reason || 'the file remains'}`,
-    );
-  }
-  await secureStoreVault.remove();
 }
 
 /**
@@ -159,9 +212,20 @@ export function sqlRecordTable(db: SQLiteDatabase): RecordTable {
         : null;
     },
     async listSummaries() {
-      return db.getAllAsync<{ id: string; summary: string }>(
-        'SELECT id, summary FROM saved_results ORDER BY saved_at DESC;',
+      const rows = await db.getAllAsync<{
+        id: string;
+        schema_version: number;
+        saved_at: string;
+        summary: string;
+      }>(
+        'SELECT id, schema_version, saved_at, summary FROM saved_results ORDER BY saved_at DESC;',
       );
+      return rows.map(({ id, schema_version, saved_at, summary }) => ({
+        id,
+        schemaVersion: schema_version,
+        savedAt: saved_at,
+        summary,
+      }));
     },
     async remove(id) {
       await db.runAsync('DELETE FROM saved_results WHERE id = ?;', [id]);

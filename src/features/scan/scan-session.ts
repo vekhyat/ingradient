@@ -28,7 +28,8 @@ export interface StoredResult {
   snapshot: ProductSnapshot;
   assessment: LocalAssessment;
   executor: 'phone' | 'backend' | null;
-  analysedAt: string;
+  analysedAt: string | null;
+  savedAt: string | null;
   origin: 'new' | 'history';
   savedId: string | null;
   /** D70: an eligible later backend result, offered but never applied. */
@@ -383,7 +384,8 @@ export class ScanSession {
     executor: StoredResult['executor'],
     origin: StoredResult['origin'] = 'new',
     savedId: string | null = null,
-    analysedAt: string = this.now().toISOString(),
+    analysedAt: string | null = this.now().toISOString(),
+    savedAt: string | null = null,
   ): string {
     const resultKey = newOperationId('result');
     this.set({
@@ -395,6 +397,7 @@ export class ScanSession {
           assessment,
           executor,
           analysedAt,
+          savedAt,
           origin,
           savedId,
           pendingUpdate: null,
@@ -406,12 +409,16 @@ export class ScanSession {
     return resultKey;
   }
 
-  markSaved(resultKey: string, savedId: string): void {
+  markSaved(
+    resultKey: string,
+    savedId: string,
+    savedAt: string = this.now().toISOString(),
+  ): void {
     const result = this.state.results[resultKey];
     if (!result) {
       return;
     }
-    this.setResult({ ...result, savedId });
+    this.setResult({ ...result, savedId, savedAt });
   }
 
   /** Drops the saved link after the saved copy is deleted. */
@@ -419,7 +426,18 @@ export class ScanSession {
     const results: Record<string, StoredResult> = {};
     for (const [key, result] of Object.entries(this.state.results)) {
       results[key] =
-        result.savedId === savedId ? { ...result, savedId: null } : result;
+        result.savedId === savedId
+          ? { ...result, savedId: null, savedAt: null }
+          : result;
+    }
+    this.set({ results });
+  }
+
+  /** Drops every saved link after the encrypted saved history is erased. */
+  forgetAllSaved(): void {
+    const results: Record<string, StoredResult> = {};
+    for (const [key, result] of Object.entries(this.state.results)) {
+      results[key] = { ...result, savedId: null, savedAt: null };
     }
     this.set({ results });
   }

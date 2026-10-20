@@ -74,6 +74,35 @@ export function isValidGtin(barcode: unknown): barcode is string {
 }
 
 /**
+ * Scanner symbology disambiguates UPC-E from the eight-digit EAN-8.
+ * UPC-E retains the UPC-A check digit, so expand before validating it.
+ * GS1 General Specifications 5.2.2.4.2 defines the four expansion cases.
+ */
+export function normalizeScannedGtin(
+  data: string,
+  type: string,
+): string | null {
+  let barcode = data.trim();
+  if (type === 'upc_e') {
+    if (!/^[01]\d{7}$/.test(barcode)) return null;
+    const prefix = barcode.charAt(0);
+    const payload = barcode.slice(1, 7);
+    const last = payload.charAt(5);
+    const check = barcode.charAt(7);
+    if (last <= '2') {
+      barcode = `${prefix}${payload.slice(0, 2)}${last}0000${payload.slice(2, 5)}${check}`;
+    } else if (last === '3') {
+      barcode = `${prefix}${payload.slice(0, 3)}00000${payload.slice(3, 5)}${check}`;
+    } else if (last === '4') {
+      barcode = `${prefix}${payload.slice(0, 4)}00000${payload.charAt(4)}${check}`;
+    } else {
+      barcode = `${prefix}${payload.slice(0, 5)}0000${last}${check}`;
+    }
+  }
+  return isValidGtin(barcode) ? barcode : null;
+}
+
+/**
  * Checks whether a returned barcode matches the requested barcode.
  * Supports exact match and GS1 14-digit zero-padded canonical matching.
  *

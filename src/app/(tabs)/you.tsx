@@ -30,19 +30,28 @@ export default function YouTab() {
 
   useFocusEffect(
     useCallback(() => {
+      let active = true;
+      setCount(null);
       if (store.status !== 'ready') {
-        setCount(null);
         return;
       }
       store.store
         .count()
-        .then(setCount)
-        .catch(() => setCount(null));
+        .then((next) => {
+          if (active) setCount(next);
+        })
+        .catch(() => {
+          if (active) setCount(null);
+        });
+      return () => {
+        active = false;
+      };
     }, [store, storeRevision]), // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const erase = async () => {
     setConfirm(false);
+    if (store.status === 'opening') return;
     setOperation('erasing');
     try {
       if (store.status === 'ready') {
@@ -51,6 +60,7 @@ export default function YouTab() {
         // The data cannot be opened (for example a lost key): remove the file.
         await resetStore();
       }
+      setCount(0);
       setOperation('erased');
       bumpStore();
     } catch {
@@ -76,9 +86,14 @@ export default function YouTab() {
       ) : null}
       <LocalDataControls
         slice="S1"
-        savedCount={store.status === 'error' ? 1 : count}
+        savedCount={count}
+        eraseDisabledReason={
+          store.status === 'opening' ? enGB.history.loading : undefined
+        }
         operation={operation}
-        onErase={() => setConfirm(true)}
+        onErase={() => {
+          if (store.status !== 'opening') setConfirm(true);
+        }}
         onOpenPrivacy={() => router.push('/privacy')}
         onOpenMethod={() => router.push('/about-method')}
       />
@@ -104,6 +119,8 @@ export default function YouTab() {
         primaryAction={{
           label: enGB.you.eraseConfirm,
           variant: 'outline',
+          disabledReason:
+            store.status === 'opening' ? enGB.history.loading : undefined,
           onPress: () => void erase(),
         }}
       >

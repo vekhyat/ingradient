@@ -1,5 +1,6 @@
 import index from './generated/taxonomy-index.json';
 import { normaliseKey } from './normalise-key';
+import { normaliseAdditiveCode } from './normalise-additive-code';
 
 export type MatchIdentity =
   | {
@@ -32,15 +33,11 @@ export function matchIngredient(
   }: { additiveContext?: boolean; fuzzy?: boolean } = {},
 ): MatchIdentity {
   const key = normaliseKey(text);
-  const code = /^(?:(e|ins)\s*)?(\d{3,4}[a-z]?(?:\s*\(\s*[ivx]+\s*\))?)$/i.exec(
-    key,
-  );
+  const code = normaliseAdditiveCode(key);
   let candidates: readonly string[];
   if (code) {
-    if (!code[1] && !additiveContext) return unresolved();
-    const number = code[2];
-    if (number === undefined) return unresolved();
-    const additiveKey = `e${number.replace(/\s+/g, '')}`;
+    if (!/^(?:e|ins)/.test(key) && !additiveContext) return unresolved();
+    const additiveKey = `e${code}`;
     candidates = Object.hasOwn(additives, additiveKey)
       ? (additives[additiveKey] ?? [])
       : [];

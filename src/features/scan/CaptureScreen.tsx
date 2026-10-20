@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { isValidGtin } from '../../adapters/catalogue/gtin';
+import { normalizeScannedGtin } from '../../adapters/catalogue/gtin';
 import { AppText } from '../../components/AppText';
 import { Button } from '../../components/Button';
 import { CaptureViewfinder } from '../../components/CaptureViewfinder';
@@ -29,6 +29,7 @@ import {
   nutritionStillOptional,
 } from '../capture/label-session';
 import { checkTypedBarcode } from './barcode-input';
+import { DiscardLabelSheet } from './DiscardLabelSheet';
 
 const BARCODE_TYPES = ['ean13', 'ean8', 'upc_a', 'upc_e'] as const;
 
@@ -86,6 +87,7 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
   const [torch, setTorch] = useState(false);
   const [locked, setLocked] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
   const [manualValue, setManualValue] = useState('');
   const [manualError, setManualError] = useState<
     BarcodeFieldError | undefined
@@ -95,6 +97,7 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
   const [analysisFailed, setAnalysisFailed] = useState(false);
   const analysis = useRef<AbortController | null>(null);
   const lockedRef = useRef(false);
+  const scannerEnabled = useRef(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -103,12 +106,14 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
       lockedRef.current = false;
       setLocked(false);
       return () => {
+        scannerEnabled.current = false;
         analysis.current?.abort();
         analysis.current = null;
         setAnalysing(false);
         setFocused(false);
         setReady(false);
         setTorch(false);
+        setManualOpen(false);
       };
     }, [warmUpBackend]),
   );
@@ -117,6 +122,7 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
     const subscription = AppState.addEventListener('change', (state) => {
       setForeground(state === 'active');
       if (state !== 'active') {
+        scannerEnabled.current = false;
         analysis.current?.abort();
         analysis.current = null;
         setAnalysing(false);
@@ -154,7 +160,16 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
       session.nutrition.state !== 'missing');
   // While a label is being photographed, a barcode printed on the same pack
   // must not pull the user away to a lookup.
-  const scanningBarcodes = !labelOnly && !anyPanel && !labelState.reading;
+  const scanningBarcodes =
+    cameraActive &&
+    !manualOpen &&
+    !discardOpen &&
+    !labelOnly &&
+    !anyPanel &&
+    !labelState.reading;
+  useEffect(() => {
+    scannerEnabled.current = scanningBarcodes;
+  }, [scanningBarcodes]);
 
   /** Largest still size the camera offers, so OCR sees small print. */
   const pickLargestPictureSize = async () => {
@@ -177,33 +192,35 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
   };
 
   const startLookup = (code: string) => {
+    lockedRef.current = true;
+    scannerEnabled.current = false;
+    setLocked(true);
+    setManualOpen(false);
+    setManualError(undefined);
+    setManualValue('');
     void scan.lookup(code);
     router.push('/lookup');
   };
 
-  const onBarcode = (data: string) => {
-    if (lockedRef.current || !scanningBarcodes) {
+  const onBarcode = (data: string, type: string) => {
+    if (lockedRef.current || !scannerEnabled.current) {
       return;
     }
-    const code = data.trim();
-    if (!isValidGtin(code)) {
+    const code = normalizeScannedGtin(data, type);
+    if (!code) {
       return;
     }
     // Freeze this code: repeated frames cannot start a second lookup.
-    lockedRef.current = true;
-    setLocked(true);
     startLookup(code);
   };
 
   const submitManual = () => {
+    if (!focused || !foreground || lockedRef.current) return;
     const checked = checkTypedBarcode(manualValue);
     if (!checked.ok) {
       setManualError(checked.error);
       return;
     }
-    setManualOpen(false);
-    setManualError(undefined);
-    setManualValue('');
     startLookup(checked.code);
   };
 
@@ -357,7 +374,7 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
                 barcodeScannerSettings={{ barcodeTypes: [...BARCODE_TYPES] }}
                 onBarcodeScanned={
                   scanningBarcodes && !locked
-                    ? (result) => onBarcode(result.data)
+                    ? (result) => onBarcode(result.data, result.type)
                     : undefined
                 }
                 pictureSize={pictureSize}
@@ -448,7 +465,10 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
               <Button
                 label={enGB.scan.typeBarcode}
                 variant="text"
-                onPress={() => setManualOpen(true)}
+                onPress={() => {
+                  scannerEnabled.current = false;
+                  setManualOpen(true);
+                }}
               />
             </View>
           </>
@@ -505,13 +525,24 @@ export function CaptureScreen({ labelOnly }: { labelOnly: boolean }) {
                 disabledReason={
                   analysing ? enGB.status.analysis.server : undefined
                 }
-                onPress={() => label.discard()}
+                onPress={() => {
+                  if (label.isDirty()) setDiscardOpen(true);
+                  else label.discard();
+                }}
               />
             ) : null}
           </>
         )}
       </View>
 
+      <DiscardLabelSheet
+        visible={discardOpen}
+        onKeep={() => setDiscardOpen(false)}
+        onDiscard={() => {
+          setDiscardOpen(false);
+          label.discard();
+        }}
+      />
       <Sheet
         visible={manualOpen}
         title={enGB.scan.manualTitle}

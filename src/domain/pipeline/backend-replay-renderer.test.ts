@@ -78,6 +78,41 @@ function reverseKeys(value: unknown): unknown {
 }
 
 describe('renderReplayedBackendReasons', () => {
+  it.each([
+    ['zero protein', 0, 0.8],
+    ['protein at the cap', 6, 0.8],
+    ['protein not counted', 20, 3],
+  ])(
+    'accepts unchanged backend protein evidence for red meat with %s',
+    (_name, protein, salt) => {
+      const vector = vectorsJson.vectors[0];
+      if (!vector) throw new Error('Missing canonical fixture');
+      const snapshot = snapshotFor(vector);
+      snapshot.observations = snapshot.observations.map((obs) =>
+        obs.kind === 'read' && (obs.field === 'protein' || obs.field === 'salt')
+          ? { ...obs, value: obs.field === 'protein' ? protein : salt }
+          : obs,
+      );
+      // The backend keeps ordinary/uncounted protein evidence when the cap has
+      // no effect. Derive that evidence independently with red meat absent.
+      const server = replayScientificSnapshot(snapshot).scientific;
+      if (!snapshot.scoringFacts) throw new Error('Missing facts');
+      snapshot.scoringFacts.redMeat = {
+        state: 'present',
+        sourceIds: ['source'],
+      };
+      const reviewed = renderReplayedBackendReasons(snapshot, server);
+      if (!reviewed) throw new Error('Expected accepted replay');
+      expect(reviewed.issues).toEqual([]);
+      expect(reviewed.reasons).toEqual(server.reasons);
+      expect(
+        server.reasons.some(
+          (reason) => reason.templateId === 'nutriscore.protein_red_meat',
+        ),
+      ).toBe(false);
+    },
+  );
+
   it.each(vectorsJson.vectors)(
     'accepts matching actual replay for $id',
     (vector) => {

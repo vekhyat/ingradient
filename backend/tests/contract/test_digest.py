@@ -4,12 +4,12 @@ import json
 from typing import Any
 
 import pytest
-from rfc8785 import dumps
+from rfc8785 import CanonicalizationError, dumps
 from tests.contract.support import VECTORS_PATH, load_json
 
 from app.contract.digest import input_digest
 from app.contract.models import ProductAnalysisInput
-from app.contract.parsing import RequestParseError, parse_json_body
+from app.contract.parsing import MAX_JSON_DEPTH, RequestParseError, parse_json_body
 
 
 def _cases() -> list[dict[str, Any]]:
@@ -79,3 +79,38 @@ def test_digest_survives_a_json_round_trip_of_special_numbers() -> None:
     for case in cases:
         parsed = json.loads(json.dumps(case["value"]))
         assert input_digest(parsed) == case["sha256"]
+
+
+def test_parser_and_digest_enforce_the_same_explicit_nesting_bound() -> None:
+    raw = b"[" * MAX_JSON_DEPTH + b'"{}[]\\""' + b"]" * MAX_JSON_DEPTH
+    parsed = parse_json_body(raw)
+    assert input_digest(parsed)
+    with pytest.raises(RequestParseError):
+        parse_json_body(b"[" + raw + b"]")
+    with pytest.raises(CanonicalizationError):
+        input_digest([parsed])
+
+
+def test_digest_rejects_deep_programmatic_input_without_recursing() -> None:
+    value: object = "private-product-text"
+    for _ in range(1100):
+        value = {"x": value}
+    with pytest.raises(CanonicalizationError):
+        input_digest(value)
+
+
+@pytest.mark.parametrize("boundary", ["parse", "digest"])
+def test_runtime_recursion_errors_are_translated(
+    boundary: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def recurse(*_args: object, **_kwargs: object) -> object:
+        raise RecursionError("private-product-text")
+
+    if boundary == "parse":
+        monkeypatch.setattr("app.contract.parsing.json.loads", recurse)
+        with pytest.raises(RequestParseError):
+            parse_json_body(b"{}")
+    else:
+        monkeypatch.setattr("app.contract.digest.dumps", recurse)
+        with pytest.raises(CanonicalizationError):
+            input_digest({})

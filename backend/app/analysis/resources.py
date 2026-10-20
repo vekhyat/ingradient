@@ -6,10 +6,16 @@ The local manifest is a pin, not a cryptographic release signature.
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
+from app.analysis.matching import (
+    ECMASCRIPT_WHITESPACE,
+    build_alias_lookup,
+    normalize_key,
+)
 from app.contract.models import Citation, MethodRef
 
 RESOURCE_ROOT = Path(__file__).resolve().parents[3] / "resources"
@@ -39,22 +45,46 @@ class AnalysisResources:
         }
 
 
-def _aliases(text: str) -> dict[str, tuple[str, ...]]:
+def _aliases(
+    text: str, kind: Literal["ingredient", "additive"]
+) -> dict[str, tuple[str, ...]]:
+    """Rebuild the phone index's English and language-neutral own-name aliases."""
+
     aliases: dict[str, set[str]] = {}
-    for block in text.split("\n\n"):
+    whitespace = "[" + ECMASCRIPT_WHITESPACE + "]"
+    for block in re.split(r"\r?\n" + whitespace + r"*\r?\n", text):
         names: list[str] = []
-        for line in block.splitlines():
-            if line.startswith("en:"):
-                names.extend(
-                    name.strip() for name in line[3:].split(",") if name.strip()
+        canonical: str | None = None
+        for line in re.split(r"\r?\n", block):
+            match = re.fullmatch(r"([a-z]{2}):" + whitespace + r"*(.*)", line)
+            if match is None:
+                continue
+            language, value = match.groups()
+            line_names = [
+                name.replace(r"\,", ",").strip(ECMASCRIPT_WHITESPACE)
+                for name in re.split(r"(?<!\\),", value)
+            ]
+            line_names = [name for name in line_names if name]
+            if not line_names:
+                continue
+            if language == "en" and canonical is None:
+                first = line_names[0]
+                canonical = "en:" + first.lower().replace(" ", "-")
+                code = re.fullmatch(
+                    "E" + whitespace + r"?(\d{3,4}[a-z]?)(?:\(([ivx]+)\))?",
+                    first,
+                    flags=re.IGNORECASE | re.ASCII,
                 )
-        if not names:
+                if kind == "additive" and code is not None:
+                    canonical = f"en:e{code[1].lower()}"
+                    if code[2] is not None:
+                        canonical = canonical + "(" + code[2].lower() + ")"
+            if language in {"en", "xx"}:
+                names.extend(line_names)
+        if canonical is None:
             continue
-        # OFF's first English entry is the English canonical name. Properties,
-        # parent relations and synonym directives are deliberately not aliases.
-        canonical = "en:" + names[0].lower().replace(" ", "-")
         for name in names:
-            aliases.setdefault(" ".join(name.casefold().split()), set()).add(canonical)
+            aliases.setdefault(normalize_key(name), set()).add(canonical)
     return {name: tuple(sorted(ids)) for name, ids in aliases.items()}
 
 
@@ -97,11 +127,10 @@ def load_resources(root: Path = RESOURCE_ROOT) -> AnalysisResources:
                         raise ResourceUnavailable("resource_operator")
         ingredient_pin, ingredients = loaded["off-taxonomy-ingredients"]
         _, additives = loaded["off-taxonomy-additives"]
-        aliases = _aliases(ingredients.decode("utf-8").replace("\r\n", "\n"))
-        for name, ids in _aliases(
-            additives.decode("utf-8").replace("\r\n", "\n")
-        ).items():
-            aliases[name] = tuple(sorted(set(aliases.get(name, ())) | set(ids)))
+        aliases = build_alias_lookup(
+            _aliases(ingredients.decode("utf-8"), "ingredient"),
+            _aliases(additives.decode("utf-8"), "additive"),
+        )
         return AnalysisResources(
             method=method,
             templates=templates,

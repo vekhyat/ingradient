@@ -4,6 +4,7 @@
 import { describe, expect, it } from '@jest/globals';
 import {
   INGREDIENT_MENTION_LIMIT,
+  INGREDIENT_NESTING_LIMIT,
   INGREDIENT_PANEL_TEXT_LIMIT,
 } from './limits';
 import { parseIngredients } from './parse-ingredients';
@@ -676,6 +677,76 @@ describe('parseIngredients', () => {
       false,
     );
   });
+
+  it.each([INGREDIENT_NESTING_LIMIT, INGREDIENT_NESTING_LIMIT + 1, 9_990])(
+    'bounds %i anonymous groups and preserves the unexpanded source span',
+    (groups) => {
+      const input = `${'('.repeat(groups)}E150(a), salt${')'.repeat(groups)}, sugar`;
+      const result = parsed(input);
+      expect(result.issues.map((issue) => issue.code)).toEqual([
+        'nesting_limit',
+      ]);
+      const raw = result.mentions[0];
+      const skipped = INGREDIENT_NESTING_LIMIT - 1;
+      expect(raw).toMatchObject({
+        depth: INGREDIENT_NESTING_LIMIT,
+        parentId: null,
+        text: input.slice(skipped, input.lastIndexOf(', sugar') - skipped),
+        additive: null,
+        percentage: null,
+      });
+      expect(raw?.name).toBe(raw?.text);
+      expect(raw?.nameSpans).toEqual([raw?.span]);
+      expect(raw?.issues[0]?.span).toEqual(raw?.span);
+      expect(result.mentions[1]?.name).toBe('sugar');
+      expect(result.mentions).toHaveLength(2);
+      expect(
+        result.mentions.every((m) => m.depth <= INGREDIENT_NESTING_LIMIT),
+      ).toBe(true);
+      assertSpans(input);
+    },
+  );
+
+  it('allows an ingredient exactly at the anonymous nesting boundary', () => {
+    const groups = INGREDIENT_NESTING_LIMIT - 1;
+    const input = `${'['.repeat(groups)}salt${']'.repeat(groups)}`;
+    expect(parsed(input).mentions).toMatchObject([
+      { name: 'salt', depth: INGREDIENT_NESTING_LIMIT, parentId: null },
+    ]);
+    expect(parsed(input).issues).toEqual([]);
+    assertSpans(input);
+  });
+
+  it('counts named and anonymous groups against the same depth budget', () => {
+    const groups = INGREDIENT_NESTING_LIMIT - 1;
+    const input = `Sauce {${'['.repeat(groups)}salt${']'.repeat(groups)}}`;
+    const result = parsed(input);
+    expect(result.mentions).toHaveLength(2);
+    expect(result.mentions[1]).toMatchObject({
+      name: '[salt]',
+      parentId: result.mentions[0]?.id,
+      depth: INGREDIENT_NESTING_LIMIT,
+      issues: [{ code: 'nesting_limit' }],
+    });
+    assertSpans(input);
+  });
+
+  it.each(['Contains: milk, soy', 'E100 E150a'])(
+    'does not create statement or synthetic children beyond the depth limit: %s',
+    (body) => {
+      const groups = INGREDIENT_NESTING_LIMIT - 1;
+      const input = `${'('.repeat(groups)}${body}${')'.repeat(groups)}`;
+      const result = parsed(input);
+      expect(result.mentions).toHaveLength(1);
+      expect(result.mentions[0]).toMatchObject({
+        name: body,
+        depth: INGREDIENT_NESTING_LIMIT,
+        additive: null,
+        issues: [{ code: 'nesting_limit' }],
+      });
+      assertSpans(input);
+    },
+  );
 
   it('stops at the mention limit without throwing', () => {
     const input = Array.from(

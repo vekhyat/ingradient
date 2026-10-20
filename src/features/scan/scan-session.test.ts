@@ -136,6 +136,51 @@ describe('ScanSession lookup', () => {
 });
 
 describe('results', () => {
+  it('retains distinct analysis and saved times, including an unknown analysis time', () => {
+    const session = new ScanSession(
+      manualCatalogue().catalogue,
+      methodNotInstalledAnalyser,
+    );
+    const scenario = getLocalScenario('complete_graded');
+    const analysedAt = '2026-10-18T08:00:00Z';
+    const savedAt = '2026-10-20T08:00:00Z';
+    const key = session.addResult(
+      scenario.snapshot,
+      scenario.assessment,
+      'phone',
+      'history',
+      'saved-1',
+      analysedAt,
+      savedAt,
+    );
+    expect(session.getResult(key)).toMatchObject({ analysedAt, savedAt });
+    const unknown = session.addResult(
+      scenario.snapshot,
+      scenario.assessment,
+      null,
+      'history',
+      'saved-2',
+      null,
+      savedAt,
+    );
+    expect(session.getResult(unknown)).toMatchObject({
+      analysedAt: null,
+      savedAt,
+    });
+    session.forgetAllSaved();
+    expect(session.getResult(key)).toMatchObject({
+      savedId: null,
+      savedAt: null,
+      analysedAt,
+    });
+    expect(session.getResult(unknown)).toMatchObject({
+      savedId: null,
+      savedAt: null,
+      analysedAt: null,
+    });
+    expect(session.getResult(key)?.assessment).toBe(scenario.assessment);
+  });
+
   it('tracks the saved copy and forgets it after delete', () => {
     const session = new ScanSession(
       { lookupBarcode: () => Promise.resolve({ state: 'absent', issues: [] }) },
@@ -149,8 +194,10 @@ describe('results', () => {
     );
     session.markSaved(key, 'saved-1');
     expect(session.getResult(key)?.savedId).toBe('saved-1');
+    expect(session.getResult(key)?.savedAt).toEqual(expect.any(String));
     session.forgetSaved('saved-1');
     expect(session.getResult(key)?.savedId).toBeNull();
+    expect(session.getResult(key)?.savedAt).toBeNull();
   });
 });
 

@@ -10,8 +10,12 @@ import { AppState, type AppStateStatus } from 'react-native';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 
 import vectors from '../../../resources/vectors/nutriscore-vectors.json';
+import { StorageError } from '../../adapters/storage/records';
 import { MemoryRecordTable } from '../../adapters/storage/snapshot-store';
-import type { ProductSnapshot } from '../../domain/contracts/generated/local';
+import type {
+  LocalAssessment,
+  ProductSnapshot,
+} from '../../domain/contracts/generated/local';
 import { localValidators } from '../../domain/contracts/generated/validate-local';
 import { wireValidators } from '../../domain/contracts/generated/validate-wire';
 import type { AnalyzeResponse } from '../../domain/contracts/generated/wire';
@@ -23,6 +27,8 @@ const mockReadNotice = jest.fn<(key: string) => Promise<string | null>>();
 const mockWriteNotice =
   jest.fn<(key: string, value: string) => Promise<void>>();
 const mockOpenDatabase = jest.fn<() => Promise<unknown>>();
+const mockCloseDatabase = jest.fn<(db: unknown) => Promise<void>>();
+const mockDestroyDatabase = jest.fn<() => Promise<void>>();
 const mockClearPhotos = jest.fn();
 let mockTable: MemoryRecordTable;
 
@@ -32,8 +38,9 @@ jest.mock('expo-secure-store', () => ({
 }));
 jest.mock('../../adapters/storage/sqlcipher-table', () => ({
   openEncryptedDatabase: () => mockOpenDatabase(),
+  closeEncryptedDatabase: (db: unknown) => mockCloseDatabase(db),
   sqlRecordTable: () => mockTable,
-  destroyEncryptedDatabase: async () => undefined,
+  destroyEncryptedDatabase: () => mockDestroyDatabase(),
 }));
 jest.mock('../../adapters/storage/session-photos', () => ({
   clearSessionPhotos: () => mockClearPhotos(),
@@ -98,6 +105,16 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 
+function localAssessment(input: ProductSnapshot): LocalAssessment {
+  const replay = replayScientificSnapshot(input);
+  return {
+    ...replay,
+    citations: [...replay.citations],
+    snapshotId: input.id,
+    personal: { state: 'not_in_slice', issues: [] },
+  };
+}
+
 describe('actual app services notice and foreground lifecycle', () => {
   let screen: ReactTestRenderer | undefined;
   let current: ReturnType<typeof useServices> | undefined;
@@ -141,6 +158,8 @@ describe('actual app services notice and foreground lifecycle', () => {
     mockReadNotice.mockReset().mockResolvedValue(null);
     mockWriteNotice.mockReset().mockResolvedValue(undefined);
     mockOpenDatabase.mockReset().mockResolvedValue({});
+    mockCloseDatabase.mockReset().mockResolvedValue(undefined);
+    mockDestroyDatabase.mockReset().mockResolvedValue(undefined);
     jest
       .spyOn(AppState, 'addEventListener')
       .mockImplementation((_event, listener) => {
@@ -260,30 +279,180 @@ describe('actual app services notice and foreground lifecycle', () => {
     },
   );
 
-  it('backgrounding aborts the pending hybrid request and clears existing and future update offers', async () => {
-    mockReadNotice.mockResolvedValueOnce(NOTICE_VERSION);
+  it.each(['background', 'inactive'] as const)(
+    '%s aborts the pending hybrid request and clears existing and future update offers',
+    async (nextState) => {
+      mockReadNotice.mockResolvedValueOnce(NOTICE_VERSION);
+      await mount();
+      delayMs = 3500;
+      const first = analyse();
+      await jest.advanceTimersByTimeAsync(2000);
+      const firstKey = await first;
+      if (!firstKey) throw new Error('Missing phone result');
+      await jest.advanceTimersByTimeAsync(1500);
+      expect(services().scan.getResult(firstKey)?.pendingUpdate).not.toBeNull();
+      const second = analyse();
+      await jest.advanceTimersByTimeAsync(2000);
+      const secondKey = await second;
+      if (!secondKey) throw new Error('Missing second phone result');
+      expect(requests[1]?.signal?.aborted).toBe(false);
+      await act(async () => {
+        onAppState?.(nextState);
+        onAppState?.('active');
+      });
+      expect(requests[1]?.signal?.aborted).toBe(true);
+      expect(services().scan.getResult(firstKey)?.pendingUpdate).toBeNull();
+      await jest.advanceTimersByTimeAsync(1500);
+      expect(services().scan.getResult(secondKey)?.pendingUpdate).toBeNull();
+      expect(services().scan.getResult(firstKey)?.executor).toBe('phone');
+      expect(services().scan.getResult(secondKey)?.executor).toBe('phone');
+    },
+  );
+
+  it('refuses recovery during initial opening without erasing healthy data', async () => {
+    const initial = deferred<unknown>();
+    mockOpenDatabase.mockReturnValueOnce(initial.promise);
     await mount();
-    delayMs = 3500;
-    const first = analyse();
-    await jest.advanceTimersByTimeAsync(2000);
-    const firstKey = await first;
-    if (!firstKey) throw new Error('Missing phone result');
-    await jest.advanceTimersByTimeAsync(1500);
-    expect(services().scan.getResult(firstKey)?.pendingUpdate).not.toBeNull();
-    const second = analyse();
-    await jest.advanceTimersByTimeAsync(2000);
-    const secondKey = await second;
-    if (!secondKey) throw new Error('Missing second phone result');
-    expect(requests[1]?.signal?.aborted).toBe(false);
-    await act(async () => {
-      onAppState?.('background');
+    expect(services().store.status).toBe('opening');
+    await expect(services().resetStore()).rejects.toMatchObject({
+      code: 'unavailable',
     });
-    expect(requests[1]?.signal?.aborted).toBe(true);
-    expect(services().scan.getResult(firstKey)?.pendingUpdate).toBeNull();
-    await jest.advanceTimersByTimeAsync(1500);
-    expect(services().scan.getResult(secondKey)?.pendingUpdate).toBeNull();
-    expect(services().scan.getResult(firstKey)?.executor).toBe('phone');
-    expect(services().scan.getResult(secondKey)?.executor).toBe('phone');
+    expect(mockDestroyDatabase).not.toHaveBeenCalled();
+    await act(async () => {
+      initial.resolve({});
+    });
+    expect(services().store.status).toBe('ready');
+    expect(mockOpenDatabase).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes stale open completions before a queued reopen and publishes only the latest store', async () => {
+    const initial = deferred<unknown>();
+    const next = deferred<unknown>();
+    const firstDb = { name: 'first' };
+    const nextDb = { name: 'next' };
+    mockOpenDatabase
+      .mockReturnValueOnce(initial.promise)
+      .mockReturnValueOnce(next.promise);
+    await mount();
+    await act(async () => {
+      services().reopenStore();
+    });
+    expect(mockOpenDatabase).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      initial.resolve(firstDb);
+    });
+    expect(mockCloseDatabase).toHaveBeenCalledWith(firstDb);
+    expect(services().store.status).toBe('opening');
+    expect(mockOpenDatabase).toHaveBeenCalledTimes(2);
+    await act(async () => {
+      next.resolve(nextDb);
+    });
+    expect(services().store.status).toBe('ready');
+  });
+
+  it('waits for confirmed recovery and the replacement open before reset resolves', async () => {
+    mockOpenDatabase.mockRejectedValueOnce(
+      new StorageError('key_lost', 'Missing key'),
+    );
+    await mount();
+    const deletion = deferred<void>();
+    const replacement = deferred<unknown>();
+    mockDestroyDatabase.mockReturnValueOnce(deletion.promise);
+    mockOpenDatabase.mockReturnValueOnce(replacement.promise);
+    let done = false;
+    let resetting: Promise<void> = Promise.resolve();
+    await act(async () => {
+      resetting = services()
+        .resetStore()
+        .then(() => {
+          done = true;
+        });
+    });
+    expect(services().store.status).toBe('opening');
+    expect(mockOpenDatabase).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      deletion.resolve(undefined);
+    });
+    expect(mockOpenDatabase).toHaveBeenCalledTimes(2);
+    expect(done).toBe(false);
+    await act(async () => {
+      replacement.resolve({});
+      await resetting;
+    });
+    expect(done).toBe(true);
+    expect(services().store.status).toBe('ready');
+  });
+
+  it('retains saved links when erase fails and clears every link only after confirmed erase', async () => {
+    await mount();
+    const assessment = localAssessment(input);
+    const first = services().scan.addResult(
+      input,
+      assessment,
+      'phone',
+      'new',
+      'saved-a',
+    );
+    const second = services().scan.addResult(
+      input,
+      assessment,
+      'phone',
+      'new',
+      'saved-b',
+    );
+    const state = services().store;
+    if (state.status !== 'ready') throw new Error('Missing store');
+    mockTable.failNextWrite = 'disk locked';
+    await expect(state.store.eraseAll()).rejects.toMatchObject({
+      code: 'write_failed',
+    });
+    expect(services().scan.getResult(first)?.savedId).toBe('saved-a');
+    expect(services().scan.getResult(second)?.savedId).toBe('saved-b');
+    await state.store.eraseAll();
+    expect(services().scan.getResult(first)?.savedId).toBeNull();
+    expect(services().scan.getResult(second)?.savedId).toBeNull();
+    expect(services().scan.getResult(first)?.assessment).toEqual(assessment);
+  });
+
+  it('keeps recovery failures visible, preserves saved links, and does not reopen after failed deletion', async () => {
+    mockOpenDatabase.mockRejectedValueOnce(
+      new StorageError('key_lost', 'Missing key'),
+    );
+    await mount();
+    const key = services().scan.addResult(
+      input,
+      localAssessment(input),
+      'phone',
+      'new',
+      'saved',
+    );
+    mockDestroyDatabase.mockRejectedValueOnce(
+      new StorageError('write_failed', 'WAL remains'),
+    );
+    await act(async () => {
+      await expect(services().resetStore()).rejects.toThrow('WAL remains');
+    });
+    expect(services().store).toMatchObject({
+      status: 'error',
+      code: 'write_failed',
+    });
+    expect(services().scan.getResult(key)?.savedId).toBe('saved');
+    expect(mockOpenDatabase).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes an open that finishes after unmount', async () => {
+    const initial = deferred<unknown>();
+    const db = { name: 'unmounted' };
+    mockOpenDatabase.mockReturnValueOnce(initial.promise);
+    await mount();
+    await act(async () => {
+      screen?.unmount();
+      screen = undefined;
+    });
+    await act(async () => {
+      initial.resolve(db);
+    });
+    expect(mockCloseDatabase).toHaveBeenCalledWith(db);
   });
 
   it('keeps warmUpBackend stable across unrelated provider updates', async () => {

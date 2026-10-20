@@ -33,6 +33,14 @@ export type NutrientCorrection =
 export type IngredientCorrection =
   { kind: 'text'; text: string } | { kind: 'unreadable' };
 
+/** The frozen IngredientMention.text contract limit. */
+export const INGREDIENT_CORRECTION_MAX = 2000;
+
+/** Index in the original observation array, stable even when its basis changes. */
+export function nutrientCorrectionKey(field: string, rowId: string): string {
+  return `${field}:${rowId}`;
+}
+
 type Basis = 'per_100_g' | 'per_100_ml' | 'per_serving';
 
 export interface Corrections {
@@ -132,19 +140,48 @@ export function buildLabelSnapshot({
 
   // Apply ingredient corrections.
   const correctionRefs = new Map<string, string>();
-  const correctionSource = (title: string) => {
-    const existing = correctionRefs.get(title);
+  const correctionSource = (title: string, locator?: string) => {
+    const key = `${title}:${locator ?? ''}`;
+    const existing = correctionRefs.get(key);
     if (existing) {
       return existing;
     }
     const id = newSourceId();
-    sourceRefs.push({ id, kind: 'user_correction', title });
-    correctionRefs.set(title, id);
+    sourceRefs.push({
+      id,
+      kind: 'user_correction',
+      title,
+      ...(locator ? { locator } : {}),
+    });
+    correctionRefs.set(key, id);
     return id;
   };
+  const parsedIngredients = parseIngredients(ingredientsPanel?.text ?? '');
   const unreadableIssues: Issue[] = [];
   ingredients = ingredients.map((mention) => {
     const fix = corrections.ingredients[mention.id];
+    if (!fix) return mention;
+    // A locator connects this correction to the original panel, including
+    // catalogue mentions whose ids differ from the local parser's ids.
+    const candidates = parsedIngredients.mentions.filter(
+      (item) =>
+        (item.role === 'ingredient' || item.role === 'additive') &&
+        (item.name.trim() === mention.text.trim() ||
+          item.text.trim() === mention.text.trim()),
+    );
+    const prefix = `ingredients.${mention.id};parsed=`;
+    const previousLocator = mention.sourceIds
+      .map((id) => sourceRefs.find((source) => source.id === id))
+      .find((source) => source?.locator?.startsWith(prefix))?.locator;
+    const original =
+      parsedIngredients.mentions.find(
+        (item) => item.id === previousLocator?.slice(prefix.length),
+      ) ??
+      candidates.find((item) => item.id === mention.id) ??
+      (candidates.length === 1 ? candidates[0] : undefined);
+    const locator = original
+      ? `ingredients.${mention.id};parsed=${original.id}`
+      : undefined;
     if (fix?.kind === 'unreadable') {
       // The printed text stays as evidence of what was rejected; the issue
       // and the dropped identity say it cannot be relied on.
@@ -155,7 +192,7 @@ export function buildLabelSnapshot({
         state: 'unresolved',
         candidateIds: [],
         sourceIds: [
-          correctionSource('You marked this as unreadable'),
+          correctionSource('You marked this as unreadable', locator),
           ...mention.sourceIds,
         ],
       };
@@ -163,7 +200,12 @@ export function buildLabelSnapshot({
     if (!fix || fix.kind !== 'text' || fix.text.trim().length === 0) {
       return mention;
     }
-    const fixId = correctionSource('Your correction');
+    if (fix.text.trim().length > INGREDIENT_CORRECTION_MAX) {
+      throw new RangeError(
+        `Ingredient corrections must be ${INGREDIENT_CORRECTION_MAX} characters or fewer.`,
+      );
+    }
+    const fixId = correctionSource('Your correction', locator);
     return {
       ...mention,
       text: fix.text.trim(),
@@ -238,8 +280,26 @@ export function buildLabelSnapshot({
   }
 
   // Apply nutrient corrections.
-  observations = observations.map((observation): NutrientObservation => {
-    const fix = corrections.nutrients[observation.field];
+  observations = observations.map((observation, index): NutrientObservation => {
+    const fieldFix = corrections.nutrients[observation.field];
+    const fieldRows = observations.filter(
+      (item) => item.field === observation.field,
+    );
+    // Legacy field-only callers can still correct one unambiguous reading.
+    // With multiple bases, a value correction targets its unique matching
+    // basis; an ambiguous correction never rewrites several readings.
+    const legacyTarget =
+      fieldRows.length === 1 ||
+      (fieldFix?.kind === 'value' &&
+        observation.kind !== 'missing' &&
+        observation.basis === fieldFix.basis &&
+        fieldRows.filter(
+          (item) => item.kind !== 'missing' && item.basis === fieldFix.basis,
+        ).length === 1);
+    const fix =
+      corrections.nutrients[
+        nutrientCorrectionKey(observation.field, String(index))
+      ] ?? (legacyTarget ? fieldFix : undefined);
     if (!fix) {
       return observation;
     }
@@ -307,7 +367,7 @@ function unreadableIngredientIssue(mention: IngredientMention): Issue {
     code: 'ingredient_unreadable',
     stage: 'extraction',
     field: `ingredients.${mention.id}`,
-    message: `You marked "${mention.text}" as unreadable.`,
+    message: 'You marked this ingredient reading as unreadable.',
     action: 'retake',
   };
 }

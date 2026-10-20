@@ -662,6 +662,10 @@ function appendStatement(
     noteLimit(ctx, headerStart, bodyEnd);
     return;
   }
+  if (depth >= INGREDIENT_NESTING_LIMIT) {
+    appendLimitedSpan(ctx, headerStart, bodyEnd, parentId, roleOf(kind), depth);
+    return;
+  }
   const id = `m${ctx.nextId}`;
   ctx.nextId += 1;
   const body = trimRange(ctx.text, bodyStart, bodyEnd);
@@ -798,6 +802,40 @@ function choosePercent(
   return chosen;
 }
 
+/** Keep an unexpanded subtree opaque instead of guessing names inside it. */
+function appendLimitedSpan(
+  ctx: Ctx,
+  start: number,
+  end: number,
+  parentId: string | null,
+  role: IngredientRole,
+  depth: number,
+): void {
+  const sliced = sliceAt(ctx, start, end);
+  const issue = makeIssue(
+    'nesting_limit',
+    `Nesting deeper than ${INGREDIENT_NESTING_LIMIT} was kept as one span.`,
+    sliced.span,
+    'edit',
+  );
+  ctx.mentions.push({
+    id: `m${ctx.nextId}`,
+    role,
+    parentId,
+    text: sliced.text,
+    span: sliced.span,
+    name: cleanPart(ctx.text.slice(start, end)),
+    nameSpans: [sliced.span],
+    percentage: null,
+    additive: null,
+    additiveClass: null,
+    depth,
+    issues: [issue],
+  });
+  ctx.nextId += 1;
+  ctx.issues.push(issue);
+}
+
 function appendItem(
   ctx: Ctx,
   start: number,
@@ -845,6 +883,11 @@ function appendItem(
     }
   }
 
+  if (childGroups.length > 0 && depth >= INGREDIENT_NESTING_LIMIT) {
+    appendLimitedSpan(ctx, item.start, item.end, parentId, role, depth);
+    return;
+  }
+
   const groupHoles = structureOk ? [...percentGroups, ...childGroups] : [];
   const outside = coverRanges(item.start, item.end, groupHoles);
   const percentHit = choosePercent(
@@ -876,7 +919,7 @@ function appendItem(
         parentId,
         role,
         ownClass,
-        depth,
+        depth + 1,
       );
     }
     return;
@@ -908,26 +951,15 @@ function appendItem(
       ),
     );
   }
-  if (
-    structureOk &&
-    childGroups.length > 0 &&
-    depth >= INGREDIENT_NESTING_LIMIT
-  ) {
-    const sliced = sliceAt(ctx, item.start, item.end);
-    issues.push(
-      makeIssue(
-        'nesting_limit',
-        `Nesting deeper than ${INGREDIENT_NESTING_LIMIT} was kept as one span.`,
-        sliced.span,
-        'edit',
-      ),
-    );
-  }
 
+  const synthetic = hits.length > 1 && !expandChildren;
+  if (synthetic && depth >= INGREDIENT_NESTING_LIMIT) {
+    appendLimitedSpan(ctx, item.start, item.end, parentId, role, depth);
+    return;
+  }
   const id = `m${ctx.nextId}`;
   ctx.nextId += 1;
   const sliced = sliceAt(ctx, item.start, item.end);
-  const synthetic = hits.length > 1 && !expandChildren;
   const additive =
     hits.length === 1 && hits[0] ? toAdditive(ctx, hits[0]) : null;
   let roleOut = role;

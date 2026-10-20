@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { AppText } from '../components/AppText';
 import { OperationStatus } from '../components/OperationStatus';
@@ -27,9 +27,11 @@ export default function LookupScreen() {
   const router = useRouter();
   const { scan, label } = useServices();
   const { lookup } = useScanState();
+  const handedOff = useRef(false);
 
   useEffect(() => {
     if (lookup.status === 'opened') {
+      handedOff.current = true;
       scan.acknowledgeLookup(lookup.operationId);
       router.replace({
         pathname: '/result/[key]',
@@ -38,7 +40,12 @@ export default function LookupScreen() {
     }
   }, [lookup, router, scan]);
 
-  useEffect(() => () => scan.cancelLookup(), [scan]);
+  useEffect(
+    () => () => {
+      if (!handedOff.current) scan.cancelLookup();
+    },
+    [scan],
+  );
 
   const back = () => {
     scan.cancelLookup();

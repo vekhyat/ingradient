@@ -91,7 +91,7 @@ def create_analyses_router(contract_version: str) -> APIRouter:
 
         try:
             parsed = parse_json_body(raw)
-        except RequestParseError:
+        except RequestParseError, RecursionError:
             return problem_response(400, "invalid_request", INVALID_REQUEST_MESSAGE)
 
         digest: str | None = None
@@ -100,7 +100,7 @@ def create_analyses_router(contract_version: str) -> APIRouter:
                 # Hash the parser's product, not the model. Defaults such as a
                 # missing name becoming null would change the digest.
                 digest = input_digest(parsed["product"])
-            except CanonicalizationError:
+            except CanonicalizationError, RecursionError:
                 return problem_response(
                     400,
                     "invalid_request",

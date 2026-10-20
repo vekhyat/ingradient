@@ -223,7 +223,10 @@ export function toNutrientViews(snapshot: ProductSnapshot): AmountView[] {
     return index === -1 ? NUTRIENT_ORDER.length : index;
   };
   return snapshot.observations
-    .map((observation) => toAmountView(observation, sources))
+    .map((observation, index) => ({
+      ...toAmountView(observation, sources),
+      rowId: String(index),
+    }))
     .sort((a, b) => rank(a.field) - rank(b.field));
 }
 

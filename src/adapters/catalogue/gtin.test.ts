@@ -3,7 +3,49 @@
  */
 /// <reference types="node" />
 import { describe, expect, it } from '@jest/globals';
-import { areMatchingGtins, calculateGtinCheckDigit, isValidGtin } from './gtin';
+import {
+  areMatchingGtins,
+  calculateGtinCheckDigit,
+  isValidGtin,
+  normalizeScannedGtin,
+} from './gtin';
+
+describe('scanner symbology normalization', () => {
+  it.each([
+    ['04252614', '042100005264'],
+    ['01234505', '012000003455'],
+    ['01234514', '012100003454'],
+    ['01234523', '012200003453'],
+    ['01234531', '012300000451'],
+    ['01234543', '012340000053'],
+    ['01234558', '012345000058'],
+    ['01234596', '012345000096'],
+    ['11234555', '112345000055'],
+  ])('expands UPC-E %s into UPC-A %s', (compressed, expanded) => {
+    expect(normalizeScannedGtin(compressed, 'upc_e')).toBe(expanded);
+  });
+
+  it('expands UPC-E even when the compressed digits also pass the GTIN-8 checksum', () => {
+    expect(isValidGtin('01234558')).toBe(true);
+    expect(normalizeScannedGtin('01234558', 'upc_e')).toBe('012345000058');
+    expect(normalizeScannedGtin('01234558', 'ean8')).toBe('01234558');
+  });
+
+  it.each(['04252615', '24252614', '425261', '04252x14', ''])(
+    'rejects malformed UPC-E %s',
+    (code) => {
+      expect(normalizeScannedGtin(code, 'upc_e')).toBeNull();
+    },
+  );
+
+  it('preserves EAN-8 and other GTIN formats', () => {
+    expect(normalizeScannedGtin('96385074', 'ean8')).toBe('96385074');
+    expect(normalizeScannedGtin(' 3017624010701 ', 'ean13')).toBe(
+      '3017624010701',
+    );
+    expect(normalizeScannedGtin('012345678905', 'upc_a')).toBe('012345678905');
+  });
+});
 
 describe('GTIN Check Digit and Validation (gtin.ts)', () => {
   describe('calculateGtinCheckDigit', () => {

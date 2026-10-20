@@ -7,3 +7,9 @@ indent_size = 2
 end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
+
+# Pinned inputs are byte-exact; editors must not rewrite their whitespace.
+[{contracts,resources}/**]
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = false

@@ -81,8 +81,8 @@
     },
     {
       "bundleId": "off-exact-match-vectors",
-      "sha256": "356d9e30067a576ed9f6b75cefe175c068ad777957427fef2f98e0f6a81109c4",
-      "sizeBytes": 20612,
+      "sha256": "2b3868fb3d0b2bd14b59d361b815b64cf24b4c17c30e0189828a6e65dff6f207",
+      "sizeBytes": 20698,
       "schemaVersion": 1,
       "minAppContract": "0.3.0-draft",
       "signature": "pinned-local-contract",
@@ -90,7 +90,7 @@
       "path": "vectors/match-vectors.json",
       "licence": "OFF-derived expectations: ODbL v1.0 / DbCL v1.0; project-authored scaffolding licence pending owner/team decision",
       "sourceUrl": "https://github.com/vekhyat/Ingradient/tree/main/tools/resources/build_match_vectors.py",
-      "accessDate": "2026-10-17",
+      "accessDate": "2026-10-20",
       "attribution": "Open Food Facts contributors (https://world.openfoodfacts.org/terms-of-use); Ingradient project source-derived engineering fixtures",
       "alterationsUrl": "https://github.com/vekhyat/Ingradient/tree/main/tools/resources/build_match_vectors.py"
     }

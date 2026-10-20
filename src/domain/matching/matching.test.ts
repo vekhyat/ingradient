@@ -1,10 +1,12 @@
 import { describe, expect, it } from '@jest/globals';
 import { parseIngredients } from '../ingredients';
+import { INGREDIENT_NESTING_LIMIT } from '../ingredients/limits';
 import { DEFAULT_TAXONOMY_VERSION } from '../../adapters/catalogue/types';
 import {
   matchIngredient,
   matchIngredientMentions,
   MATCH_TAXONOMY_VERSION,
+  normaliseAdditiveCode,
 } from './index';
 
 describe('source-backed exact matching', () => {
@@ -26,6 +28,9 @@ describe('source-backed exact matching', () => {
     ['E503 ( ii )', 'en:e503(ii)'],
     ['E160a(i)', 'en:e160a(i)'],
     ['E150d', 'en:e150d'],
+    ['E150(a)', 'en:e150a'],
+    ['E150(d)', 'en:e150d'],
+    ['INS 150 ( A )', 'en:e150a'],
     ['salt', 'en:salt'],
     ['1% fat milk', 'en:skimmed-milk'],
     ['3% fat reduced cocoa powder', 'en:3%-fat-reduced-cocoa-powder'],
@@ -39,7 +44,12 @@ describe('source-backed exact matching', () => {
   it.each([
     '503',
     '503(ii)',
-    'E150(d)',
+    '150(a)',
+    'E150(q)',
+    'E150a(d)',
+    'E150(a)(d)',
+    'E150(a',
+    'E150[a]',
     'E503(vv)',
     'E503(ii)(i)',
     'E100garbage',
@@ -56,7 +66,34 @@ describe('source-backed exact matching', () => {
     expect(
       matchIngredient('503(ii)', { additiveContext: true }).canonicalId,
     ).toBe('en:e503(ii)');
+    expect(
+      matchIngredient('150(a)', { additiveContext: true }).canonicalId,
+    ).toBe('en:e150a');
   });
+  it.each(['a', 'b', 'c', 'd', 'e', 'f'])(
+    'normalizes only one supported parenthesized letter %s',
+    (letter) => {
+      expect(normaliseAdditiveCode(`INS 150 ( ${letter.toUpperCase()} )`)).toBe(
+        `150${letter}`,
+      );
+      expect(matchIngredient(`E150(${letter})`)).toEqual(
+        matchIngredient(`E150${letter}`),
+      );
+    },
+  );
+  it.each(['E150(q)', 'E150(a)(i)', 'E150a(a)', '150[a]', '150(a', '150()'])(
+    'does not normalize unsupported or malformed code %s',
+    (text) => {
+      expect(normaliseAdditiveCode(text)).toBeNull();
+      expect(
+        matchIngredient(text, { additiveContext: true, fuzzy: true }),
+      ).toEqual({
+        state: 'unresolved',
+        canonicalId: null,
+        candidateIds: [],
+      });
+    },
+  );
   it.each(['atta', 'maida'])(
     'preserves conflicting source aliases %s',
     (text) => {
@@ -88,6 +125,39 @@ describe('parsed mention matching', () => {
     sourceIds: ['label-1'],
     taxonomyVersion: MATCH_TAXONOMY_VERSION,
   };
+  it.each(['a', 'd'])(
+    'matches printed parenthesized letter %s while preserving source text',
+    (letter) => {
+      const input = `Colour (150(${letter}))`;
+      const parsed = parseIngredients(input);
+      const result = matchIngredientMentions(parsed, context);
+      expect(parsed.mentions[1]?.additive).toMatchObject({
+        code: `150(${letter})`,
+        written: `150(${letter})`,
+        suffix: `(${letter})`,
+      });
+      expect(result.mentions[1]).toMatchObject({
+        text: `150(${letter})`,
+        state: 'matched',
+        canonicalId: `en:e150${letter}`,
+      });
+    },
+  );
+  it('keeps nesting-limited spans unresolved even when they are exact aliases', () => {
+    const groups = INGREDIENT_NESTING_LIMIT - 1;
+    const parsed = parseIngredients(
+      `${'('.repeat(groups)}E100 E150a${')'.repeat(groups)}`,
+    );
+    // Supply an exact alias to prove the issue, rather than punctuation, blocks identity.
+    const raw = parsed.mentions[0];
+    if (!raw) throw new Error('Expected nesting-limited mention');
+    raw.name = 'salt';
+    expect(matchIngredientMentions(parsed, context).mentions[0]).toMatchObject({
+      state: 'unresolved',
+      canonicalId: null,
+      candidateIds: [],
+    });
+  });
   it.each(['E150(q)', 'E160a(i)(q)'])(
     'does not match a truncated identity from %s',
     (text) => {

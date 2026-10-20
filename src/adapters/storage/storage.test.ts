@@ -5,6 +5,7 @@ import { resolveDatabaseKey, type KeyVault } from './database-key';
 import {
   StorageError,
   decodeRecord,
+  decodeSummary,
   encodeRecord,
   type SavedRecord,
 } from './records';
@@ -94,6 +95,50 @@ describe('snapshot store', () => {
     // The corrupt row is still there for the user to decide about.
     expect(await store.count()).toBe(1);
   });
+
+  it.each([
+    { schemaVersion: 9 },
+    { schemaVersion: 0 },
+    { savedAt: '2026-01-01T00:00:00Z' },
+    { id: 'another-row' },
+    { summary: JSON.stringify({}) },
+  ])('rejects inconsistent row metadata: %j', async (changes) => {
+    const table = new MemoryRecordTable();
+    const store = createSnapshotStore(table);
+    await store.save(record('r1', '2026-10-16T10:00:00Z'));
+    table.rows.set('r1', { ...table.rows.get('r1')!, ...changes });
+    await expect(store.get('r1')).rejects.toBeInstanceOf(StorageError);
+    expect(await store.count()).toBe(1);
+  });
+
+  it('refuses unsupported versions and mismatched dates in History without deleting them', async () => {
+    const table = new MemoryRecordTable();
+    const store = createSnapshotStore(table);
+    await store.save(record('r1', '2026-10-16T10:00:00Z'));
+    const row = table.rows.get('r1')!;
+    table.rows.set('r1', { ...row, schemaVersion: 2 });
+    await expect(store.list()).rejects.toMatchObject({
+      code: 'incompatible_schema',
+    });
+    table.rows.set('r1', { ...row, savedAt: '2026-01-01T00:00:00Z' });
+    await expect(store.list()).rejects.toMatchObject({ code: 'corrupt' });
+    expect(await store.count()).toBe(1);
+  });
+
+  it('accepts valid summary fields regardless of JSON property order', async () => {
+    const table = new MemoryRecordTable();
+    const store = createSnapshotStore(table);
+    await store.save(record('r1', '2026-10-16T10:00:00Z'));
+    const row = table.rows.get('r1')!;
+    const entries = Object.entries(
+      JSON.parse(row.summary) as Record<string, unknown>,
+    ).reverse();
+    table.rows.set('r1', {
+      ...row,
+      summary: JSON.stringify(Object.fromEntries(entries)),
+    });
+    await expect(store.get('r1')).resolves.toMatchObject({ id: 'r1' });
+  });
 });
 
 describe('record versions', () => {
@@ -117,6 +162,104 @@ describe('record versions', () => {
     expect(() => decodeRecord('other', body)).toThrow(
       expect.objectContaining({ code: 'corrupt' }),
     );
+  });
+
+  it.each([
+    { snapshot: {}, assessment: {} },
+    { snapshot: [] },
+    { assessment: { scientific: { state: 'graded', grade: 'A' } } },
+    { kind: 'other' },
+    { savedAt: null },
+    { savedAt: 'not-a-date' },
+    { executor: 'other' },
+    { executor: undefined },
+    { analysedAt: undefined },
+    { analysedAt: 'invalid' },
+  ])(
+    'refuses incomplete nested contracts and envelope fields: %j',
+    (changes) => {
+      const candidate = { ...record('r1', '2026-10-16T10:00:00Z'), ...changes };
+      expect(() => decodeRecord('r1', JSON.stringify(candidate))).toThrow(
+        expect.objectContaining({ code: 'corrupt' }),
+      );
+    },
+  );
+
+  it.each([0, -1, 2, 1.5, null, '1'])(
+    'refuses unsupported or malformed schema version %j',
+    (schemaVersion) => {
+      const candidate = {
+        ...record('r1', '2026-10-16T10:00:00Z'),
+        schemaVersion,
+      };
+      expect(() => decodeRecord('r1', JSON.stringify(candidate))).toThrow(
+        StorageError,
+      );
+    },
+  );
+
+  it('checks assessment and scientific input identities against the frozen snapshot', () => {
+    const original = record('r1', '2026-10-16T10:00:00Z');
+    for (const assessment of [
+      { ...original.assessment, snapshotId: 'different' },
+      {
+        ...original.assessment,
+        scientific: {
+          ...original.assessment.scientific,
+          inputSnapshotId: 'different',
+        },
+      },
+    ]) {
+      expect(() =>
+        decodeRecord('r1', JSON.stringify({ ...original, assessment })),
+      ).toThrow(expect.objectContaining({ code: 'corrupt' }));
+    }
+  });
+
+  it('preserves nullable historical provenance', () => {
+    const historical = {
+      ...record('r1', '2026-10-16T10:00:00Z'),
+      executor: null,
+      analysedAt: null,
+    };
+    expect(decodeRecord('r1', JSON.stringify(historical))).toEqual(historical);
+  });
+});
+
+describe('summary decoder', () => {
+  const valid = {
+    id: 'r1',
+    savedAt: '2026-10-16T10:00:00Z',
+    kind: 'product',
+    name: 'Food',
+    letter: 'C',
+    scienceState: 'graded',
+  };
+  it.each([
+    null,
+    [],
+    {},
+    { ...valid, id: 'other' },
+    { ...valid, savedAt: 42 },
+    { ...valid, savedAt: 'bad date' },
+    { ...valid, name: {} },
+    { ...valid, letter: 'Z' },
+    { ...valid, letter: null },
+    { ...valid, scienceState: 'unsupported' },
+    { ...valid, scienceState: 'other' },
+  ])('rejects malformed list data before rendering: %j', (candidate) => {
+    expect(() => decodeSummary('r1', JSON.stringify(candidate))).toThrow(
+      expect.objectContaining({ code: 'corrupt' }),
+    );
+  });
+  it('accepts an ungraded result with an unknown name and no letter', () => {
+    const summary = {
+      ...valid,
+      name: null,
+      letter: null,
+      scienceState: 'unsupported',
+    };
+    expect(decodeSummary('r1', JSON.stringify(summary))).toEqual(summary);
   });
 });
 

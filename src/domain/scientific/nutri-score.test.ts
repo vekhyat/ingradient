@@ -207,6 +207,57 @@ describe('case 1: route points and letter boundaries', () => {
     expect(points(absent, 'sweeteners')).toBe(0);
     expect(points(present, 'sweeteners')).toBeGreaterThan(0);
   });
+
+  it.each([
+    ['low protein', GENERAL, 2, 'cannot_bind', true],
+    ['protein excluded at high Points A', HIGH_A, 7, 'not_evaluated', false],
+  ])(
+    'does not apply the red-meat cap for %s',
+    (_name, input, expectedPoints, capUse, counted) => {
+      const result = calculateNutriScore(
+        withFacts(input, { redMeat: 'present' }),
+      );
+      expect(result.state).toBe('graded');
+      if (result.state !== 'graded') throw new Error('Expected graded result');
+      const protein = result.trace.find((step) => step.component === 'protein');
+      expect(protein).toMatchObject({
+        points: expectedPoints,
+        counted,
+        redMeatCap: capUse,
+        ruleLocator:
+          methodJson.routes.general.favourableComponents.protein.ruleLocator,
+      });
+      expect(protein).not.toHaveProperty('uncappedPoints');
+      expect(result.facts.redMeat.effect).toBe('no_effect');
+    },
+  );
+
+  it.each([
+    'energy',
+    'sugars',
+    'saturates',
+    'salt',
+    'protein',
+    'fibre',
+    'fat',
+    'fvl',
+  ] as const)(
+    'refuses plain water with nonzero %s even outside the route-required fields',
+    (field) => {
+      const result = calculateNutriScore({
+        category: 'beverage',
+        facts: withFacts(DRINK, { plainWater: 'present' }).facts,
+        nutrients: {
+          [field]:
+            field === 'fvl'
+              ? { value: 1, unit: 'percent', basis: 'per_100_ml' }
+              : ml(1, field === 'energy' ? 'kJ' : 'g'),
+        },
+      });
+      expect(result.state).toBe('insufficient_data');
+      expect(issueCodes(result)).toEqual(['conflicting_water_facts']);
+    },
+  );
 });
 
 describe('case 2: refuse missing, unsupported or ambiguous data', () => {

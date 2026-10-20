@@ -118,6 +118,53 @@ function buildSyntheticSnapshot(vector: Vector): ProductSnapshot {
 }
 
 describe('replayScientificSnapshot', () => {
+  it.each([
+    'vector-general-mid',
+    'vector-fats-olive-oil',
+    'vector-beverage-sweetener',
+  ])(
+    'uses the required per-100 column when other bases are present: %s',
+    (id) => {
+      const snapshot = buildSyntheticSnapshot(getVector(id));
+      const baseline = replayScientificSnapshot(snapshot).scientific;
+      const extra = snapshot.observations.flatMap<NutrientObservation>((obs) =>
+        obs.kind === 'read'
+          ? [
+              { ...obs, basis: 'per_serving', value: 99 },
+              {
+                ...obs,
+                basis: obs.basis === 'per_100_g' ? 'per_100_ml' : 'per_100_g',
+                value: 99,
+              },
+            ]
+          : [],
+      );
+      // Unusable extra columns must not hide a usable scoring column either.
+      snapshot.observations = [...extra, ...snapshot.observations];
+      expect(replayScientificSnapshot(snapshot).scientific).toEqual(baseline);
+      snapshot.observations[0] = {
+        ...extra[0],
+        kind: 'uncertain',
+      } as NutrientObservation;
+      expect(replayScientificSnapshot(snapshot).scientific).toEqual(baseline);
+    },
+  );
+
+  it('still refuses conflicting required-basis observations beside a serving column', () => {
+    const snapshot = buildSyntheticSnapshot(getVector(0));
+    const obs = snapshot.observations[0];
+    if (!obs || obs.kind !== 'read') throw new Error('Expected read fixture');
+    snapshot.observations.push(
+      { ...obs, value: 999 },
+      { ...obs, basis: 'per_serving' },
+    );
+    const result = replayScientificSnapshot(snapshot).scientific;
+    expect(result.state).toBe('insufficient_data');
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({ code: 'conflicting_energy' }),
+    );
+  });
+
   it('refuses an incompatible taxonomy edition', () => {
     const snapshot = buildSyntheticSnapshot(getVector(0));
     snapshot.taxonomyVersion = 'incompatible-taxonomy';

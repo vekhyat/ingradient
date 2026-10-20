@@ -50,6 +50,7 @@ class ReferenceAnalysisService:
             )
         observations = []
         observation_issues = []
+        required_basis = "per_100_ml" if category == "beverage" else "per_100_g"
         for observation in product.observations:
             if observation.kind in ("read", "corrected") and not observation.issues:
                 observations.append(
@@ -58,7 +59,9 @@ class ReferenceAnalysisService:
                         for k in ("field", "value", "unit", "basis")
                     }
                 )
-            else:
+            # Other label columns do not conflict with the route's per-100
+            # column. Missing entries have no basis and remain unresolved.
+            elif observation.kind == "missing" or observation.basis == required_basis:
                 observation_issues.append(
                     issue(
                         "unusable_observation",
@@ -107,7 +110,27 @@ class ReferenceAnalysisService:
                 for name, spec in resources.method["inputFields"]["fields"].items()
                 if category in spec["routes"]
             }
-            blocking = [i for i in observation_issues if i.field in required]
+            if category == "beverage" and flags["plainWater"] is True:
+                required = set()
+                if any(
+                    o.kind != "missing"
+                    and o.value != 0
+                    and o.field in resources.method["inputFields"]["fields"]
+                    for o in product.observations
+                ):
+                    observation_issues.append(
+                        issue(
+                            "conflicting_water_facts",
+                            "plainWater",
+                            "Plain-water evidence conflicts with "
+                            "nutrient observations.",
+                        )
+                    )
+            blocking = [
+                i
+                for i in observation_issues
+                if i.field in required or i.code == "conflicting_water_facts"
+            ]
             if blocking:
                 scientific = gap(
                     snapshot_id,

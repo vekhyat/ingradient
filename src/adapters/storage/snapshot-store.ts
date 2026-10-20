@@ -1,6 +1,8 @@
 import {
   StorageError,
+  assertRecordVersion,
   decodeRecord,
+  decodeSummary,
   encodeRecord,
   summarise,
   type SavedRecord,
@@ -14,7 +16,9 @@ import {
 export interface RecordTable {
   put(row: StoredRow): Promise<void>;
   get(id: string): Promise<StoredRow | null>;
-  listSummaries(): Promise<{ id: string; summary: string }[]>;
+  listSummaries(): Promise<
+    Pick<StoredRow, 'id' | 'schemaVersion' | 'savedAt' | 'summary'>[]
+  >;
   remove(id: string): Promise<void>;
   clear(): Promise<void>;
   count(): Promise<number>;
@@ -48,7 +52,7 @@ export function createSnapshotStore(table: RecordTable): SnapshotStore {
   return {
     async save(record) {
       const body = encodeRecord(record);
-      const summary = summarise(record);
+      const summary = summarise(decodeRecord(record.id, body));
       try {
         await table.put({
           id: record.id,
@@ -64,7 +68,14 @@ export function createSnapshotStore(table: RecordTable): SnapshotStore {
         );
       }
       const stored = await table.get(record.id);
-      if (stored === null || stored.body !== body) {
+      if (
+        stored === null ||
+        stored.body !== body ||
+        stored.id !== record.id ||
+        stored.schemaVersion !== record.schemaVersion ||
+        stored.savedAt !== record.savedAt ||
+        stored.summary !== JSON.stringify(summary)
+      ) {
         throw new StorageError(
           'write_failed',
           'The save could not be confirmed on this phone.',
@@ -75,15 +86,16 @@ export function createSnapshotStore(table: RecordTable): SnapshotStore {
 
     async list() {
       const rows = await table.listSummaries();
-      const summaries = rows.map(({ id, summary }) => {
-        try {
-          return JSON.parse(summary) as SavedSummary;
-        } catch {
+      const summaries = rows.map(({ id, schemaVersion, savedAt, summary }) => {
+        assertRecordVersion(schemaVersion);
+        const decoded = decodeSummary(id, summary);
+        if (decoded.savedAt !== savedAt) {
           throw new StorageError(
             'corrupt',
-            `Saved result ${id} cannot be read.`,
+            `Saved result ${id} has inconsistent metadata.`,
           );
         }
+        return decoded;
       });
       return summaries.sort((a, b) => b.savedAt.localeCompare(a.savedAt));
     },
@@ -93,7 +105,24 @@ export function createSnapshotStore(table: RecordTable): SnapshotStore {
       if (row === null) {
         throw new StorageError('not_found', `Saved result ${id} is not here.`);
       }
-      return decodeRecord(id, row.body);
+      assertRecordVersion(row.schemaVersion);
+      const record = decodeRecord(id, row.body);
+      const summary = decodeSummary(id, row.summary);
+      const expected = summarise(record);
+      if (
+        row.id !== id ||
+        row.savedAt !== record.savedAt ||
+        row.schemaVersion !== record.schemaVersion ||
+        (Object.keys(expected) as (keyof SavedSummary)[]).some(
+          (key) => summary[key] !== expected[key],
+        )
+      ) {
+        throw new StorageError(
+          'corrupt',
+          `Saved result ${id} has inconsistent metadata.`,
+        );
+      }
+      return record;
     },
 
     async remove(id) {
@@ -153,7 +182,14 @@ export class MemoryRecordTable implements RecordTable {
     return this.rows.get(id) ?? null;
   }
   async listSummaries() {
-    return [...this.rows.values()].map(({ id, summary }) => ({ id, summary }));
+    return [...this.rows.values()].map(
+      ({ id, schemaVersion, savedAt, summary }) => ({
+        id,
+        schemaVersion,
+        savedAt,
+        summary,
+      }),
+    );
   }
   async remove(id: string) {
     if (this.failNextWrite) {

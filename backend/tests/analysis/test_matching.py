@@ -30,6 +30,10 @@ def resources() -> AnalysisResources:
         ("E 503 ( ii )", "en:e503(ii)", "en: E503(ii), Ammonium hydrogen carbonate,"),
         ("INS 503(i)", "en:e503(i)", "en: E503(i), Ammonium carbonate"),
         ("INS 503", "en:e503", "en: E503, Ammonium carbonates"),
+        ("E1200", "en:e1200", "en: E1200, Polydextrose,"),
+        ("INS 1200", "en:e1200", "en: E1200, Polydextrose,"),
+        ("E150(d)", "en:e150d", "en: E150d,"),
+        ("E160(a)", "en:e160a", "en: E160a,"),
         (
             "sodium bicarbonate",
             "en:e500(ii)",
@@ -102,6 +106,46 @@ def test_related_names_remain_distinct_exact_identities(
     )
 
 
+def test_escaped_comma_does_not_create_a_tomato_alias_for_lycopene(
+    resources: AnalysisResources,
+) -> None:
+    source = (ROOT / "resources/taxonomy/additives.txt").read_text(encoding="utf-8")
+    assert r"en: E160d(ii), Lycopene\, tomato" in source
+    result = match_ingredient("tomato", resources.ingredient_aliases)
+    assert result.canonical_id == "en:tomato"
+    assert result.candidate_ids == ("en:tomato",)
+    assert (
+        match_ingredient("synthetic", resources.ingredient_aliases).state
+        == "unresolved"
+    )
+    assert (
+        match_ingredient("lycopene, tomato", resources.ingredient_aliases).canonical_id
+        == "en:e160d(ii)"
+    )
+
+
+def test_language_neutral_names_are_exact_aliases(resources: AnalysisResources) -> None:
+    source = (ROOT / "resources/taxonomy/ingredients.txt").read_text(encoding="utf-8")
+    name = "Lactobacillus delbruecki ssp. bulgaricus"
+    assert any(line.startswith("xx:") and name in line for line in source.splitlines())
+    result = match_ingredient(name, resources.ingredient_aliases)
+    assert result.canonical_id == "en:lactobacillus-bulgaricus"
+
+
+def test_non_code_alias_keeps_both_pinned_source_identities(
+    resources: AnalysisResources,
+) -> None:
+    ingredient = (ROOT / "resources/taxonomy/ingredients.txt").read_text(
+        encoding="utf-8"
+    )
+    additive = (ROOT / "resources/taxonomy/additives.txt").read_text(encoding="utf-8")
+    assert "en: polydextrose, E1200" in ingredient
+    assert "en: E1200, Polydextrose," in additive
+    result = match_ingredient("polydextrose", resources.ingredient_aliases)
+    assert result.state == "ambiguous"
+    assert result.candidate_ids == ("en:e1200", "en:polydextrose")
+
+
 @pytest.mark.parametrize(
     "text,expected",
     [
@@ -121,7 +165,7 @@ def test_parser_keeps_letter_bearing_code_suffixes_on_one_span(
 
 @pytest.mark.parametrize(
     "text",
-    ["E150(d)", "E160(a)", "E503(a)", "E503(iii)", "E503(ii)(x)", "E503[bogus]"],
+    ["E150(q)", "E503(a)", "E503(iii)", "E503(ii)(x)", "E503[bogus]"],
 )
 def test_parser_does_not_certify_a_parent_when_a_code_suffix_is_unsupported(
     text: str, resources: AnalysisResources
@@ -169,7 +213,7 @@ def test_every_pinned_parenthesized_additive_name_is_one_parser_atom(
 
 @pytest.mark.parametrize(
     "text,expected_id,expected_state",
-    [("E160a(i)", "en:e160a(i)", "matched"), ("E150(d)", None, "unresolved")],
+    [("E160a(i)", "en:e160a(i)", "matched"), ("E150(q)", None, "unresolved")],
 )
 def test_real_route_preserves_the_whole_code_atom(
     text: str,

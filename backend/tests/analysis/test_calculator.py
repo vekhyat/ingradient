@@ -167,7 +167,7 @@ def test_energy_ceiling(
 
 @pytest.mark.parametrize(
     "change",
-    ["basis", "unit", "duplicate", "fvl_overflow", "flags_missing", "contradiction"],
+    ["basis", "unit", "duplicate", "fvl_overflow", "contradiction"],
 )
 def test_adversarial_facts_refuse(change: str, resources: AnalysisResources) -> None:
     data = copy.deepcopy(VECTORS[0]["inputs"])
@@ -179,8 +179,6 @@ def test_adversarial_facts_refuse(change: str, resources: AnalysisResources) -> 
         data["observations"].append(copy.deepcopy(data["observations"][0]))
     elif change == "fvl_overflow":
         data["observations"][-1]["value"] = 101
-    elif change == "flags_missing":
-        del data["flags"]
     else:
         data["flags"].update(cheese=True, redMeat=True)
     result = calculate(
@@ -313,9 +311,7 @@ def test_changed_rule_refuses_without_a_letter(resources: AnalysisResources) -> 
     assert result.state == "method_unavailable"
 
 
-@pytest.mark.parametrize(
-    "change", ["unknown_water", "conflicting_water", "unknown_sweetener"]
-)
+@pytest.mark.parametrize("change", ["unknown_water", "conflicting_water"])
 def test_water_requires_supported_uncontradicted_facts(
     change: str, resources: AnalysisResources
 ) -> None:
@@ -324,8 +320,6 @@ def test_water_requires_supported_uncontradicted_facts(
     )
     if change == "unknown_water":
         del data["flags"]["plainWater"]
-    elif change == "unknown_sweetener":
-        del data["flags"]["nonNutritiveSweetener"]
     else:
         data["observations"] = [
             dict(field="sugars", value=5, unit="g", basis="per_100_ml")
@@ -336,3 +330,94 @@ def test_water_requires_supported_uncontradicted_facts(
         ).state
         == "insufficient_data"
     )
+
+
+@pytest.mark.parametrize("route", ["general", "fats_nuts_seeds", "beverage"])
+def test_other_basis_columns_do_not_conflict(
+    route: str, resources: AnalysisResources
+) -> None:
+    data = copy.deepcopy(
+        next(
+            v["inputs"]
+            for v in VECTORS
+            if v["inputs"]["category"] == route
+            and v["expectedAssessment"]["state"] == "graded"
+            and v["inputs"]["observations"]
+        )
+    )
+    baseline = calculate(
+        CalculationInput.model_validate(data), resources, snapshot_id="basis"
+    )
+    extras = [
+        dict(o, basis=basis, value=99)
+        for o in data["observations"]
+        for basis in (
+            "per_serving",
+            "per_100_g" if route == "beverage" else "per_100_ml",
+        )
+    ]
+    data["observations"] = extras + data["observations"]
+    assert (
+        calculate(CalculationInput.model_validate(data), resources, snapshot_id="basis")
+        == baseline
+    )
+    data["observations"].append(copy.deepcopy(data["observations"][-1]))
+    assert (
+        calculate(
+            CalculationInput.model_validate(data), resources, snapshot_id="basis"
+        ).state
+        == "insufficient_data"
+    )
+
+
+@pytest.mark.parametrize("protein,high_a", [(0, False), (6, False), (20, True)])
+def test_general_unknown_facts_are_accepted_only_when_irrelevant(
+    protein: int, high_a: bool, resources: AnalysisResources
+) -> None:
+    data = copy.deepcopy(VECTORS[0]["inputs"])
+    data["flags"].update(cheese=None, redMeat=None)
+    for o in data["observations"]:
+        if o["field"] == "protein":
+            o["value"] = protein
+        if high_a and o["field"] == "salt":
+            o["value"] = 3
+    if high_a:
+        data["flags"]["cheese"] = False
+    assert (
+        calculate(
+            CalculationInput.model_validate(data), resources, snapshot_id="facts"
+        ).state
+        == "graded"
+    )
+
+
+def test_zero_protein_makes_high_adverse_cheese_fact_irrelevant(
+    resources: AnalysisResources,
+) -> None:
+    data = copy.deepcopy(VECTORS[0]["inputs"])
+    data["flags"].update(cheese=None, redMeat=None)
+    for o in data["observations"]:
+        if o["field"] == "protein":
+            o["value"] = 0
+        if o["field"] == "salt":
+            o["value"] = 3
+    assert (
+        calculate(
+            CalculationInput.model_validate(data), resources, snapshot_id="facts"
+        ).state
+        == "graded"
+    )
+
+
+def test_plain_water_does_not_require_its_excluded_sweetener_fact(
+    resources: AnalysisResources,
+) -> None:
+    result = calculate(
+        CalculationInput.model_validate(
+            dict(category="beverage", flags={"plainWater": True})
+        ),
+        resources,
+        snapshot_id="water",
+    )
+    assert result.state == "graded"
+    assert result.grade == "A"

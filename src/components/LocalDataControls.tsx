@@ -9,6 +9,8 @@ import { Divider } from './Card';
 export interface LocalDataControlsProps {
   slice: 'S1' | 'S2' | 'S3' | 'S4';
   savedCount: number | null;
+  /** A count may be unknown while recovery is still available. */
+  eraseDisabledReason?: string;
   operation: 'idle' | 'erasing' | 'failed' | 'erased';
   onErase: () => void;
   onOpenPrivacy: () => void;
@@ -24,6 +26,7 @@ export interface LocalDataControlsProps {
 export function LocalDataControls({
   slice,
   savedCount,
+  eraseDisabledReason,
   operation,
   onErase,
   onOpenPrivacy,
@@ -53,9 +56,10 @@ export function LocalDataControls({
           icon="delete"
           busy={operation === 'erasing'}
           disabledReason={
-            savedCount === 0 && operation !== 'failed'
+            eraseDisabledReason ??
+            (savedCount === 0 && operation !== 'failed'
               ? enGB.history.empty
-              : undefined
+              : undefined)
           }
           onPress={onErase}
         />

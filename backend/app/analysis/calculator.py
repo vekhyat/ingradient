@@ -124,22 +124,25 @@ def _calculate(
             ],
         )
     missing: list[Issue] = []
-    for flag in (
-        ("cheese", "redMeat")
-        if category == "general"
-        else ("plainWater",)
-        if category == "beverage"
-        else ()
-    ):
-        if getattr(flags, flag) is None:
-            missing.append(
-                issue(
-                    "missing_" + flag.lower(),
-                    flag,
-                    f"Supported {flag} presence or absence is required.",
-                )
+    # Mutually exclusive supported facts can settle an unknown partner. Keep
+    # the original flags intact; unknown is otherwise never treated as absent.
+    cheese = False if flags.redMeat is True else flags.cheese
+    plain_water = (
+        False if flags.nonNutritiveSweetener == "present" else flags.plainWater
+    )
+    if category == "beverage" and plain_water is None:
+        missing.append(
+            issue(
+                "missing_plainwater",
+                "plainWater",
+                "Supported plainWater presence or absence is required.",
             )
-    if category == "beverage" and flags.nonNutritiveSweetener == "unknown":
+        )
+    if (
+        category == "beverage"
+        and plain_water is not True
+        and flags.nonNutritiveSweetener == "unknown"
+    ):
         missing.append(
             issue(
                 "sweetener_presence_unknown",
@@ -157,7 +160,7 @@ def _calculate(
         "sc-beverage-2023" if category == "beverage" else "sc-food-2022",
         "fps-public-health-tool-2025",
     ]
-    if category == "beverage" and flags.plainWater is True:
+    if category == "beverage" and plain_water is True:
         # An explicit water fact is required. Zero energy never establishes it.
         if any(
             o.value != 0 and o.field in resources.method["inputFields"]["fields"]
@@ -202,13 +205,25 @@ def _calculate(
     fields = resources.method["inputFields"]["fields"]
     required = [name for name, spec in fields.items() if category in spec["routes"]]
     for name in required:
-        observations = [o for o in inputs.observations if o.field == name]
-        if not observations:
+        field_observations = [o for o in inputs.observations if o.field == name]
+        if not field_observations:
             missing.append(
                 issue(
                     "missing_" + name,
                     name,
                     f"{name.capitalize()} is not available for this calculation.",
+                )
+            )
+            continue
+        observations = [
+            o for o in field_observations if o.basis == fields[name]["basis"][category]
+        ]
+        if not observations:
+            missing.append(
+                issue(
+                    "unsupported_" + name + "_basis",
+                    name,
+                    "A supported unit and per-100 basis are required.",
                 )
             )
             continue
@@ -332,11 +347,43 @@ def _calculate(
     points_a = sum(adverse.values())
     conditional = route["scoring"].get("conditionalProteinRule")
     scoring_locator = (conditional or route["scoring"])["ruleLocator"]
+    protein_rule = route["favourableComponents"]["protein"]
+    raw_protein = component_points(values["protein"], protein_rule)
+    if (
+        category == "general"
+        and conditional
+        and points_a >= conditional["thresholdA"]
+        and cheese is None
+        and raw_protein > 0
+    ):
+        missing.append(
+            issue(
+                "cheese_unknown",
+                "cheese",
+                "Cheese presence determines whether protein points are subtracted.",
+            )
+        )
     counts_protein = not (
         conditional
         and points_a >= conditional["thresholdA"]
-        and not (category == "general" and flags.cheese is True)
+        and not (category == "general" and cheese is True)
     )
+    if (
+        category == "general"
+        and counts_protein
+        and cheese is not True
+        and flags.redMeat is None
+        and raw_protein > protein_rule["exceptions"]["red_meat"]["maxPoints"]
+    ):
+        missing.append(
+            issue(
+                "red_meat_unknown",
+                "redMeat",
+                "Red-meat presence determines whether protein points are capped.",
+            )
+        )
+    if missing:
+        return gap(snapshot_id, missing)
     add_trace("points_a", points_a, scoring_locator, list(adverse))
     favourable: dict[str, int] = {}
     counted: list[str] = []

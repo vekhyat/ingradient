@@ -78,6 +78,7 @@ export default function HistoryTab() {
         record.executor,
         'history',
         record.id,
+        record.analysedAt,
         record.savedAt,
       );
       router.push({ pathname: '/result/[key]', params: { key } });

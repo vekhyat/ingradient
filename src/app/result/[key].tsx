@@ -125,17 +125,18 @@ export default function ResultScreen() {
     setSaveState('saving');
     try {
       const savedId = `saved-${stored.resultKey}`;
+      const savedAt = new Date().toISOString();
       await store.store.save({
         schemaVersion: 1,
         id: savedId,
-        savedAt: new Date().toISOString(),
+        savedAt,
         kind: 'product',
         snapshot: stored.snapshot,
         assessment: stored.assessment,
         executor: stored.executor,
         analysedAt: stored.analysedAt,
       });
-      scan.markSaved(stored.resultKey, savedId);
+      scan.markSaved(stored.resultKey, savedId, savedAt);
       bumpStore();
       setSaveState('saved');
       AccessibilityInfo.announceForAccessibility(enGB.result.saved);
@@ -186,8 +187,8 @@ export default function ResultScreen() {
               }}
             >
               <AppText variant="button" color="ink2">
-                {stored.origin === 'history'
-                  ? enGB.result.savedOn(formatSavedDate(stored.analysedAt))
+                {stored.origin === 'history' && stored.savedAt
+                  ? enGB.result.savedOn(formatSavedDate(stored.savedAt))
                   : enGB.result.saved}
               </AppText>
             </View>

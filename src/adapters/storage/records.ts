@@ -3,6 +3,7 @@ import type {
   LocalAssessment,
   ProductSnapshot,
 } from '../../domain/contracts/generated/local';
+import { localValidators } from '../../domain/contracts/generated/validate-local';
 
 /**
  * Saved-result record format. Every record carries `schemaVersion`, so a
@@ -68,7 +69,29 @@ export function encodeRecord(record: SavedRecord): string {
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isTimestamp(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(
+      value,
+    ) &&
+    Number.isFinite(Date.parse(value))
+  );
+}
+
+export function assertRecordVersion(version: unknown): void {
+  if (typeof version !== 'number' || !Number.isInteger(version)) {
+    throw new StorageError('corrupt', 'Saved result has no valid version.');
+  }
+  if (version !== CURRENT_SCHEMA_VERSION) {
+    throw new StorageError(
+      'incompatible_schema',
+      'Saved result uses an unsupported version of the app.',
+    );
+  }
 }
 
 /**
@@ -82,27 +105,68 @@ export function decodeRecord(id: string, body: string): SavedRecord {
   } catch {
     throw new StorageError('corrupt', `Saved result ${id} cannot be read.`);
   }
-  if (!isObject(parsed) || typeof parsed.schemaVersion !== 'number') {
+  if (!isObject(parsed)) {
     throw new StorageError('corrupt', `Saved result ${id} has no version.`);
   }
-  if (parsed.schemaVersion > CURRENT_SCHEMA_VERSION) {
-    throw new StorageError(
-      'incompatible_schema',
-      `Saved result ${id} was written by a newer version of the app.`,
-    );
-  }
-  const record = migrate(parsed);
+  assertRecordVersion(parsed.schemaVersion);
   if (
-    record.id !== id ||
-    !isObject(record.snapshot) ||
-    !isObject(record.assessment)
+    parsed.id !== id ||
+    id.length === 0 ||
+    parsed.kind !== 'product' ||
+    !isTimestamp(parsed.savedAt) ||
+    !(
+      parsed.executor === 'phone' ||
+      parsed.executor === 'backend' ||
+      parsed.executor === null
+    ) ||
+    !(parsed.analysedAt === null || isTimestamp(parsed.analysedAt)) ||
+    !localValidators.ProductSnapshot(parsed.snapshot) ||
+    !localValidators.LocalAssessment(parsed.assessment)
   ) {
     throw new StorageError('corrupt', `Saved result ${id} is incomplete.`);
+  }
+  const record = parsed as unknown as SavedRecord;
+  if (
+    record.assessment.snapshotId !== record.snapshot.id ||
+    record.assessment.scientific.inputSnapshotId !== record.snapshot.id
+  ) {
+    throw new StorageError(
+      'corrupt',
+      `Saved result ${id} has mismatched inputs.`,
+    );
   }
   return record;
 }
 
-/** Version 1 is the first format; later versions add steps here. */
-function migrate(parsed: Record<string, unknown>): SavedRecord {
-  return parsed as unknown as SavedRecordV1;
+/** Validate list data before History reads names, dates and grade states. */
+export function decodeSummary(id: string, body: string): SavedSummary {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    throw new StorageError('corrupt', `Saved result ${id} cannot be read.`);
+  }
+  if (
+    !isObject(parsed) ||
+    parsed.id !== id ||
+    id.length === 0 ||
+    parsed.kind !== 'product' ||
+    !isTimestamp(parsed.savedAt) ||
+    !(parsed.name === null || typeof parsed.name === 'string') ||
+    ![
+      'graded',
+      'insufficient_data',
+      'unsupported',
+      'method_unavailable',
+    ].includes(parsed.scienceState as string) ||
+    (parsed.scienceState === 'graded'
+      ? !['A', 'B', 'C', 'D', 'E'].includes(parsed.letter as string)
+      : parsed.letter !== null)
+  ) {
+    throw new StorageError(
+      'corrupt',
+      `Saved result ${id} has an invalid summary.`,
+    );
+  }
+  return parsed as unknown as SavedSummary;
 }

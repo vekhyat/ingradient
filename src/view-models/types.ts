@@ -58,6 +58,8 @@ export interface PanelPresence {
 /** One nutrient row. `value: null` is unknown, never zero. */
 export interface AmountView {
   field: string;
+  /** Original observation index, independent of the displayed value or basis. */
+  rowId?: string;
   label: string;
   value: number | null;
   unit: string;

@@ -1,54 +1,33 @@
-# Resource Management and Integrity Tooling
+﻿# Resource integrity and generation
 
-This directory contains tooling for validating and managing frozen scientific and data resources under `resources/`.
+The phone and Python scientific implementations share the byte-pinned inputs in `resources/`. `resources/manifest.json` records bundle paths, sizes, SHA-256 digests, provenance and licensing. Wire and local contracts have their own manifest under `contracts/`.
 
-## Integrity Verification
+Run from the repository root after installing the backend's locked development dependencies:
 
-To verify that all resource files in `resources/` match the hashes and sizes pinned in `resources/manifest.json`, run:
-
-```bash
-python tools/resources/verify_resources.py
+```powershell
+backend/.venv/Scripts/python.exe tools/resources/verify_resources.py
+backend/.venv/Scripts/python.exe tools/resources/build_match_vectors.py --check
 ```
 
-The script will:
-1. Recompute SHA-256 and byte sizes of all bundles in `resources/`.
-2. Verify matching checksums and sizes against `resources/manifest.json`.
-3. Validate JSON syntax for all JSON resources.
-4. If the external cache directory (`~/.cache/ingradient-sources/`) is present, check the cached primary source binaries.
-5. Exit with code `0` on complete success, or code `1` if any file is missing, altered, corrupted, or has an invalid checksum.
+On Unix, use `backend/.venv/bin/python`. The verifier checks bundle hashes and sizes, JSON syntax, scientific vectors against the local contract, and exact-match fixtures against the independent source-derived builder. If `~/.cache/ingradient-sources/` exists, it also checks available cached primary-source artifacts. Missing cached artifacts produce warnings; repository bundle failures fail verification.
 
-## Freezing or Updating a Resource
+## Generated consumers
 
-In Ingradient, resource files are immutable pinned artifacts. Never edit resource files by hand without updating the manifest and running dual review.
+- `node src/domain/contracts/codegen/generate.mjs` generates TypeScript types and validators from frozen contracts.
+- `node src/domain/matching/codegen/build-index.mjs` builds the exact-match taxonomy index from pinned sources.
+- `node tools/resources/build_additive_names.mjs` builds the additive-name lookup from the pinned additive taxonomy.
+- `tools/resources/build_match_vectors.py --check` checks exact-match fixture drift without writing. Omitting `--check` rewrites that pinned fixture and is only appropriate for a reviewed resource update.
 
-When an official method update or upstream taxonomy refresh is approved:
-1. **Acquire Primary Sources**: Download official artifacts into external cache (`~/.cache/ingradient-sources/`) and record the exact URL, retrieval date, size in bytes, and SHA-256 hash. If any source is blocked (e.g. HTTP 403), record that plainly without inventing hashes.
-2. **Update Bundle Files**:
-   - For taxonomies (`resources/taxonomy/`): Pin to an exact upstream git commit from `openfoodfacts-server` and verify license (ODbL 1.0 / DbCL 1.0).
-   - For method rules (`resources/method/`): Update JSON thresholds and citation locators matching the official scientific reports and calculation workbooks.
-   - For canonical vectors (`resources/vectors/`): Recompute and verify expected assessments against the updated method bundle.
-3. **Regenerate / Update Manifest**:
-   - Update `resources/manifest.json` with new SHA-256 digests and file sizes.
-   - Update `bundleSha256` in any references (e.g. in `resources/vectors/nutriscore-vectors.json`).
-4. **Validate**:
-   - Run `python tools/resources/verify_resources.py` and ensure all checks PASS.
+Generators emit LF. `.gitattributes` keeps generated source checkouts at LF while exempting `contracts/` and `resources/` from line-ending conversion. Prettier also ignores pinned inputs and the generated additive lookup. Do not format or normalize frozen input files to repair a source-formatting check.
 
-## Shared exact-match engineering fixtures
+## Exact-match fixtures and parity
 
-`resources/vectors/match-vectors.json` contains project-authored, source-derived
-regressions for the exact-identity profile. Expectations cite pinned OFF English
-entry lines; these are not official OFF test vectors or human research gold.
-The source taxonomy attribution and ODbL/DbCL labels remain in the fixture and
-manifest; project-authored scaffolding licence is pending team agreement.
+`resources/vectors/match-vectors.json` contains project-authored regressions derived from pinned Open Food Facts English entries. Each expectation cites source lines; these are engineering fixtures rather than official OFF vectors or human research gold. Source attribution and ODbL/DbCL labels remain in the fixture and manifest; the project-authored scaffolding licence is pending team agreement.
 
-Rebuild or check without invoking either runtime matcher:
+The builder derives expectations without running either application matcher. Both runtimes compare state, canonical identity and sorted candidate identities for the same edition. Keep these checks separate from nutrition calculation vectors and complete scientific-assessment parity in `tools/parity/` and `.github/workflows/backend.yml`. Fuzzy candidates and wrapper/advisory prose require their own integration coverage.
 
-```bash
-python tools/resources/build_match_vectors.py
-python tools/resources/build_match_vectors.py --check
-```
+## Updating pinned inputs
 
-Both actual runtimes must compare state, canonicalId and sorted candidateIds
-for the same edition. Keep matching counts separate from the 15 nutrition
-calculation vectors. Exact matching does not promote fuzzy candidates or parse
-wrapper/advisory prose; those paths need their own integration checks.
+Resource changes need a reviewed scientific or upstream-source reason. Acquire the official source into the external cache and record its exact URL, retrieval date, byte size and SHA-256. Record unavailable sources plainly; never invent their hashes.
+
+Pin taxonomies to an exact upstream revision and preserve licensing and attribution. For a method update, align thresholds and citation locators with official reports and workbooks. Regenerate affected vectors and consumers, update bundle hashes/sizes and embedded bundle references, then run integrity, generated-drift, expected-vector and cross-runtime parity checks. Follow the project's review process before accepting new pins. Ordinary implementation fixes should use synthetic test inputs when possible and leave scientific pins unchanged.

@@ -75,6 +75,93 @@ def test_current_contract_request_gets_an_honest_gap(
     assert result.product.evidenceVersion == resources.evidence_version
 
 
+@pytest.mark.parametrize("kind", ["read", "uncertain", "flagged"])
+def test_other_basis_extras_do_not_block_required_basis(
+    kind: str, resources: AnalysisResources
+) -> None:
+    payload = request_payload(resources, adr013=True)
+    baseline = (
+        ReferenceAnalysisService(resources)
+        .assess(AnalyzeRequest.model_validate(payload), input_digest="0" * 64)
+        .scientific
+    )
+    extra = dict(
+        payload["product"]["observations"][0],
+        basis="per_serving",
+        value=99,
+        kind="read" if kind == "flagged" else kind,
+    )
+    if kind != "read":
+        extra["issues"] = [
+            dict(
+                code="review_required",
+                stage="extraction",
+                message="Review printed value.",
+                action="edit",
+            )
+        ]
+    payload["product"]["observations"].insert(0, extra)
+    result = ReferenceAnalysisService(resources).assess(
+        AnalyzeRequest.model_validate(payload), input_digest="0" * 64
+    )
+    assert result.scientific == baseline
+
+
+@pytest.mark.parametrize("kind", ["uncertain", "read"])
+def test_same_basis_unusable_duplicate_still_blocks(
+    kind: str, resources: AnalysisResources
+) -> None:
+    payload = request_payload(resources, adr013=True)
+    extra = dict(payload["product"]["observations"][0], kind=kind)
+    extra["issues"] = [
+        dict(
+            code="review_required",
+            stage="extraction",
+            message="Review printed value.",
+            action="edit",
+        )
+    ]
+    payload["product"]["observations"].append(extra)
+    result = ReferenceAnalysisService(resources).assess(
+        AnalyzeRequest.model_validate(payload), input_digest="0" * 64
+    )
+    assert result.scientific.state == "insufficient_data"
+    assert any(i.code == "unusable_observation" for i in result.scientific.issues)
+
+
+def test_water_conflict_cannot_be_hidden_in_an_unusable_other_basis_column(
+    resources: AnalysisResources,
+) -> None:
+    payload = request_payload(resources, adr013=True)
+    payload["product"]["category"] = "beverage"
+    payload["product"]["scoringFacts"]["plainWater"] = dict(
+        state="present", sourceIds=["src-0"]
+    )
+    payload["product"]["observations"] = [
+        dict(
+            field="sugars",
+            kind="uncertain",
+            value=5,
+            unit="g",
+            basis="per_serving",
+            sourceIds=["src-0"],
+            issues=[
+                dict(
+                    code="review_required",
+                    stage="extraction",
+                    message="Review printed value.",
+                    action="edit",
+                )
+            ],
+        )
+    ]
+    result = ReferenceAnalysisService(resources).assess(
+        AnalyzeRequest.model_validate(payload), input_digest="0" * 64
+    )
+    assert result.scientific.state == "insufficient_data"
+    assert any(i.code == "conflicting_water_facts" for i in result.scientific.issues)
+
+
 @pytest.mark.parametrize("kind", ["read", "corrected"])
 def test_flagged_observations_cannot_support_a_grade(
     kind: str, resources: AnalysisResources

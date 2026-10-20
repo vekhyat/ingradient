@@ -14,6 +14,10 @@ import {
 import { enGB } from '../copy/en-GB';
 import { ScreenFrame } from '../features/app/ScreenFrame';
 import { useLabelState, useServices } from '../features/app/services';
+import {
+  INGREDIENT_CORRECTION_MAX,
+  nutrientCorrectionKey,
+} from '../features/capture/label-snapshot';
 import { space } from '../theme/tokens';
 import {
   BASIS_LABELS,
@@ -28,6 +32,8 @@ type Editing =
   | {
       kind: 'nutrient';
       field: string;
+      correctionKey: string;
+      initialDraft: string;
       printed: string;
       unit: string;
       basis: string;
@@ -54,6 +60,7 @@ export default function ReviewScreen() {
   >();
   const [analysing, setAnalysing] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [correctionError, setCorrectionError] = useState<string>();
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const controller = useRef<AbortController | null>(null);
 
@@ -112,13 +119,18 @@ export default function ReviewScreen() {
     setEditing({ kind: 'ingredient', id, printed: row.printedText });
     setDraft(row.printedText);
     setDraftError(undefined);
+    setCorrectionError(undefined);
   };
 
-  const openNutrient = (field: string) => {
-    const row = nutrients.find((item) => item.field === field);
-    const observation = snapshot.observations.find(
-      (item) => item.field === field,
+  const openNutrient = (field: string, rowId?: string) => {
+    const row = nutrients.find(
+      (item) =>
+        item.field === field && (rowId === undefined || item.rowId === rowId),
     );
+    if (!row?.rowId) {
+      return;
+    }
+    const observation = snapshot.observations[Number(row.rowId)];
     const printed =
       observation && observation.kind !== 'missing'
         ? String(observation.value)
@@ -126,9 +138,15 @@ export default function ReviewScreen() {
     setEditing({
       kind: 'nutrient',
       field,
+      correctionKey: nutrientCorrectionKey(field, row.rowId),
+      initialDraft: printed,
       printed: row?.value === null ? (row?.missingReason ?? '') : printed,
       unit:
-        observation && observation.kind !== 'missing' ? observation.unit : 'g',
+        observation && observation.kind !== 'missing'
+          ? observation.unit
+          : field === 'energy'
+            ? 'kJ'
+            : 'g',
       basis:
         observation && observation.kind !== 'missing'
           ? observation.basis
@@ -148,6 +166,7 @@ export default function ReviewScreen() {
         : 'per_100_g',
     );
     setDraftError(undefined);
+    setCorrectionError(undefined);
   };
 
   const apply = () => {
@@ -159,6 +178,12 @@ export default function ReviewScreen() {
         setDraftError('empty');
         return;
       }
+      if (draft.trim().length > INGREDIENT_CORRECTION_MAX) {
+        setCorrectionError(
+          `Use ${INGREDIENT_CORRECTION_MAX} characters or fewer for one ingredient correction.`,
+        );
+        return;
+      }
       label.correctIngredient(editing.id, { kind: 'text', text: draft });
     } else {
       const value = Number(draft.replace(',', '.'));
@@ -166,7 +191,7 @@ export default function ReviewScreen() {
         setDraftError('empty');
         return;
       }
-      label.correctNutrient(editing.field, {
+      label.correctNutrient(editing.correctionKey, {
         kind: 'value',
         value,
         unit,
@@ -178,7 +203,7 @@ export default function ReviewScreen() {
 
   const cantRead = () => {
     if (editing?.kind === 'nutrient') {
-      label.correctNutrient(editing.field, { kind: 'unreadable' });
+      label.correctNutrient(editing.correctionKey, { kind: 'unreadable' });
     } else if (editing?.kind === 'ingredient') {
       label.correctIngredient(editing.id, { kind: 'unreadable' });
     }
@@ -226,8 +251,11 @@ export default function ReviewScreen() {
       : enGB.review.ingredientLabel;
   const dirty =
     editing !== null &&
-    draft !== (editing.kind === 'ingredient' ? editing.printed : '') &&
-    draft.length > 0;
+    (editing.kind === 'ingredient'
+      ? draft !== editing.printed
+      : draft !== editing.initialDraft ||
+        unit !== editing.unit ||
+        basis !== editing.basis);
 
   return (
     <ScreenFrame title={enGB.review.title} onBack={back}>
@@ -302,8 +330,19 @@ export default function ReviewScreen() {
               onChange={(next) => {
                 setDraft(next);
                 setDraftError(undefined);
+                setCorrectionError(undefined);
               }}
             />
+            {correctionError ? (
+              <AppText
+                variant="bodySm"
+                color="alertInk"
+                accessibilityLiveRegion="polite"
+                accessibilityRole="alert"
+              >
+                {correctionError}
+              </AppText>
+            ) : null}
             {editing.kind === 'nutrient' ? (
               <>
                 <View

@@ -114,10 +114,10 @@ export interface ComponentEvaluation {
 }
 
 /**
- * `applied`: red meat is present, so protein points are capped.
+ * `applied`: counted protein exceeds the red-meat cap and is reduced.
  * `not_applicable`: red meat is absent, or the product is cheese.
- * `cannot_bind`: red meat is unknown but protein points are at or below the cap.
- * `not_evaluated`: red meat is unknown and protein is not counted, so the cap
+ * `cannot_bind`: protein points are at or below the cap.
+ * `not_evaluated`: protein is not counted, so the cap
  * cannot change the score; `points` shows the uncapped value.
  */
 export type RedMeatCapUse =

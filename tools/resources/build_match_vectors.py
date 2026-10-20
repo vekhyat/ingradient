@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 TARGET = ROOT / "resources/vectors/match-vectors.json"
-EDITION = "off-exact-match-2026-10-17.1"
+EDITION = "off-exact-match-2026-10-20.1"
 
 # A source relation is not an alias. Only the English identity/synonym line is
 # cited here; parent, origin, derivative and advisory prose must not resolve it.
@@ -95,7 +95,7 @@ def document():
     add("suffix-without-context", "503(ii)", ["e503ii"], why="No E/INS prefix or explicit additive context.")
     add("letter-roman-suffix", "E160a(i)", ["e160ai"], ["en:e160a(i)"], why="Preserve both the letter and roman suffix.")
     add("letter-suffix", "E150d", ["e150d"], ["en:e150d"], why="Letter suffix is part of the English source code.")
-    add("letter-parenthesis-refused", "E150(d)", ["e150d"], why="Source has E150d, not E150(d); never repair unsupported syntax into a different code.")
+    add("letter-parenthesis-normalized", "E150(d)", ["e150d"], ["en:e150d"], why="Accepted parenthesized a-f letter normalization preserves the exact E150d source identity; Roman suffix parentheses remain significant.")
     add("unsupported-roman-refused", "E503(x)", ["e503", "e503ii"], why="A missing suffix identity must not collapse to the group.")
     add("repeated-suffix-refused", "E503(ii)(ii)", ["e503ii"], why="Malformed repeated suffix is not a valid source alias.")
     add("mixed-repeated-suffix-refused", "E160a(i)(ii)", ["e160ai"], why="Do not truncate a code to its first valid prefix.")

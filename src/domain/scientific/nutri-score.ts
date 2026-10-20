@@ -185,6 +185,21 @@ function calculateRoute(
   const facts = resolveFacts(route, read.states);
 
   if (route === 'beverage' && facts.plainWater.resolved === 'present') {
+    const nutrients = ownField(input, 'nutrients');
+    if (
+      Object.keys(FIELD_UNITS).some((field) => {
+        const amount = ownField(nutrients, field);
+        return amount !== undefined && ownField(amount, 'value') !== 0;
+      })
+    ) {
+      return refuse('insufficient_data', route, identity, {
+        code: 'conflicting_water_facts',
+        stage: 'completeness',
+        field: 'plainWater',
+        message: 'Plain-water evidence conflicts with nutrient observations.',
+        action: 'add_field',
+      });
+    }
     return gradeWater(identity, rules, facts);
   }
 
@@ -907,8 +922,12 @@ function decideProtein(
   } else if (redMeat.notApplicable !== null) {
     redMeatUse = notApplicableUse(redMeat);
   } else if (redMeat.resolved === 'present') {
-    points = Math.min(rawPoints, cap.maxPoints);
-    capUse = 'applied';
+    if (capMatters) {
+      points = cap.maxPoints;
+      capUse = 'applied';
+    } else {
+      capUse = counted === false ? 'not_evaluated' : 'cannot_bind';
+    }
     redMeatUse = capMatters
       ? {
           state: redMeat.state,
