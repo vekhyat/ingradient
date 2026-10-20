@@ -21,7 +21,7 @@ bun install --frozen-lockfile
 bun run check
 ```
 
-The root install hook applies the camera focus patch used by the native config plugin. Keep `bun.lock` as the dependency lockfile; avoid creating a competing npm lockfile.
+These commands are the same in bash on Linux. The root install hook applies the camera focus patch used by the native config plugin. Keep `bun.lock` as the dependency lockfile; avoid creating a competing npm lockfile.
 
 `check` runs TypeScript, ESLint, Prettier and Jest. CI runs these checks on Ubuntu and Windows for every change, including tools, modules, native plugins and root configuration. It also exports Android and iOS JavaScript on Ubuntu. Additional checks:
 
@@ -78,6 +78,68 @@ try {
 ```
 
 The APK is `android/app/build/outputs/apk/debug/app-debug.apk`. Generated `android/`, `ios/`, `.expo/` and `dist/` stay out of Git. Change native behavior through `app.json`, `plugins/` or `modules/`.
+
+## Android on Linux
+
+Android Studio is optional on Linux. The command-line tools and a separate JDK 17 are enough to build and install the development client.
+
+1. Install JDK 17. With [mise](https://mise.jdx.dev/):
+
+   ```bash
+   mise use --global java@temurin-17
+   ```
+
+2. Download the Android command-line tools for Linux from the Android Studio download page. Extract them so `sdkmanager` is at `~/Android/Sdk/cmdline-tools/latest/bin/sdkmanager`.
+
+3. Add the paths to your shell profile, then open a new shell:
+
+   ```bash
+   export JAVA_HOME="$(mise where java@temurin-17)"
+   export ANDROID_HOME="$HOME/Android/Sdk"
+   export PATH="$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+   ```
+
+   Without mise, point `JAVA_HOME` at any JDK 17 installation.
+
+4. Accept the SDK licenses and install the packages the build uses:
+
+   ```bash
+   sdkmanager --licenses
+   sdkmanager 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0' 'ndk;27.1.12297006'
+   ```
+
+5. Install the app dependencies from the repository root:
+
+   ```bash
+   bun install --frozen-lockfile
+   ```
+
+6. Enable USB debugging, connect the phone and accept its debugging prompt. Check that it is listed:
+
+   ```bash
+   adb devices -l
+   ```
+
+   With systemd 258 or later, the logged-in user already has ADB USB access. No extra udev rules package is needed. On older systems, install your distribution's Android udev rules if the phone shows as `no permissions`.
+
+7. Build and install the development client:
+
+   ```bash
+   bun run android
+   ```
+
+The Metro, `adb reverse` and local backend steps are the same as on Windows. In bash, set the analysis URL with `export EXPO_PUBLIC_ANALYSIS_URL=http://127.0.0.1:8000` and clear it with `unset EXPO_PUBLIC_ANALYSIS_URL`.
+
+For an ARM64 debug APK without a connected phone:
+
+```bash
+bun run prebuild --platform android
+cd android
+NODE_ENV=development ./gradlew assembleDebug --console=plain -PreactNativeArchitectures=arm64-v8a
+cd ..
+```
+
+The APK is written to the same `android/app/build/outputs/apk/debug/app-debug.apk` path.
 
 ## iOS and deployment
 

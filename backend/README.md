@@ -8,13 +8,30 @@ The base entrypoint is `app.main:app`. Its `create_app()` factory defaults to `N
 
 ## Install and run
 
-Use Python 3.14.3 (`.python-version`) and uv 0.13.1, matching CI. From this directory:
+Use Python 3.14.3 (`.python-version`) and uv 0.13.1, matching CI. On Windows, from this directory:
 
 ```powershell
 python -m pip install uv==0.13.1
 uv sync --locked
 uv run --locked uvicorn app.main:app --no-access-log --host 127.0.0.1 --port 8000
 ```
+
+On Linux:
+
+1. Install uv 0.13.1 with its standalone installer:
+
+   ```bash
+   curl -LsSf https://astral.sh/uv/0.13.1/install.sh | sh
+   ```
+
+   Open a new shell so `uv` is on `PATH`. uv downloads Python 3.14.3 from `.python-version` if it is not installed.
+
+2. Install and run from this directory:
+
+   ```bash
+   uv sync --locked
+   uv run --locked uvicorn app.main:app --no-access-log --host 127.0.0.1 --port 8000
+   ```
 
 Open <http://127.0.0.1:8000/health> for status and the manifest contract version. FastAPI's `/docs` describes the routes this process actually serves. The project package version is separate from the wire contract version.
 
@@ -33,6 +50,8 @@ uv run --locked ruff format --check
 uv run --locked pyright
 uv run --locked pytest
 ```
+
+These commands are the same in bash on Linux.
 
 The default `dev` dependency group includes the isolated `learning-store` group so strict type checking can inspect the optional store and its tests. The driver stays outside runtime dependencies: `uv sync --locked --no-dev` omits it. Having it installed for development does not import it into the API process. Base tests assert that health and default analysis do not import database drivers or open database connections.
 
@@ -66,6 +85,18 @@ try {
   Remove-Item Env:BE13_TEST_CONTAINER
   docker stop ingradient-be13-pg18-test
 }
+```
+
+On Linux, from `backend/` in bash:
+
+```bash
+docker run --detach --rm --name ingradient-be13-pg18-test -e POSTGRES_PASSWORD=disposable_local_password -e POSTGRES_DB=learning_test -p 127.0.0.1:55432:5432 postgres:18
+docker exec ingradient-be13-pg18-test pg_isready -U postgres -d learning_test
+uv sync --locked --group learning-store
+BE13_TEST_DSN='postgresql://postgres:disposable_local_password@127.0.0.1:55432/learning_test' \
+BE13_TEST_CONTAINER='ingradient-be13-pg18-test' \
+  uv run --locked --group learning-store pytest tests/learning_store/test_isolated.py -v -s
+docker stop ingradient-be13-pg18-test
 ```
 
 Wait for `pg_isready` to succeed before running pytest. The wrapper runs store cases in a child process so driver imports cannot invalidate the base API's no-driver assertions. The exact container name also enables the guarded synthetic dump/restore and deletion-replay case. CI provisions its own `postgres:18` service with a random local port, supplies both test variables and runs this wrapper independently of the base suite. It does not use inherited `DATABASE_URL` values or production credentials.
